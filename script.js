@@ -8,7 +8,6 @@ function resizeCanvas() {
 resizeCanvas();
 
 const MAP_PX = 1024;
-const CELL = 32; // Precision grid (32x32 for 1024px)
 
 const mapImage = new Image();
 mapImage.src = 'farm_map.png';
@@ -17,8 +16,8 @@ mapImage.onload = () => { mapLoaded = true; };
 
 // Player - Realistic speed and hitbox
 const player = {
-    x: 18 * CELL, // Start on the path!
-    y: 28 * CELL,
+    x: 500, // Start center bottom path
+    y: 920,
     width: 24,
     height: 38,
     speed: 5,
@@ -78,8 +77,8 @@ window.addEventListener('keydown', (e) => {
         } else if (e.key === 'Enter') {
             const action = menuOptions[currentMenuIndex].getAttribute('data-action');
             if (action === 'play') startGame();
-            else if (action === 'settings') alert("Settings menu coming soon!");
-            else if (action === 'quit') alert("Game Closed.");
+            else if (action === 'settings') alert("Settings coming soon!");
+            else if (action === 'quit') alert("Bye!");
         }
         return;
     }
@@ -89,51 +88,44 @@ window.addEventListener('keyup', (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
-// Precise Collision Rules based on the Map Reference
+// Precise Pixel-Based Collision Ranges (No more boxy grid)
 function checkCollision(px, py, pw, ph) {
-    // Check points near the feet/hitbox - 32px grid is 32x32 cells
-    const feetX_L = (px + 4);
-    const feetX_R = (px + pw - 4);
-    const feetY = (py + ph - 2);
+    // Only check the feet area (bottom of the player) for top-down collisions
+    // This allows the player's head and body to overlap obstacles slightly, just like in Stardew Valley
+    const fx = px + pw / 2;
+    const fy = py + ph - 4; // Feet position
+
+    // 1. MAP BOUNDS
+    if (fx < 20 || fx > 1000 || fy < 20 || fy > 1000) return true;
+
+    // 2. HOUSE BLOCK (approx top center area)
+    if (fx > 350 && fx < 680 && fy < 280) return true;
+
+    // 3. FENCES (Perimeter)
+    // Top fence line (left and right of house)
+    if (fy > 70 && fy < 120 && (fx < 350 || fx > 670)) return true;
     
-    // Check multiple collision points for precision
-    const points = [
-        { x: feetX_L, y: feetY },
-        { x: feetX_R, y: feetY },
-        { x: (feetX_L + feetX_R)/2, y: feetY }
-    ];
+    // Left fence line
+    if (fx > 100 && fx < 140 && fy > 90 && fy < 900) return true;
 
-    for(let pt of points) {
-        const cx = Math.floor(pt.x / CELL);
-        const cy = Math.floor(pt.y / CELL);
+    // Right fence line (inside are boulders)
+    if (fx > 880 && fx < 930 && fy > 90 && fy < 900) return true;
 
-        // Map Bounds
-        if (cx < 0 || cx >= 32 || cy < 0 || cy >= 32) return true;
+    // Bottom fence line (except the gate at x: 480-550)
+    if (fy > 880 && fy < 930 && (fx < 480 || fx > 550) && (fx > 100 && fx < 900)) return true;
 
-        // HOUSE (Center Top) - approx x: 10-22, y: 1-9
-        if (cx >= 10 && cx <= 22 && cy >= 1 && cy <= 9) return true;
+    // 4. WATER (Lake bottom-left)
+    if (fx < 380 && fy > 650 && fy < 980) return true;
 
-        // LAKE (Bottom Left) - approx x: 0-9, y: 20-28
-        if (cx >= 0 && cx <= 9 && cy >= 20 && cy <= 28) return true;
+    // 5. WELL (Right side mid)
+    if (fx > 780 && fx < 880 && fy > 420 && fy < 530) return true;
 
-        // FENCES
-        // Top perimeter
-        if (cy === 3 && (cx < 10 || cx > 22)) return true;
-        // Side perimeters
-        if (cx === 6 && (cy > 3 && cy < 28)) return true;
-        if (cx === 27 && (cy > 3 && cy < 28)) return true;
-        // Bottom perimeter (gate at 18)
-        if (cy === 28 && (cx < 17 || cx > 19) && (cx > 6 && cx < 27)) return true;
+    // 6. TREES & ROCKS (Specific corners)
+    if (fx < 160 && fy < 160) return true; // Top left trees
+    if (fx > 850 && fy < 160) return true; // Top right rocks
+    if (fx > 850 && fy > 850) return true; // Bottom right rocks
+    if (fx < 160 && fy > 850) return true; // Bottom left trees corner
 
-        // WELL
-        if (cx >= 24 && cx <= 26 && cy >= 14 && cy <= 16) return true;
-
-        // TREES (Corners)
-        if (cx < 4 && cy < 4) return true;
-        if (cx > 28 && cy < 4) return true;
-        if (cx < 4 && cy > 28) return true;
-        if (cx > 28 && cy > 28) return true;
-    }
     return false;
 }
 
@@ -149,11 +141,15 @@ function applyPhysics() {
         vy *= 0.707;
     }
     
-    player.x += vx;
-    if (checkCollision(player.x, player.y, player.width, player.height)) player.x -= vx;
+    // Horizontal Move
+    if (!checkCollision(player.x + vx, player.y, player.width, player.height)) {
+        player.x += vx;
+    }
     
-    player.y += vy;
-    if (checkCollision(player.x, player.y, player.width, player.height)) player.y -= vy;
+    // Vertical Move
+    if (!checkCollision(player.x, player.y + vy, player.width, player.height)) {
+        player.y += vy;
+    }
 
     // Camera follow
     camera.x = player.x + player.width/2 - camera.width/2;
