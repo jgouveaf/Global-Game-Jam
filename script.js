@@ -67,6 +67,33 @@ const player = {
     color: '#ff4500' 
 };
 
+// Menu System
+let gameState = 'MENU'; // MENU or PLAYING
+const menuOptions = document.querySelectorAll('.menu-option');
+let currentMenuIndex = 0;
+
+function updateMenuUI() {
+    menuOptions.forEach((opt, idx) => {
+        if (idx === currentMenuIndex) {
+            opt.classList.add('active');
+        } else {
+            opt.classList.remove('active');
+        }
+    });
+}
+
+function startGame() {
+    gameState = 'PLAYING';
+    document.getElementById('start-menu').style.display = 'none';
+    document.getElementById('game-ui').style.display = 'block';
+    
+    // Reset player position just in case
+    player.x = 400;
+    player.y = 100;
+    player.vx = 0;
+    player.vy = 0;
+}
+
 // Inputs
 const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false };
 
@@ -76,6 +103,26 @@ let selectedBlock = BLOCKS.DIRT;
 const mouse = { x: 0, y: 0, leftDown: false, rightDown: false };
 
 window.addEventListener('keydown', (e) => {
+    if (gameState === 'MENU') {
+        if (e.key === 'ArrowUp' || e.key === 'w') {
+            currentMenuIndex = (currentMenuIndex > 0) ? currentMenuIndex - 1 : menuOptions.length - 1;
+            updateMenuUI();
+        } else if (e.key === 'ArrowDown' || e.key === 's') {
+            currentMenuIndex = (currentMenuIndex < menuOptions.length - 1) ? currentMenuIndex + 1 : 0;
+            updateMenuUI();
+        } else if (e.key === 'Enter') {
+            const action = menuOptions[currentMenuIndex].getAttribute('data-action');
+            if (action === 'start') {
+                startGame();
+            } else if (action === '1player' || action === '2players') {
+                startGame(); // Just start for now, placeholder for game modes
+            } else if (action === 'exit') {
+                alert("Thanks for playing! You can close the tab.");
+            }
+        }
+        return; // Don't process game inputs
+    }
+
     if (keys.hasOwnProperty(e.key) || e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'ArrowDown' || e.key === 'ArrowRight') {
         keys[e.key] = true;
     }
@@ -98,6 +145,7 @@ canvas.addEventListener('mousemove', (e) => {
 });
 
 canvas.addEventListener('mousedown', (e) => {
+    if (gameState !== 'PLAYING') return;
     if (e.button === 0) mouse.leftDown = true;
     if (e.button === 2) mouse.rightDown = true;
     handleMiningAndPlacing();
@@ -281,17 +329,39 @@ function drawHighlight() {
 }
 
 function gameLoop() {
-    applyPhysics();
-    
-    if (mouse.leftDown || mouse.rightDown) {
-        handleMiningAndPlacing();
-    }
+    if (gameState === 'PLAYING') {
+        applyPhysics();
+        
+        if (mouse.leftDown || mouse.rightDown) {
+            handleMiningAndPlacing();
+        }
 
-    drawWorld();
-    drawHighlight();
-    drawPlayer();
+        drawWorld();
+        drawHighlight();
+        drawPlayer();
+    }
 
     requestAnimationFrame(gameLoop);
 }
+
+// Support clicking directly on menu items
+menuOptions.forEach((opt, idx) => {
+    opt.addEventListener('click', () => {
+        currentMenuIndex = idx;
+        updateMenuUI();
+        const action = opt.getAttribute('data-action');
+        if (action === 'start' || action === '1player' || action === '2players') {
+            startGame();
+        } else if (action === 'exit') {
+            alert("Thanks for playing! You can close the tab.");
+        }
+    });
+    
+    // Update visual index purely on hover for nice UX
+    opt.addEventListener('mouseenter', () => {
+        currentMenuIndex = idx;
+        updateMenuUI();
+    });
+});
 
 gameLoop();

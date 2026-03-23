@@ -9,8 +9,21 @@
 </head>
 <body>
     <div id="game-container">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        <div id="ui">
+        <!-- Start Menu Overlay -->
+        <div id="start-menu">
+            <h1 class="main-title">AgriCorp</h1>
+            <div class="menu-options">
+                <div class="menu-option active" data-action="start">START GAME</div>
+                <div class="menu-option" data-action="1player">1 PLAYER</div>
+                <div class="menu-option" data-action="2players">2 PLAYERS</div>
+                <div class="menu-option" data-action="exit">EXIT</div>
+            </div>
+        </div>
+        
+        <!-- Game Canvas and UI -->
+        <div id="game-ui" style="display: none;">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <div id="ui">
             <h1>AgriCorp</h1>
             <div id="hotbar">
                 <div class="slot selected" data-block="1" style="background-color: #8b5a2b;" title="Dirt"></div>
@@ -24,6 +37,7 @@
                 <p>Left Click: Mine Block</p>
                 <p>Right Click: Place Block</p>
                 <p>1-5: Select Block</p>
+            </div>
             </div>
         </div>
     </div>
