@@ -7,33 +7,35 @@ function resizeCanvas() {
 }
 resizeCanvas();
 
-const tileSize = 64; // bigger tiles for a more "GIANT" look
+const tileSize = 64; 
 const WORLD_COLS = 100;
 const WORLD_ROWS = 100;
 
-// Block Types remain the same for hotbar compatibility
+// Tileset support
+const tileset = new Image();
+tileset.src = 'tileset.jpg';
+let tilesetLoaded = false;
+tileset.onload = () => { tilesetLoaded = true; };
+
+// Block Types mapped to tileset 1x5 order
 const BLOCKS = {
-    AIR: 0,
+    GRASS: 0,
     DIRT: 1,
-    GRASS: 2,
+    WATER: 2,
     STONE: 3,
-    WOOD: 4,
-    LEAVES: 5,
-    WATER: 6 // new internal block
+    CROPS: 4
 };
 
 const BLOCK_COLORS = {
     [BLOCKS.DIRT]: '#8b5a2b',
     [BLOCKS.GRASS]: '#32cd32',
     [BLOCKS.STONE]: '#808080',
-    [BLOCKS.WOOD]: '#deb887',
-    [BLOCKS.LEAVES]: '#228b22',
+    [BLOCKS.CROPS]: '#228b22',
     [BLOCKS.WATER]: '#1e90ff'
 };
 
-// Top down solid blocks: Water, Stone, Wood, Leaves
-// Walkable: Air, Grass, Dirt
-const SOLID_BLOCKS = [BLOCKS.STONE, BLOCKS.WOOD, BLOCKS.LEAVES, BLOCKS.WATER];
+// Top down solid blocks: Water and Stone
+const SOLID_BLOCKS = [BLOCKS.STONE, BLOCKS.WATER];
 
 // World Data
 let world = [];
@@ -41,23 +43,15 @@ function generateWorld() {
     for (let y = 0; y < WORLD_ROWS; y++) {
         world[y] = [];
         for (let x = 0; x < WORLD_COLS; x++) {
-            // Base layer is Grass
-            world[y][x] = BLOCKS.GRASS;
-            
-            // Random dirt patches
-            if (Math.random() < 0.1) world[y][x] = BLOCKS.DIRT;
-            
-            // Random trees
-            if (Math.random() < 0.05) world[y][x] = BLOCKS.WOOD; // trunk
-            else if (Math.random() < 0.05) world[y][x] = BLOCKS.LEAVES; // bush
-            
-            // Random rocks
-            if (Math.random() < 0.02) world[y][x] = BLOCKS.STONE;
-            
-            // Little lakes
-            if (Math.random() < 0.02) {
+            // Updated generator
+            const dist = Math.sqrt(Math.pow(x-50,2) + Math.pow(y-50,2));
+            if (dist > 45) {
                 world[y][x] = BLOCKS.WATER;
-                if(x < WORLD_COLS-1) world[y][x+1] = BLOCKS.WATER;
+            } else {
+                const noise = Math.random();
+                if (noise < 0.1) world[y][x] = BLOCKS.DIRT;
+                else if (noise < 0.15) world[y][x] = BLOCKS.STONE;
+                else world[y][x] = BLOCKS.GRASS;
             }
         }
     }
@@ -242,27 +236,8 @@ function applyPhysics() {
 }
 
 function handleMiningAndPlacing() {
-    const worldMouseX = mouse.x + camera.x;
-    const worldMouseY = mouse.y + camera.y;
-    const cx = Math.floor(worldMouseX / tileSize);
-    const cy = Math.floor(worldMouseY / tileSize);
-
-    const playerCenter = { x: player.x + player.width/2, y: player.y + player.height/2 };
-    const maxReach = 200;
-    const dist = Math.hypot((cx * tileSize + tileSize/2) - playerCenter.x, (cy * tileSize + tileSize/2) - playerCenter.y);
-    
-    if (cx >= 0 && cx < WORLD_COLS && cy >= 0 && cy < WORLD_ROWS && dist < maxReach) {
-        if (mouse.leftDown) { // Mine
-            // In a top down game, mining usually replaces with basic floor like GRASS
-            world[cy][cx] = BLOCKS.GRASS;
-        } else if (mouse.rightDown) { // Place
-            const rx = cx * tileSize;
-            const ry = cy * tileSize;
-            if (!(player.x < rx + tileSize && player.x + player.width > rx && player.y < ry + tileSize && player.y + player.height > ry)) {
-                world[cy][cx] = selectedBlock;
-            }
-        }
-    }
+    // Disabled functionality as requested: destroy and place are disabled.
+    return;
 }
 
 function drawWorld() {
@@ -280,25 +255,20 @@ function drawWorld() {
     for (let y = startRow; y < endRow; y++) {
         for (let x = startCol; x < endCol; x++) {
             const block = world[y][x];
-            if (block !== BLOCKS.AIR) {
-                ctx.fillStyle = BLOCK_COLORS[block];
+            
+            if (tilesetLoaded) {
+                 // Slicing the tileset (1x5 layout)
+                 const sourceW = tileset.width / 5;
+                 const sourceH = tileset.height;
+                 ctx.drawImage(
+                    tileset,
+                    block * sourceW, 0, sourceW, sourceH,
+                    x * tileSize, y * tileSize, tileSize, tileSize
+                 );
+            } else {
+                // Fallback while loading
+                ctx.fillStyle = BLOCK_COLORS[block] || "#000";
                 ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-                
-                // Add simple texture details
-                if (block === BLOCKS.GRASS) {
-                    ctx.fillStyle = "rgba(0,100,0,0.2)";
-                    ctx.fillRect(x * tileSize + 8, y * tileSize + 8, 8, 8);
-                    ctx.fillRect(x * tileSize + 32, y * tileSize + 24, 8, 8);
-                } else if (block === BLOCKS.DIRT) {
-                    ctx.fillStyle = "rgba(0,0,0,0.1)";
-                    ctx.fillRect(x * tileSize + 10, y * tileSize + 10, 10, 10);
-                } else if (block === BLOCKS.WATER) {
-                    ctx.fillStyle = "rgba(255,255,255,0.2)";
-                    ctx.fillRect(x * tileSize + 10, y * tileSize + 16, 20, 4);
-                } else {
-                    ctx.strokeStyle = "rgba(0,0,0,0.4)";
-                    ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
-                }
             }
         }
     }
