@@ -14,10 +14,10 @@ mapImage.src = 'farm_map.png';
 let mapLoaded = false;
 mapImage.onload = () => { mapLoaded = true; };
 
-// Player - Realistic speed and hitbox
+// Player - Precise start and realistic hitbox
 const player = {
-    x: 500, // Start center bottom path
-    y: 920,
+    x: 512, // Start middle bottom path
+    y: 800,
     width: 24,
     height: 38,
     speed: 5,
@@ -88,43 +88,42 @@ window.addEventListener('keyup', (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
-// Precise Pixel-Based Collision Ranges (No more boxy grid)
+// ============================================
+// PRECISE PIXEL COLLISION (Tightened for the Farm Image)
+// ============================================
 function checkCollision(px, py, pw, ph) {
-    // Only check the feet area (bottom of the player) for top-down collisions
-    // This allows the player's head and body to overlap obstacles slightly, just like in Stardew Valley
     const fx = px + pw / 2;
-    const fy = py + ph - 4; // Feet position
+    const fy = py + ph - 4; // Check feet area only
 
-    // 1. MAP BOUNDS
-    if (fx < 20 || fx > 1000 || fy < 20 || fy > 1000) return true;
+    // 1. OUTER BOUNDS
+    if (fx < 30 || fx > 994 || fy < 30 || fy > 994) return true;
 
-    // 2. HOUSE BLOCK (approx top center area)
-    if (fx > 350 && fx < 680 && fy < 280) return true;
+    // 2. HOUSE (Central-Top)
+    // House area: x: 380 to 640, y: < 220
+    if (fx > 380 && fx < 640 && fy < 230) return true;
 
-    // 3. FENCES (Perimeter)
-    // Top fence line (left and right of house)
-    if (fy > 70 && fy < 120 && (fx < 350 || fx > 670)) return true;
-    
-    // Left fence line
-    if (fx > 100 && fx < 140 && fy > 90 && fy < 900) return true;
+    // 3. POND (Bottom-Left)
+    // Pond area: x: < 250, y: > 800
+    if (fx < 250 && fy > 800) return true;
 
-    // Right fence line (inside are boulders)
-    if (fx > 880 && fx < 930 && fy > 90 && fy < 900) return true;
+    // 4. FENCES (Perimeter)
+    // Left fence line: x offset 60px
+    if (fx < 100 && fy < 900) return true;
+    // Right fence line: x offset 940px
+    if (fx > 940 && fy < 900) return true;
+    // Top fence line (excluding gap for house)
+    if (fy < 100 && (fx < 380 || fx > 640)) return true;
+    // Bottom fence line (excluding gate at x: 480-550)
+    if (fy > 930 && (fx < 480 || fx > 550)) return true;
 
-    // Bottom fence line (except the gate at x: 480-550)
-    if (fy > 880 && fy < 930 && (fx < 480 || fx > 550) && (fx > 100 && fx < 900)) return true;
-
-    // 4. WATER (Lake bottom-left)
-    if (fx < 380 && fy > 650 && fy < 980) return true;
-
-    // 5. WELL (Right side mid)
-    if (fx > 780 && fx < 880 && fy > 420 && fy < 530) return true;
-
-    // 6. TREES & ROCKS (Specific corners)
-    if (fx < 160 && fy < 160) return true; // Top left trees
-    if (fx > 850 && fy < 160) return true; // Top right rocks
-    if (fx > 850 && fy > 850) return true; // Bottom right rocks
-    if (fx < 160 && fy > 850) return true; // Bottom left trees corner
+    // 5. DECORATIONS (Well, Trees at corners)
+    // Well: right side mid
+    if (fx > 840 && fx < 920 && fy > 440 && fy < 540) return true;
+    // Trees at corners
+    if (fx < 120 && fy < 120) return true; // Top left
+    if (fx > 900 && fy < 120) return true; // Top right
+    if (fx > 900 && fy > 900) return true; // Bottom right
+    if (fx < 120 && fy > 900) return true; // Bottom left corner
 
     return false;
 }
@@ -141,17 +140,14 @@ function applyPhysics() {
         vy *= 0.707;
     }
     
-    // Horizontal Move
     if (!checkCollision(player.x + vx, player.y, player.width, player.height)) {
         player.x += vx;
     }
     
-    // Vertical Move
     if (!checkCollision(player.x, player.y + vy, player.width, player.height)) {
         player.y += vy;
     }
 
-    // Camera follow
     camera.x = player.x + player.width/2 - camera.width/2;
     camera.y = player.y + player.height/2 - camera.height/2;
     
@@ -181,20 +177,14 @@ function drawPlayer() {
     ctx.ellipse(px + 12, py + 36, 10, 4, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Body
     ctx.fillStyle = '#800020';
     ctx.fillRect(px + 4, py + 16, 16, 16);
-    
-    // Legs
     ctx.fillStyle = '#111';
     ctx.fillRect(px + 4, py + 32, 6, 6);
     ctx.fillRect(px + 14, py + 32, 6, 6);
-    
-    // Head
     ctx.fillStyle = '#f1c27d';
     ctx.fillRect(px + 2, py + 2, 20, 14);
 
-    // Eyes/Hair based on direction
     ctx.fillStyle = '#4a3018';
     ctx.fillRect(px + 0, py, 24, 4);
     
@@ -219,13 +209,12 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Menu handling
 menuOptions.forEach((opt, idx) => {
     opt.addEventListener('click', () => {
         currentMenuIndex = idx;
         const action = opt.getAttribute('data-action');
         if (action === 'play') startGame();
-        else if (action === 'settings') alert("Settings coming soon!");
+        else if (action === 'settings') alert("Settings!");
         else if (action === 'quit') alert("Bye!");
     });
 });
