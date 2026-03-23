@@ -68,9 +68,15 @@ const player = {
 };
 
 // Menu System
-let gameState = 'MENU'; // MENU or PLAYING
+let gameState = 'SPLASH'; // SPLASH, MENU or PLAYING
 const menuOptions = document.querySelectorAll('.menu-option');
 let currentMenuIndex = 0;
+
+setTimeout(() => {
+    if (gameState === 'SPLASH') {
+        gameState = 'MENU';
+    }
+}, 3500);
 
 function updateMenuUI() {
     menuOptions.forEach((opt, idx) => {
@@ -112,12 +118,13 @@ window.addEventListener('keydown', (e) => {
             updateMenuUI();
         } else if (e.key === 'Enter') {
             const action = menuOptions[currentMenuIndex].getAttribute('data-action');
-            if (action === 'start') {
+            if (action === 'play') {
                 startGame();
-            } else if (action === '1player' || action === '2players') {
-                startGame(); // Just start for now, placeholder for game modes
-            } else if (action === 'exit') {
-                alert("Thanks for playing! You can close the tab.");
+            } else if (action === 'settings') {
+                alert("Settings menu coming soon!");
+            } else if (action === 'quit') {
+                alert("Game Closed.");
+                document.getElementById('start-menu').style.display = 'none';
             }
         }
         return; // Don't process game inputs
@@ -350,10 +357,13 @@ menuOptions.forEach((opt, idx) => {
         currentMenuIndex = idx;
         updateMenuUI();
         const action = opt.getAttribute('data-action');
-        if (action === 'start' || action === '1player' || action === '2players') {
+        if (action === 'play') {
             startGame();
-        } else if (action === 'exit') {
-            alert("Thanks for playing! You can close the tab.");
+        } else if (action === 'settings') {
+            alert("Settings menu coming soon!");
+        } else if (action === 'quit') {
+            alert("Game Closed.");
+            document.getElementById('start-menu').style.display = 'none';
         }
     });
     
