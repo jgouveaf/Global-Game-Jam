@@ -7,126 +7,59 @@ function resizeCanvas() {
 }
 resizeCanvas();
 
-const tileSize = 64; 
-const WORLD_COLS = 32;
-const WORLD_ROWS = 32;
+// ============================================
+// MAP IMAGE APPROACH - Uses a single image as the entire map
+// ============================================
+const MAP_PX = 1024; // Map image size in pixels
+const GRID = 16;     // 16x16 invisible collision grid
+const CELL = MAP_PX / GRID; // 64px per cell
 
-// Tileset support
-const tileset = new Image();
-tileset.src = 'tileset.jpg';
-let tilesetLoaded = false;
-tileset.onload = () => { tilesetLoaded = true; };
+const mapImage = new Image();
+mapImage.src = 'farm_map.png';
+let mapLoaded = false;
+mapImage.onload = () => { mapLoaded = true; };
 
-// Block Types mapped to tileset 1x5 order
-const BLOCKS = {
-    GRASS: 0,
-    DIRT: 1,
-    WATER: 2,
-    STONE: 3,
-    CROPS: 4,
-    FENCE: 5,
-    HOUSE: 6,
-    PATH: 7,
-    WELL: 8,
-    TREE: 9,
-    ROCK: 10,
-    HAY: 11,
-    CROP_WHEAT: 12,
-    CROP_CARROT: 13,
-    CROP_BEET: 14,
-    CROP_MELON: 15
-};
-
-const BLOCK_COLORS = {
-    [BLOCKS.DIRT]: '#8b5a2b',
-    [BLOCKS.GRASS]: '#32cd32',
-    [BLOCKS.STONE]: '#808080',
-    [BLOCKS.CROPS]: '#ffaa00',
-    [BLOCKS.WATER]: '#1e90ff',
-    [BLOCKS.FENCE]: '#4b2e1b',
-    [BLOCKS.HOUSE]: '#a0522d',
-    [BLOCKS.PATH]: '#d4b06a',
-    [BLOCKS.WELL]: '#555',
-    [BLOCKS.TREE]: '#2d5a27',
-    [BLOCKS.ROCK]: '#808080',
-    [BLOCKS.HAY]: '#ffd700',
-    [BLOCKS.CROP_WHEAT]: '#f5deb3',
-    [BLOCKS.CROP_CARROT]: '#ff8c00',
-    [BLOCKS.CROP_BEET]: '#8b0000',
-    [BLOCKS.CROP_MELON]: '#32cd32'
-};
-
-// Solid: Water, Stone, Fence, House, Well, Tree, Rock, Hay
-const SOLID_BLOCKS = [BLOCKS.STONE, BLOCKS.WATER, BLOCKS.FENCE, BLOCKS.HOUSE, BLOCKS.WELL, BLOCKS.TREE, BLOCKS.ROCK, BLOCKS.HAY];
-
-// World Data
-let world = [];
-function generateWorld() {
-    for (let y = 0; y < WORLD_ROWS; y++) {
-        world[y] = [];
-        for (let x = 0; x < WORLD_COLS; x++) {
-            world[y][x] = BLOCKS.GRASS;
-            
-            // LAKE (Bottom Left)
-            if (x >= 0 && x <= 7 && y >= 16 && y <= 21) {
-                if (!(x === 7 && y === 16)) world[y][x] = BLOCKS.WATER;
-            }
-            if (x >= 0 && x <= 5 && y >= 21 && y <= 26) world[y][x] = BLOCKS.WATER;
-            
-            // HOUSE (Top Center)
-            if (x >= 12 && x <= 22 && y >= 3 && y <= 9) world[y][x] = BLOCKS.HOUSE;
-            
-            // FENCES (Layout from image)
-            if (y === 3 && ((x >= 8 && x <= 11) || (x >= 23 && x <= 28))) world[y][x] = BLOCKS.FENCE;
-            if (x === 8 && y >= 3 && y <= 11) world[y][x] = BLOCKS.FENCE;
-            if (x === 28 && y >= 3 && y <= 27) world[y][x] = BLOCKS.FENCE;
-            if (y === 27 && x >= 10 && x <= 28) {
-                if (x !== 18) world[y][x] = BLOCKS.FENCE; // Small gate at 18
-            }
-            if (x === 10 && y >= 12 && y <= 27) world[y][x] = BLOCKS.FENCE;
-            
-            // PATHS
-            if (x === 18 && y > 9 && y < 32) world[y][x] = BLOCKS.PATH; // Main vert path - shifted right
-            if (y === 11 && x >= 11 && x <= 18) world[y][x] = BLOCKS.PATH; // path around patches
-            if (y >= 10 && y <= 13 && x >= 9 && x <= 11) world[y][x] = BLOCKS.PATH; // dirt yard path
-            
-            // DIRT PATCH (Left - Empty)
-            if (x >= 11 && x <= 16 && y >= 14 && y <= 25) world[y][x] = BLOCKS.DIRT;
-            
-            // CROPS PATCH (Right - Detailed)
-            if (x >= 20 && x <= 25 && y >= 14 && y <= 25) {
-                if (y >= 14 && y <= 16) world[y][x] = BLOCKS.CROP_WHEAT;
-                else if (y >= 17 && y <= 19) world[y][x] = BLOCKS.CROP_CARROT;
-                else if (y >= 20 && y <= 22) world[y][x] = BLOCKS.CROP_BEET;
-                else world[y][x] = BLOCKS.CROP_MELON;
-            }
-            
-            // TREES
-            if ((x === 5 && y === 5) || (x === 29 && y === 4) || (x === 3 && y === 29) || (x === 30 && y === 17)) world[y][x] = BLOCKS.TREE;
-            
-            // ROCKS
-            if ((x === 26 && y === 3) || (x === 29 && y === 24) || (x === 27 && y === 26)) world[y][x] = BLOCKS.ROCK;
-            
-            // WELL (Right side)
-            if (x >= 25 && x <= 27 && y >= 11 && y <= 13) world[y][x] = BLOCKS.WELL;
-            
-            // HAY (Top Left inside yard)
-            if (x >= 9 && x <= 10 && y >= 5 && y <= 6) world[y][x] = BLOCKS.HAY;
-        }
-    }
-}
-generateWorld();
-
+// ============================================
+// COLLISION MAP (16x16 grid overlay on the image)
+// 0 = walkable, 1 = solid
+// Based on the farm layout:
+// Row 0-1: Trees/grass border
+// Row 2-3: House area top / fences
+// Row 4-5: House center
+// Row 6: Path below house
+// Row 7-8: Farm patches
+// Row 9-10: Farm patches / lake starts
+// Row 11-12: Lake / crops
+// Row 13-14: Lake bottom / trees
+// Row 15: Border trees
+// ============================================
+const collisionMap = [
+    // 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15
+    [ 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1], // 0 - trees top
+    [ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 1 - grass
+    [ 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1], // 2 - fence top + house
+    [ 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1], // 3 - house
+    [ 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1], // 4 - house + pig pen
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 5 - yard below house
+    [ 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1], // 6 - fence + path
+    [ 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1], // 7 - dirt patch left
+    [ 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1], // 8 - dirt patch + crops
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 9 - path
+    [ 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1], // 10 - lake top
+    [ 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 11 - lake + crops
+    [ 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 12 - lake bottom
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1], // 13 - grass
+    [ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], // 14 - fence bottom
+    [ 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1], // 15 - border trees
+];
 
 // Player
 const player = {
-    x: 18 * tileSize,
-    y: 28 * tileSize,
-    width: 32,
-    height: 48,
-    vx: 0,
-    vy: 0,
-    speed: 6,
+    x: 7.5 * CELL, // Center of the path
+    y: 9 * CELL,
+    width: 28,
+    height: 40,
+    speed: 4,
     dir: 'down'
 };
 
@@ -144,7 +77,7 @@ window.addEventListener('resize', () => {
 });
 
 // Menu System
-let gameState = 'SPLASH'; // SPLASH, MENU or PLAYING
+let gameState = 'SPLASH';
 const menuOptions = document.querySelectorAll('.menu-option');
 let currentMenuIndex = 0;
 
@@ -171,9 +104,7 @@ function startGame() {
 }
 
 // Inputs
-const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false };
-let selectedBlock = BLOCKS.DIRT;
-const mouse = { x: 0, y: 0, leftDown: false, rightDown: false };
+const keys = {};
 
 window.addEventListener('keydown', (e) => {
     if (gameState === 'MENU') {
@@ -191,79 +122,42 @@ window.addEventListener('keydown', (e) => {
         }
         return;
     }
-    if (keys.hasOwnProperty(e.key) || e.key.startsWith('Arrow')) keys[e.key] = true;
-    if (e.key >= '1' && e.key <= '5') {
-        selectedBlock = parseInt(e.key);
-        updateHotbar();
-    }
+    keys[e.key.toLowerCase()] = true;
 });
 
 window.addEventListener('keyup', (e) => {
-    if (keys.hasOwnProperty(e.key) || e.key.startsWith('Arrow')) keys[e.key] = false;
+    keys[e.key.toLowerCase()] = false;
 });
 
-canvas.addEventListener('mousemove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    mouse.x = e.clientX - rect.left;
-    mouse.y = e.clientY - rect.top;
-});
-
-canvas.addEventListener('mousedown', (e) => {
-    if (gameState !== 'PLAYING') return;
-    if (e.button === 0) mouse.leftDown = true;
-    if (e.button === 2) mouse.rightDown = true;
-    handleMiningAndPlacing();
-    e.preventDefault();
-});
-
-canvas.addEventListener('mouseup', (e) => {
-    if (e.button === 0) mouse.leftDown = false;
-    if (e.button === 2) mouse.rightDown = false;
-});
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-function updateHotbar() {
-    document.querySelectorAll('.slot').forEach(slot => {
-        slot.classList.remove('selected');
-        if (parseInt(slot.getAttribute('data-block')) === selectedBlock) {
-            slot.classList.add('selected');
-        }
-    });
-}
-document.querySelectorAll('.slot').forEach(slot => {
-    slot.addEventListener('click', () => {
-        selectedBlock = parseInt(slot.getAttribute('data-block'));
-        updateHotbar();
-    });
-});
-updateHotbar();
-
-function checkCollision(x, y, w, h) {
-    const startX = Math.floor(x / tileSize);
-    const endX = Math.floor((x + w - 0.1) / tileSize);
-    const startY = Math.floor(y / tileSize);
-    const endY = Math.floor((y + h - 0.1) / tileSize);
-
-    for (let cy = startY; cy <= endY; cy++) {
-        for (let cx = startX; cx <= endX; cx++) {
-            if (cy >= 0 && cy < WORLD_ROWS && cx >= 0 && cx < WORLD_COLS) {
-                if (SOLID_BLOCKS.includes(world[cy][cx])) return true;
-            } else {
-                return true; // Map bounds are solid
-            }
-        }
+// Collision Check
+function checkCollision(px, py, pw, ph) {
+    // Check all four corners of the player hitbox
+    const points = [
+        { x: px + 4, y: py + ph * 0.5 },       // bottom-left (feet area)
+        { x: px + pw - 4, y: py + ph * 0.5 },   // bottom-right
+        { x: px + 4, y: py + ph - 2 },           // very bottom-left
+        { x: px + pw - 4, y: py + ph - 2 },      // very bottom-right
+    ];
+    
+    for (const p of points) {
+        const cx = Math.floor(p.x / CELL);
+        const cy = Math.floor(p.y / CELL);
+        
+        if (cx < 0 || cx >= GRID || cy < 0 || cy >= GRID) return true;
+        if (collisionMap[cy][cx] === 1) return true;
     }
     return false;
 }
 
 function applyPhysics() {
     let vx = 0; let vy = 0;
-    if (keys.a || keys.ArrowLeft) { vx = -player.speed; player.dir = 'left'; }
-    if (keys.d || keys.ArrowRight) { vx = player.speed; player.dir = 'right'; }
-    if (keys.w || keys.ArrowUp) { vy = -player.speed; player.dir = 'up'; }
-    if (keys.s || keys.ArrowDown) { vy = player.speed; player.dir = 'down'; }
+    if (keys['a'] || keys['arrowleft']) { vx = -player.speed; player.dir = 'left'; }
+    if (keys['d'] || keys['arrowright']) { vx = player.speed; player.dir = 'right'; }
+    if (keys['w'] || keys['arrowup']) { vy = -player.speed; player.dir = 'up'; }
+    if (keys['s'] || keys['arrowdown']) { vy = player.speed; player.dir = 'down'; }
     
-    // Normalize diagonal speed
     if (vx !== 0 && vy !== 0) {
         vx *= 0.707;
         vy *= 0.707;
@@ -275,162 +169,82 @@ function applyPhysics() {
     player.y += vy;
     if (checkCollision(player.x, player.y, player.width, player.height)) player.y -= vy;
 
-    // Boundary constraint
-    player.x = Math.max(0, Math.min(player.x, WORLD_COLS * tileSize - player.width));
-    player.y = Math.max(0, Math.min(player.y, WORLD_ROWS * tileSize - player.height));
+    player.x = Math.max(0, Math.min(player.x, MAP_PX - player.width));
+    player.y = Math.max(0, Math.min(player.y, MAP_PX - player.height));
     
-    // Update Camera
-    camera.x = player.x + player.width/2 - camera.width/2;
-    camera.y = player.y + player.height/2 - camera.height/2;
+    camera.x = player.x + player.width / 2 - camera.width / 2;
+    camera.y = player.y + player.height / 2 - camera.height / 2;
     
-    // Clamp Camera to world bounds
-    camera.x = Math.max(0, Math.min(camera.x, WORLD_COLS * tileSize - camera.width));
-    camera.y = Math.max(0, Math.min(camera.y, WORLD_ROWS * tileSize - camera.height));
-}
-
-function handleMiningAndPlacing() {
-    // Disabled functionality as requested: destroy and place are disabled.
-    return;
+    camera.x = Math.max(0, Math.min(camera.x, MAP_PX - camera.width));
+    camera.y = Math.max(0, Math.min(camera.y, MAP_PX - camera.height));
 }
 
 function drawWorld() {
-    ctx.fillStyle = '#0a0a0a';
+    ctx.fillStyle = '#1a1a2e';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
     ctx.translate(-Math.floor(camera.x), -Math.floor(camera.y));
 
-    const startCol = Math.max(0, Math.floor(camera.x / tileSize));
-    const endCol = Math.min(WORLD_COLS, startCol + Math.ceil(camera.width / tileSize) + 1);
-    const startRow = Math.max(0, Math.floor(camera.y / tileSize));
-    const endRow = Math.min(WORLD_ROWS, startRow + Math.ceil(camera.height / tileSize) + 1);
-
-    for (let y = startRow; y < endRow; y++) {
-        for (let x = startCol; x < endCol; x++) {
-            const block = world[y][x];
-            
-            if (tilesetLoaded && block < 5) {
-                 // Slicing the tileset (1x5 layout)
-                 const sourceW = tileset.width / 5;
-                 const sourceH = tileset.height;
-                 ctx.drawImage(
-                    tileset,
-                    block * sourceW, 0, sourceW, sourceH,
-                    x * tileSize, y * tileSize, tileSize, tileSize
-                 );
-            } else {
-                // Fallback for new tiles or while loading - LESS "QUADRADO" LOOK
-                ctx.fillStyle = BLOCK_COLORS[block] || "#000";
-                const bx = x * tileSize;
-                const by = y * tileSize;
-
-                if (block === BLOCKS.TREE) {
-                    ctx.fillStyle = "#4b2e1b"; // Trunk
-                    ctx.fillRect(bx + 24, by + 40, 16, 24);
-                    ctx.fillStyle = "#2d5a27"; // Leaves
-                    ctx.beginPath();
-                    ctx.arc(bx + 32, by + 24, 28, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (block === BLOCKS.ROCK) {
-                    ctx.beginPath();
-                    ctx.moveTo(bx + 10, by + 54);
-                    ctx.lineTo(bx + 32, by + 10);
-                    ctx.lineTo(bx + 54, by + 54);
-                    ctx.closePath();
-                    ctx.fill();
-                } else if (block === BLOCKS.HOUSE) {
-                    ctx.fillRect(bx, by + 10, tileSize, tileSize - 10);
-                    ctx.fillStyle = "rgba(0,0,0,0.2)"; // Shadow/Roof detail
-                    ctx.beginPath();
-                    ctx.moveTo(bx, by + 10);
-                    ctx.lineTo(bx + 32, by - 20);
-                    ctx.lineTo(bx + 64, by + 10);
-                    ctx.fill();
-                } else if (block === BLOCKS.FENCE) {
-                    ctx.fillRect(bx + 28, by, 8, tileSize); // Vertical post
-                    ctx.fillRect(bx, by + 20, tileSize, 4); // Horizontal rail
-                } else {
-                    ctx.fillRect(bx, by, tileSize, tileSize);
-                }
-            }
-        }
+    if (mapLoaded) {
+        ctx.imageSmoothingEnabled = false; // Keep pixel art crisp
+        ctx.drawImage(mapImage, 0, 0, MAP_PX, MAP_PX);
     }
 }
 
 function drawPlayer() {
-    // Draw player with top-down aesthetic
-    const px = player.x;
-    const py = player.y;
+    const px = Math.floor(player.x);
+    const py = Math.floor(player.y);
     
     // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.beginPath();
-    ctx.ellipse(px + 16, py + 46, 16, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(px + 14, py + 38, 12, 5, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Body (Shirt)
-    ctx.fillStyle = '#800020'; // Burgundy
-    ctx.fillRect(px + 4, py + 20, 24, 20);
+    ctx.fillStyle = '#800020';
+    ctx.fillRect(px + 4, py + 18, 20, 16);
     
     // Legs
-    ctx.fillStyle = '#111';
-    ctx.fillRect(px + 6, py + 40, 8, 8); // left leg
-    ctx.fillRect(px + 18, py + 40, 8, 8); // right leg
+    ctx.fillStyle = '#222';
+    ctx.fillRect(px + 6, py + 34, 6, 6);
+    ctx.fillRect(px + 16, py + 34, 6, 6);
     
     // Head/Skin
     ctx.fillStyle = '#f1c27d';
-    ctx.fillRect(px + 2, py + 2, 28, 22);
+    ctx.fillRect(px + 4, py + 2, 20, 18);
 
     // Hair
     ctx.fillStyle = '#4a3018';
-    ctx.fillRect(px + 0, py, 32, 8); // top
+    ctx.fillRect(px + 2, py, 24, 6);
     if (player.dir === 'left') {
-        ctx.fillRect(px + 0, py + 8, 12, 14); // side
-        // Eyes
+        ctx.fillRect(px + 2, py + 6, 8, 12);
         ctx.fillStyle = '#000';
-        ctx.fillRect(px + 6, py + 12, 4, 4);
+        ctx.fillRect(px + 8, py + 10, 3, 3);
     } else if (player.dir === 'right') {
-        ctx.fillRect(px + 20, py + 8, 12, 14); // side
+        ctx.fillRect(px + 18, py + 6, 8, 12);
         ctx.fillStyle = '#000';
-        ctx.fillRect(px + 22, py + 12, 4, 4);
+        ctx.fillRect(px + 17, py + 10, 3, 3);
     } else if (player.dir === 'up') {
-        ctx.fillRect(px + 0, py + 8, 32, 14); // full back of head
+        ctx.fillRect(px + 2, py + 6, 24, 12);
     } else { // down
-        ctx.fillRect(px + 0, py + 8, 8, 14); // left side
-        ctx.fillRect(px + 24, py + 8, 8, 14); // right side
-        // Eyes
+        ctx.fillRect(px + 2, py + 6, 6, 12);
+        ctx.fillRect(px + 20, py + 6, 6, 12);
         ctx.fillStyle = '#000';
-        ctx.fillRect(px + 8, py + 12, 4, 4);
-        ctx.fillRect(px + 20, py + 12, 4, 4);
+        ctx.fillRect(px + 8, py + 10, 3, 3);
+        ctx.fillRect(px + 17, py + 10, 3, 3);
     }
-}
-
-function drawHighlight() {
-     const worldMouseX = mouse.x + camera.x;
-     const worldMouseY = mouse.y + camera.y;
-     const cx = Math.floor(worldMouseX / tileSize);
-     const cy = Math.floor(worldMouseY / tileSize);
-     
-     const playerCenter = { x: player.x + player.width/2, y: player.y + player.height/2 };
-     const maxReach = 200;
-     const dist = Math.hypot((cx * tileSize + tileSize/2) - playerCenter.x, (cy * tileSize + tileSize/2) - playerCenter.y);
-     
-     if (cx >= 0 && cx < WORLD_COLS && cy >= 0 && cy < WORLD_ROWS && dist < maxReach) {
-         ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
-         ctx.lineWidth = 2;
-         ctx.strokeRect(cx * tileSize, cy * tileSize, tileSize, tileSize);
-         ctx.lineWidth = 1;
-     }
 }
 
 function gameLoop() {
     if (gameState === 'PLAYING') {
         applyPhysics();
-        if (mouse.leftDown || mouse.rightDown) handleMiningAndPlacing();
         
+        drawWorld();
         drawPlayer();
         
-        ctx.restore(); 
+        ctx.restore();
     }
     requestAnimationFrame(gameLoop);
 }
