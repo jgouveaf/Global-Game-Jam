@@ -1,8 +1,6 @@
 /**
- * AgriCorp - Game Opening Sequence
- * 
- * Este script controla o tempo e as transições de opacidade
- * para uma abertura cinemática baseada na imagem enviada.
+ * AgriCorp - Game Opening Sequence & Menu
+ * Tiempos refinados para uma experiência mais fluida.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,70 +10,54 @@ document.addEventListener('DOMContentLoaded', () => {
     const introElements = document.querySelectorAll('.intro-text');
     const agriCorpTitle = document.querySelector('.game-logo');
 
-    // Botões do Menu
+    // Botões
     const startBtn = document.getElementById('start-btn');
     const settingsBtn = document.getElementById('settings-btn');
     const exitBtn = document.getElementById('exit-btn');
 
-    // 1. Mostrar a Produção (A GODFRAME PRODUCTION)
+    // 1. Mostrar Produtora
     setTimeout(() => {
         productionIntro.classList.add('visible');
-        
-        // Fazer aparecer um por um: A -> GODFRAME -> PRODUCTION
         introElements.forEach((el, index) => {
             setTimeout(() => {
                 el.style.opacity = '1';
                 el.style.transform = 'translateY(0)';
-            }, index * 800);
+            }, index * 600);
         });
-    }, 1000);
+    }, 500);
 
-    // 2. Transição para o nome do jogo (AgriCorp)
+    // 2. Transição para Logo AgriCorp
     setTimeout(() => {
-        // Desvanecer a intro
         productionIntro.style.opacity = '0';
         
         setTimeout(() => {
             productionIntro.classList.add('hidden');
             gameTitleContainer.classList.remove('hidden');
-            
-            // Forçar reflow
-            void gameTitleContainer.offsetWidth;
+            void gameTitleContainer.offsetWidth; // Reflow
             gameTitleContainer.classList.add('visible');
             
-            // Mostrar AgriCorp com estilo
             setTimeout(() => {
-                agriCorpTitle.style.animation = 'fadeInAgri 3.5s forwards ease-in-out';
+                agriCorpTitle.style.animation = 'fadeInAgri 2s forwards ease-in-out';
                 
-                // 3. Transição para o Menu Principal após o logo
+                // 3. Transição para o Menu (Acelerei este tempo)
                 setTimeout(() => {
-                    // Subir o logo levemente para dar espaço ao menu
-                    agriCorpTitle.style.transition = 'transform 2s cubic-bezier(0.4, 0, 0.2, 1), opacity 2s';
-                    agriCorpTitle.style.transform = 'translateY(-120px) scale(0.6)';
+                    // Logo sobe
+                    agriCorpTitle.style.transition = 'transform 1.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 1.5s, font-size 1.5s';
+                    agriCorpTitle.style.transform = 'translateY(-140px) scale(0.5)';
                     
-                    // Mostrar menu
+                    // Menu aparece
                     setTimeout(() => {
                         mainMenuContainer.classList.remove('hidden');
                         void mainMenuContainer.offsetWidth;
                         mainMenuContainer.classList.add('visible');
-                    }, 1000);
-                }, 5000); // Espera 5s após o logo começar a aparecer
+                    }, 800);
+                }, 3000); // Menu aparece 3s após o logo começar a surgir
             }, 500);
-        }, 1500);
-    }, 6000);
+        }, 1000);
+    }, 4500); // Intro dura menos tempo (4.5s)
 
-    // Eventos simples para os botões do menu
-    startBtn.addEventListener('click', () => {
-        alert('Iniciando o jogo AgriCorp...');
-    });
-
-    settingsBtn.addEventListener('click', () => {
-        alert('Abrindo configurações...');
-    });
-
-    exitBtn.addEventListener('click', () => {
-        if(confirm('Deseja realmente sair?')) {
-            window.close(); // Tenta fechar a aba
-        }
-    });
+    // Eventos
+    startBtn.addEventListener('click', () => alert('Iniciando...'));
+    settingsBtn.addEventListener('click', () => alert('Configurações...'));
+    exitBtn.addEventListener('click', () => confirm('Sair?') && window.close());
 });
