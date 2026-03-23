@@ -1,20 +1,33 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const tileSize = 40;
-let cols = Math.ceil(window.innerWidth / tileSize);
-let rows = Math.ceil(window.innerHeight / tileSize);
-
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+}
+resizeCanvas();
+
+const tileSize = 40;
+let cols = Math.ceil(canvas.width / tileSize);
+let rows = Math.ceil(canvas.height / tileSize);
+
+window.addEventListener('resize', () => {
+    resizeCanvas();
     cols = Math.ceil(canvas.width / tileSize);
     rows = Math.ceil(canvas.height / tileSize);
-    // Note: Re-generating world on resize would wipe progress, 
-    // so we just ensure the drawing knows the new bounds.
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+    
+    // Fill new rows with air/stone to prevent crash
+    for (let y = 0; y < rows; y++) {
+        if (!world[y]) world[y] = [];
+        for (let x = 0; x < cols; x++) {
+            if (world[y][x] === undefined) {
+                if (y < 7) world[y][x] = BLOCKS.AIR;
+                else if (y < 11) world[y][x] = BLOCKS.DIRT;
+                else world[y][x] = BLOCKS.STONE;
+            }
+        }
+    }
+});
 
 // Block Types
 const BLOCKS = {
@@ -83,18 +96,11 @@ let gameState = 'SPLASH'; // SPLASH, MENU or PLAYING
 const menuOptions = document.querySelectorAll('.menu-option');
 let currentMenuIndex = 0;
 
-// Splash sequence: GODFRAME -> AGRICORP -> MENU
 setTimeout(() => {
-    const godframe = document.getElementById('splash-godframe');
-    const agricorp = document.getElementById('splash-agricorp');
-    if (godframe) godframe.style.display = 'none';
-    if (agricorp) agricorp.style.display = 'flex';
-    
-    setTimeout(() => {
-        if (agricorp) agricorp.style.display = 'none';
+    if (gameState === 'SPLASH') {
         gameState = 'MENU';
-    }, 3000);
-}, 3000);
+    }
+}, 3500);
 
 function updateMenuUI() {
     menuOptions.forEach((opt, idx) => {
