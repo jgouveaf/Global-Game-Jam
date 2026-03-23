@@ -57,8 +57,7 @@ function generateWorld() {
             // Little lakes
             if (Math.random() < 0.02) {
                 world[y][x] = BLOCKS.WATER;
-                if(x<WORLD_COLS-1) world[y][x+1] = BLOCKS.WATER;
-                if(y<WORLD_ROWS-1) world[y+1][x] = BLOCKS.WATER;
+                if(x < WORLD_COLS-1) world[y][x+1] = BLOCKS.WATER;
             }
         }
     }
