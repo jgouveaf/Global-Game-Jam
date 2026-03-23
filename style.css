@@ -1,136 +1,84 @@
 * {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    /* cursor: none; */ /* Pode deixar o cursor agora pra facilitar o uso no Github/Deploy */
 }
 
 body {
-    background-color: #010101; /* Black */
-    color: #f4f4f4;
-    font-family: 'Outfit', sans-serif;
-    height: 100vh;
-    width: 100vw;
+    background-color: #1a1a1a;
+    color: #fff;
+    font-family: 'Press Start 2P', cursive;
     display: flex;
     justify-content: center;
     align-items: center;
+    min-height: 100vh;
     overflow: hidden;
 }
 
-#splash-container {
-    text-align: center;
+#game-container {
+    position: relative;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    border-radius: 8px;
+    background-color: #87CEEB; /* Sky blue */
+    overflow: hidden;
+}
+
+#gameCanvas {
+    display: block;
+    image-rendering: pixelated;
+}
+
+#ui {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-}
-
-.intro-screen {
-    position: absolute;
+    pointer-events: none;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    transition: opacity 1.5s ease-in-out;
-    opacity: 0;
+    justify-content: space-between;
 }
 
-.intro-screen.visible {
-    opacity: 1;
+h1 {
+    font-size: 24px;
+    text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    color: #ffd700;
+    text-align: center;
 }
 
-.hidden {
-    display: none;
-}
-
-/* Estilo para Produtora (Igual à imagem) */
-.intro-text {
-    opacity: 0;
-    transition: opacity 2s ease-out, transform 2s ease-out;
-    letter-spacing: 0.5rem;
-}
-
-.intro-text.small {
-    font-size: 0.9rem;
-    font-weight: 300;
-}
-
-.intro-text.logo {
-    font-size: 3.5rem;
-    font-weight: 700;
-    margin: 1.5rem 0;
-    letter-spacing: 1.5rem;
-}
-
-.intro-text.production {
-    font-size: 0.7rem;
-    font-weight: 300;
-    letter-spacing: 0.8rem;
-}
-
-/* Estilo para Nome do Jogo */
-.game-logo {
-    font-size: 6rem;
-    font-weight: 900;
-    background: linear-gradient(180deg, #ffffff 0%, #a0a0a0 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: 0.3rem;
-    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2));
-    opacity: 0;
-}
-
-/* Animações dinâmicas injetadas via JS ou controladas aqui */
-@keyframes fadeInAgri {
-    0% { 
-        opacity: 0; 
-        transform: scale(0.9);
-        letter-spacing: 0.1rem;
-        filter: blur(10px);
-    }
-    100% { 
-        opacity: 1; 
-        transform: scale(1);
-        letter-spacing: 0.5rem;
-        filter: blur(0px);
-    }
-}
-
-/* Menu Principal */
-.menu-container {
+#hotbar {
     display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    margin-top: 2rem;
+    gap: 10px;
+    justify-content: center;
+    pointer-events: auto;
 }
 
-.menu-btn {
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #e0e0e0;
-    padding: 1.2rem 3rem;
-    font-size: 1rem;
-    font-weight: 300;
-    letter-spacing: 0.4rem;
+.slot {
+    width: 48px;
+    height: 48px;
+    border: 3px solid #555;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(5px);
+    transition: all 0.2s ease;
 }
 
-.menu-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: #ffffff;
-    color: #ffffff;
-    letter-spacing: 0.6rem;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-    transform: translateY(-3px);
+.slot.selected {
+    border-color: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
-.menu-btn:active {
-    transform: translateY(0px) scale(0.98);
+#controls-help {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 10px;
+    line-height: 1.5;
+    text-shadow: 1px 1px 0 #000;
 }
