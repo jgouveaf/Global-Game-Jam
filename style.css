@@ -17,15 +17,14 @@ body {
 
 #game-container {
     position: relative;
-    box-shadow: 0 0 20px rgba(0,0,0,0.8);
-    border-radius: 8px;
+    box-shadow: none;
     background-color: #87CEEB; /* Sky blue */
     overflow: hidden;
-    width: 800px;
-    height: 600px;
+    width: 100vw;
+    height: 100vh;
 }
 
-#splash-screen {
+.splash-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -36,35 +35,28 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 200;
-    animation: fadeOutSplash 1s forwards;
-    animation-delay: 2.5s;
     pointer-events: none;
 }
 
 .splash-logo {
     color: #fff;
-    font-size: 42px;
+    font-size: 48px;
     text-align: center;
     opacity: 0;
     text-shadow: none;
-    animation: fadeInOutLogo 2.5s forwards;
+    animation: fadeInOutLogo 3s forwards;
 }
 
 .splash-logo span {
-    font-size: 20px;
+    font-size: 24px;
     color: #888;
 }
 
 @keyframes fadeInOutLogo {
-    0% { opacity: 0; transform: scale(0.9); }
-    30% { opacity: 1; transform: scale(1); }
-    70% { opacity: 1; transform: scale(1); }
-    100% { opacity: 0; transform: scale(1.1); }
-}
-
-@keyframes fadeOutSplash {
-    from { opacity: 1; }
-    to { opacity: 0; visibility: hidden; }
+    0% { opacity: 0; transform: scale(0.95); }
+    20% { opacity: 1; transform: scale(1); }
+    80% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.05); }
 }
 
 #start-menu {

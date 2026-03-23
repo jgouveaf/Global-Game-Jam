@@ -2,8 +2,19 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 const tileSize = 40;
-const cols = canvas.width / tileSize; // 20
-const rows = canvas.height / tileSize; // 15
+let cols = Math.ceil(window.innerWidth / tileSize);
+let rows = Math.ceil(window.innerHeight / tileSize);
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols = Math.ceil(canvas.width / tileSize);
+    rows = Math.ceil(canvas.height / tileSize);
+    // Note: Re-generating world on resize would wipe progress, 
+    // so we just ensure the drawing knows the new bounds.
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
 // Block Types
 const BLOCKS = {
@@ -72,11 +83,18 @@ let gameState = 'SPLASH'; // SPLASH, MENU or PLAYING
 const menuOptions = document.querySelectorAll('.menu-option');
 let currentMenuIndex = 0;
 
+// Splash sequence: GODFRAME -> AGRICORP -> MENU
 setTimeout(() => {
-    if (gameState === 'SPLASH') {
+    const godframe = document.getElementById('splash-godframe');
+    const agricorp = document.getElementById('splash-agricorp');
+    if (godframe) godframe.style.display = 'none';
+    if (agricorp) agricorp.style.display = 'flex';
+    
+    setTimeout(() => {
+        if (agricorp) agricorp.style.display = 'none';
         gameState = 'MENU';
-    }
-}, 3500);
+    }, 3000);
+}, 3000);
 
 function updateMenuUI() {
     menuOptions.forEach((opt, idx) => {
