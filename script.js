@@ -7,36 +7,19 @@ function resizeCanvas() {
 }
 resizeCanvas();
 
-const tileSize = 40;
-let cols = Math.ceil(canvas.width / tileSize);
-let rows = Math.ceil(canvas.height / tileSize);
+const tileSize = 64; // bigger tiles for a more "GIANT" look
+const WORLD_COLS = 100;
+const WORLD_ROWS = 100;
 
-window.addEventListener('resize', () => {
-    resizeCanvas();
-    cols = Math.ceil(canvas.width / tileSize);
-    rows = Math.ceil(canvas.height / tileSize);
-    
-    // Fill new rows with air/stone to prevent crash
-    for (let y = 0; y < rows; y++) {
-        if (!world[y]) world[y] = [];
-        for (let x = 0; x < cols; x++) {
-            if (world[y][x] === undefined) {
-                if (y < 7) world[y][x] = BLOCKS.AIR;
-                else if (y < 11) world[y][x] = BLOCKS.DIRT;
-                else world[y][x] = BLOCKS.STONE;
-            }
-        }
-    }
-});
-
-// Block Types
+// Block Types remain the same for hotbar compatibility
 const BLOCKS = {
     AIR: 0,
     DIRT: 1,
     GRASS: 2,
     STONE: 3,
     WOOD: 4,
-    LEAVES: 5
+    LEAVES: 5,
+    WATER: 6 // new internal block
 };
 
 const BLOCK_COLORS = {
@@ -44,52 +27,75 @@ const BLOCK_COLORS = {
     [BLOCKS.GRASS]: '#32cd32',
     [BLOCKS.STONE]: '#808080',
     [BLOCKS.WOOD]: '#deb887',
-    [BLOCKS.LEAVES]: '#228b22'
+    [BLOCKS.LEAVES]: '#228b22',
+    [BLOCKS.WATER]: '#1e90ff'
 };
+
+// Top down solid blocks: Water, Stone, Wood, Leaves
+// Walkable: Air, Grass, Dirt
+const SOLID_BLOCKS = [BLOCKS.STONE, BLOCKS.WOOD, BLOCKS.LEAVES, BLOCKS.WATER];
 
 // World Data
 let world = [];
 function generateWorld() {
-    for (let y = 0; y < rows; y++) {
+    for (let y = 0; y < WORLD_ROWS; y++) {
         world[y] = [];
-        for (let x = 0; x < cols; x++) {
-            if (y < 7) {
-                world[y][x] = BLOCKS.AIR;
-            } else if (y === 7) {
-                world[y][x] = Math.random() < 0.9 ? BLOCKS.GRASS : BLOCKS.AIR; // basic rugged surface
-            } else if (y < 11) {
-                world[y][x] = BLOCKS.DIRT;
-            } else {
-                world[y][x] = BLOCKS.STONE;
+        for (let x = 0; x < WORLD_COLS; x++) {
+            // Base layer is Grass
+            world[y][x] = BLOCKS.GRASS;
+            
+            // Random dirt patches
+            if (Math.random() < 0.1) world[y][x] = BLOCKS.DIRT;
+            
+            // Random trees
+            if (Math.random() < 0.05) world[y][x] = BLOCKS.WOOD; // trunk
+            else if (Math.random() < 0.05) world[y][x] = BLOCKS.LEAVES; // bush
+            
+            // Random rocks
+            if (Math.random() < 0.02) world[y][x] = BLOCKS.STONE;
+            
+            // Little lakes
+            if (Math.random() < 0.02) {
+                world[y][x] = BLOCKS.WATER;
+                if(x<WORLD_COLS-1) world[y][x+1] = BLOCKS.WATER;
+                if(y<WORLD_ROWS-1) world[y+1][x] = BLOCKS.WATER;
             }
         }
     }
-    
-    // Add a tree
-    world[6][4] = BLOCKS.WOOD;
-    world[5][4] = BLOCKS.WOOD;
-    world[4][4] = BLOCKS.LEAVES;
-    world[4][3] = BLOCKS.LEAVES;
-    world[4][5] = BLOCKS.LEAVES;
-    world[3][4] = BLOCKS.LEAVES;
+    // Clear start area so player isn't stuck
+    for(let y=48; y<52; y++){
+        for(let x=48; x<52; x++){
+            world[y][x] = BLOCKS.GRASS;
+        }
+    }
 }
 generateWorld();
 
 
 // Player
 const player = {
-    x: 400,
-    y: 100,
-    width: 24,
-    height: 36,
+    x: 50 * tileSize,
+    y: 50 * tileSize,
+    width: 32,
+    height: 48,
     vx: 0,
     vy: 0,
-    speed: 4,
-    jumpForce: 8,
-    gravity: 0.4,
-    grounded: false,
-    color: '#ff4500' 
+    speed: 6,
+    dir: 'down'
 };
+
+const camera = {
+    x: 0,
+    y: 0,
+    width: canvas.width,
+    height: canvas.height
+};
+
+window.addEventListener('resize', () => {
+    resizeCanvas();
+    camera.width = canvas.width;
+    camera.height = canvas.height;
+});
 
 // Menu System
 let gameState = 'SPLASH'; // SPLASH, MENU or PLAYING
@@ -116,20 +122,11 @@ function startGame() {
     gameState = 'PLAYING';
     document.getElementById('start-menu').style.display = 'none';
     document.getElementById('game-ui').style.display = 'block';
-    
-    // Reset player position just in case
-    player.x = 400;
-    player.y = 100;
-    player.vx = 0;
-    player.vy = 0;
 }
 
 // Inputs
 const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false };
-
 let selectedBlock = BLOCKS.DIRT;
-
-// Mouse
 const mouse = { x: 0, y: 0, leftDown: false, rightDown: false };
 
 window.addEventListener('keydown', (e) => {
@@ -142,21 +139,13 @@ window.addEventListener('keydown', (e) => {
             updateMenuUI();
         } else if (e.key === 'Enter') {
             const action = menuOptions[currentMenuIndex].getAttribute('data-action');
-            if (action === 'play') {
-                startGame();
-            } else if (action === 'settings') {
-                alert("Settings menu coming soon!");
-            } else if (action === 'quit') {
-                alert("Game Closed.");
-                document.getElementById('start-menu').style.display = 'none';
-            }
+            if (action === 'play') startGame();
+            else if (action === 'settings') alert("Settings menu coming soon!");
+            else if (action === 'quit') alert("Game Closed.");
         }
-        return; // Don't process game inputs
+        return;
     }
-
-    if (keys.hasOwnProperty(e.key) || e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-        keys[e.key] = true;
-    }
+    if (keys.hasOwnProperty(e.key) || e.key.startsWith('Arrow')) keys[e.key] = true;
     if (e.key >= '1' && e.key <= '5') {
         selectedBlock = parseInt(e.key);
         updateHotbar();
@@ -164,9 +153,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 window.addEventListener('keyup', (e) => {
-    if (keys.hasOwnProperty(e.key) || e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-        keys[e.key] = false;
-    }
+    if (keys.hasOwnProperty(e.key) || e.key.startsWith('Arrow')) keys[e.key] = false;
 });
 
 canvas.addEventListener('mousemove', (e) => {
@@ -187,7 +174,6 @@ canvas.addEventListener('mouseup', (e) => {
     if (e.button === 0) mouse.leftDown = false;
     if (e.button === 2) mouse.rightDown = false;
 });
-
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
 function updateHotbar() {
@@ -198,16 +184,12 @@ function updateHotbar() {
         }
     });
 }
-
-document.querySelectorAll('.slot').init = function() {
-    document.querySelectorAll('.slot').forEach(slot => {
-        slot.addEventListener('click', () => {
-            selectedBlock = parseInt(slot.getAttribute('data-block'));
-            updateHotbar();
-        });
+document.querySelectorAll('.slot').forEach(slot => {
+    slot.addEventListener('click', () => {
+        selectedBlock = parseInt(slot.getAttribute('data-block'));
+        updateHotbar();
     });
-}
-document.querySelectorAll('.slot').init();
+});
 updateHotbar();
 
 function checkCollision(x, y, w, h) {
@@ -218,12 +200,10 @@ function checkCollision(x, y, w, h) {
 
     for (let cy = startY; cy <= endY; cy++) {
         for (let cx = startX; cx <= endX; cx++) {
-            if (cy >= 0 && cy < rows && cx >= 0 && cx < cols) {
-                if (world[cy][cx] !== BLOCKS.AIR) {
-                    return true;
-                }
+            if (cy >= 0 && cy < WORLD_ROWS && cx >= 0 && cx < WORLD_COLS) {
+                if (SOLID_BLOCKS.includes(world[cy][cx])) return true;
             } else {
-                if (cy >= rows || cx < 0 || cx >= cols) return true;
+                return true; // Map bounds are solid
             }
         }
     }
@@ -231,127 +211,159 @@ function checkCollision(x, y, w, h) {
 }
 
 function applyPhysics() {
-    // Horizontal Movement
-    if (keys.a || keys.ArrowLeft) player.vx = -player.speed;
-    else if (keys.d || keys.ArrowRight) player.vx = player.speed;
-    else player.vx = 0;
-
-    player.x += player.vx;
-    if (checkCollision(player.x, player.y, player.width, player.height)) {
-        if (player.vx > 0) {
-            player.x = Math.floor((player.x + player.width) / tileSize) * tileSize - player.width;
-        } else if (player.vx < 0) {
-            player.x = Math.floor(player.x / tileSize) * tileSize + tileSize;
-        }
-        player.vx = 0;
+    let vx = 0; let vy = 0;
+    if (keys.a || keys.ArrowLeft) { vx = -player.speed; player.dir = 'left'; }
+    if (keys.d || keys.ArrowRight) { vx = player.speed; player.dir = 'right'; }
+    if (keys.w || keys.ArrowUp) { vy = -player.speed; player.dir = 'up'; }
+    if (keys.s || keys.ArrowDown) { vy = player.speed; player.dir = 'down'; }
+    
+    // Normalize diagonal speed
+    if (vx !== 0 && vy !== 0) {
+        vx *= 0.707;
+        vy *= 0.707;
     }
+    
+    player.x += vx;
+    if (checkCollision(player.x, player.y, player.width, player.height)) player.x -= vx;
+    
+    player.y += vy;
+    if (checkCollision(player.x, player.y, player.width, player.height)) player.y -= vy;
 
-    // Vertical Movement
-    player.vy += player.gravity;
-    if (player.vy > 12) player.vy = 12;
-
-    player.y += player.vy;
-    player.grounded = false;
-
-    if (checkCollision(player.x, player.y, player.width, player.height)) {
-        if (player.vy > 0) { // falling
-            player.y = Math.floor((player.y + player.height) / tileSize) * tileSize - player.height;
-            player.grounded = true;
-            player.vy = 0;
-        } else if (player.vy < 0) { // jumping into ceiling
-            player.y = Math.floor(player.y / tileSize) * tileSize + tileSize;
-            player.vy = 0;
-        }
-    }
-
-    // Jump
-    if ((keys.w || keys.ArrowUp) && player.grounded) {
-        player.vy = -player.jumpForce;
-        player.grounded = false;
-    }
+    // Boundary constraint
+    player.x = Math.max(0, Math.min(player.x, WORLD_COLS * tileSize - player.width));
+    player.y = Math.max(0, Math.min(player.y, WORLD_ROWS * tileSize - player.height));
+    
+    // Update Camera
+    camera.x = player.x + player.width/2 - camera.width/2;
+    camera.y = player.y + player.height/2 - camera.height/2;
+    
+    // Clamp Camera to world bounds
+    camera.x = Math.max(0, Math.min(camera.x, WORLD_COLS * tileSize - camera.width));
+    camera.y = Math.max(0, Math.min(camera.y, WORLD_ROWS * tileSize - camera.height));
 }
 
 function handleMiningAndPlacing() {
-    const cx = Math.floor(mouse.x / tileSize);
-    const cy = Math.floor(mouse.y / tileSize);
+    const worldMouseX = mouse.x + camera.x;
+    const worldMouseY = mouse.y + camera.y;
+    const cx = Math.floor(worldMouseX / tileSize);
+    const cy = Math.floor(worldMouseY / tileSize);
 
     const playerCenter = { x: player.x + player.width/2, y: player.y + player.height/2 };
-    const maxReach = 180;
+    const maxReach = 200;
     const dist = Math.hypot((cx * tileSize + tileSize/2) - playerCenter.x, (cy * tileSize + tileSize/2) - playerCenter.y);
     
-    if (cx >= 0 && cx < cols && cy >= 0 && cy < rows && dist < maxReach) {
+    if (cx >= 0 && cx < WORLD_COLS && cy >= 0 && cy < WORLD_ROWS && dist < maxReach) {
         if (mouse.leftDown) { // Mine
-            world[cy][cx] = BLOCKS.AIR;
+            // In a top down game, mining usually replaces with basic floor like GRASS
+            world[cy][cx] = BLOCKS.GRASS;
         } else if (mouse.rightDown) { // Place
-            if (world[cy][cx] === BLOCKS.AIR) {
-                const rx = cx * tileSize;
-                const ry = cy * tileSize;
-                const rw = tileSize;
-                const rh = tileSize;
-                
-                if (!(player.x < rx + rw && 
-                      player.x + player.width > rx && 
-                      player.y < ry + rh && 
-                      player.y + player.height > ry)) {
-                    world[cy][cx] = selectedBlock;
-                }
+            const rx = cx * tileSize;
+            const ry = cy * tileSize;
+            if (!(player.x < rx + tileSize && player.x + player.width > rx && player.y < ry + tileSize && player.y + player.height > ry)) {
+                world[cy][cx] = selectedBlock;
             }
         }
     }
 }
 
 function drawWorld() {
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, "#87CEEB");
-    gradient.addColorStop(1, "#E0F6FF");
-    ctx.fillStyle = gradient;
+    ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
+
+    const startCol = Math.max(0, Math.floor(camera.x / tileSize));
+    const endCol = Math.min(WORLD_COLS, startCol + Math.ceil(camera.width / tileSize) + 1);
+    const startRow = Math.max(0, Math.floor(camera.y / tileSize));
+    const endRow = Math.min(WORLD_ROWS, startRow + Math.ceil(camera.height / tileSize) + 1);
+
+    for (let y = startRow; y < endRow; y++) {
+        for (let x = startCol; x < endCol; x++) {
             const block = world[y][x];
             if (block !== BLOCKS.AIR) {
                 ctx.fillStyle = BLOCK_COLORS[block];
                 ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
                 
-                ctx.fillStyle = "rgba(255,255,255,0.15)";
-                ctx.fillRect(x * tileSize, y * tileSize, tileSize, 4);
-                ctx.fillRect(x * tileSize, y * tileSize, 4, tileSize);
-                
-                ctx.fillStyle = "rgba(0,0,0,0.15)";
-                ctx.fillRect(x * tileSize, y * tileSize + tileSize - 4, tileSize, 4);
-                ctx.fillRect(x * tileSize + tileSize - 4, y * tileSize, 4, tileSize);
-                
-                ctx.strokeStyle = "rgba(0,0,0,0.4)";
-                ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                // Add simple texture details
+                if (block === BLOCKS.GRASS) {
+                    ctx.fillStyle = "rgba(0,100,0,0.2)";
+                    ctx.fillRect(x * tileSize + 8, y * tileSize + 8, 8, 8);
+                    ctx.fillRect(x * tileSize + 32, y * tileSize + 24, 8, 8);
+                } else if (block === BLOCKS.DIRT) {
+                    ctx.fillStyle = "rgba(0,0,0,0.1)";
+                    ctx.fillRect(x * tileSize + 10, y * tileSize + 10, 10, 10);
+                } else if (block === BLOCKS.WATER) {
+                    ctx.fillStyle = "rgba(255,255,255,0.2)";
+                    ctx.fillRect(x * tileSize + 10, y * tileSize + 16, 20, 4);
+                } else {
+                    ctx.strokeStyle = "rgba(0,0,0,0.4)";
+                    ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                }
             }
         }
     }
 }
 
 function drawPlayer() {
-    ctx.fillStyle = player.color;
-    ctx.fillRect(player.x, player.y, player.width, player.height);
+    // Draw player with top-down aesthetic
+    const px = player.x;
+    const py = player.y;
     
-    ctx.fillStyle = "white";
-    if (player.vx >= 0) {
-        ctx.fillRect(player.x + 14, player.y + 6, 6, 6);
-        ctx.fillStyle = "black";
-        ctx.fillRect(player.x + 16, player.y + 8, 2, 2);
-    } else {
-        ctx.fillRect(player.x + 4, player.y + 6, 6, 6);
-        ctx.fillStyle = "black";
-        ctx.fillRect(player.x + 4, player.y + 8, 2, 2);
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath();
+    ctx.ellipse(px + 16, py + 46, 16, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Body (Shirt)
+    ctx.fillStyle = '#800020'; // Burgundy
+    ctx.fillRect(px + 4, py + 20, 24, 20);
+    
+    // Legs
+    ctx.fillStyle = '#111';
+    ctx.fillRect(px + 6, py + 40, 8, 8); // left leg
+    ctx.fillRect(px + 18, py + 40, 8, 8); // right leg
+    
+    // Head/Skin
+    ctx.fillStyle = '#f1c27d';
+    ctx.fillRect(px + 2, py + 2, 28, 22);
+
+    // Hair
+    ctx.fillStyle = '#4a3018';
+    ctx.fillRect(px + 0, py, 32, 8); // top
+    if (player.dir === 'left') {
+        ctx.fillRect(px + 0, py + 8, 12, 14); // side
+        // Eyes
+        ctx.fillStyle = '#000';
+        ctx.fillRect(px + 6, py + 12, 4, 4);
+    } else if (player.dir === 'right') {
+        ctx.fillRect(px + 20, py + 8, 12, 14); // side
+        ctx.fillStyle = '#000';
+        ctx.fillRect(px + 22, py + 12, 4, 4);
+    } else if (player.dir === 'up') {
+        ctx.fillRect(px + 0, py + 8, 32, 14); // full back of head
+    } else { // down
+        ctx.fillRect(px + 0, py + 8, 8, 14); // left side
+        ctx.fillRect(px + 24, py + 8, 8, 14); // right side
+        // Eyes
+        ctx.fillStyle = '#000';
+        ctx.fillRect(px + 8, py + 12, 4, 4);
+        ctx.fillRect(px + 20, py + 12, 4, 4);
     }
 }
 
 function drawHighlight() {
-     const cx = Math.floor(mouse.x / tileSize);
-     const cy = Math.floor(mouse.y / tileSize);
+     const worldMouseX = mouse.x + camera.x;
+     const worldMouseY = mouse.y + camera.y;
+     const cx = Math.floor(worldMouseX / tileSize);
+     const cy = Math.floor(worldMouseY / tileSize);
+     
      const playerCenter = { x: player.x + player.width/2, y: player.y + player.height/2 };
+     const maxReach = 200;
      const dist = Math.hypot((cx * tileSize + tileSize/2) - playerCenter.x, (cy * tileSize + tileSize/2) - playerCenter.y);
      
-     if (cx >= 0 && cx < cols && cy >= 0 && cy < rows && dist < 180) {
+     if (cx >= 0 && cx < WORLD_COLS && cy >= 0 && cy < WORLD_ROWS && dist < maxReach) {
          ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
          ctx.lineWidth = 2;
          ctx.strokeRect(cx * tileSize, cy * tileSize, tileSize, tileSize);
@@ -362,16 +374,14 @@ function drawHighlight() {
 function gameLoop() {
     if (gameState === 'PLAYING') {
         applyPhysics();
+        if (mouse.leftDown || mouse.rightDown) handleMiningAndPlacing();
         
-        if (mouse.leftDown || mouse.rightDown) {
-            handleMiningAndPlacing();
-        }
-
         drawWorld();
         drawHighlight();
         drawPlayer();
+        
+        ctx.restore(); // restore from camera translation
     }
-
     requestAnimationFrame(gameLoop);
 }
 
@@ -381,17 +391,10 @@ menuOptions.forEach((opt, idx) => {
         currentMenuIndex = idx;
         updateMenuUI();
         const action = opt.getAttribute('data-action');
-        if (action === 'play') {
-            startGame();
-        } else if (action === 'settings') {
-            alert("Settings menu coming soon!");
-        } else if (action === 'quit') {
-            alert("Game Closed.");
-            document.getElementById('start-menu').style.display = 'none';
-        }
+        if (action === 'play') startGame();
+        else if (action === 'settings') alert("Settings menu coming soon!");
+        else if (action === 'quit') alert("Game Closed.");
     });
-    
-    // Update visual index purely on hover for nice UX
     opt.addEventListener('mouseenter', () => {
         currentMenuIndex = idx;
         updateMenuUI();
