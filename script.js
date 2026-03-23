@@ -298,7 +298,7 @@ function drawWorld() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
-    ctx.translate(-camera.x, -camera.y);
+    ctx.translate(-Math.floor(camera.x), -Math.floor(camera.y));
 
     const startCol = Math.max(0, Math.floor(camera.x / tileSize));
     const endCol = Math.min(WORLD_COLS, startCol + Math.ceil(camera.width / tileSize) + 1);
@@ -319,9 +319,39 @@ function drawWorld() {
                     x * tileSize, y * tileSize, tileSize, tileSize
                  );
             } else {
-                // Fallback for new tiles or while loading
+                // Fallback for new tiles or while loading - LESS "QUADRADO" LOOK
                 ctx.fillStyle = BLOCK_COLORS[block] || "#000";
-                ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                const bx = x * tileSize;
+                const by = y * tileSize;
+
+                if (block === BLOCKS.TREE) {
+                    ctx.fillStyle = "#4b2e1b"; // Trunk
+                    ctx.fillRect(bx + 24, by + 40, 16, 24);
+                    ctx.fillStyle = "#2d5a27"; // Leaves
+                    ctx.beginPath();
+                    ctx.arc(bx + 32, by + 24, 28, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (block === BLOCKS.ROCK) {
+                    ctx.beginPath();
+                    ctx.moveTo(bx + 10, by + 54);
+                    ctx.lineTo(bx + 32, by + 10);
+                    ctx.lineTo(bx + 54, by + 54);
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (block === BLOCKS.HOUSE) {
+                    ctx.fillRect(bx, by + 10, tileSize, tileSize - 10);
+                    ctx.fillStyle = "rgba(0,0,0,0.2)"; // Shadow/Roof detail
+                    ctx.beginPath();
+                    ctx.moveTo(bx, by + 10);
+                    ctx.lineTo(bx + 32, by - 20);
+                    ctx.lineTo(bx + 64, by + 10);
+                    ctx.fill();
+                } else if (block === BLOCKS.FENCE) {
+                    ctx.fillRect(bx + 28, by, 8, tileSize); // Vertical post
+                    ctx.fillRect(bx, by + 20, tileSize, 4); // Horizontal rail
+                } else {
+                    ctx.fillRect(bx, by, tileSize, tileSize);
+                }
             }
         }
     }
@@ -398,11 +428,9 @@ function gameLoop() {
         applyPhysics();
         if (mouse.leftDown || mouse.rightDown) handleMiningAndPlacing();
         
-        drawWorld();
-        drawHighlight();
         drawPlayer();
         
-        ctx.restore(); // restore from camera translation
+        ctx.restore(); 
     }
     requestAnimationFrame(gameLoop);
 }
