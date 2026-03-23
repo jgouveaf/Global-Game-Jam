@@ -8,8 +8,8 @@ function resizeCanvas() {
 resizeCanvas();
 
 const tileSize = 64; 
-const WORLD_COLS = 100;
-const WORLD_ROWS = 100;
+const WORLD_COLS = 32;
+const WORLD_ROWS = 32;
 
 // Tileset support
 const tileset = new Image();
@@ -23,19 +23,27 @@ const BLOCKS = {
     DIRT: 1,
     WATER: 2,
     STONE: 3,
-    CROPS: 4
+    CROPS: 4,
+    FENCE: 5,
+    HOUSE: 6,
+    PATH: 7,
+    WELL: 8
 };
 
 const BLOCK_COLORS = {
     [BLOCKS.DIRT]: '#8b5a2b',
     [BLOCKS.GRASS]: '#32cd32',
     [BLOCKS.STONE]: '#808080',
-    [BLOCKS.CROPS]: '#228b22',
-    [BLOCKS.WATER]: '#1e90ff'
+    [BLOCKS.CROPS]: '#ffaa00',
+    [BLOCKS.WATER]: '#1e90ff',
+    [BLOCKS.FENCE]: '#4b2e1b',
+    [BLOCKS.HOUSE]: '#a0522d',
+    [BLOCKS.PATH]: '#c2b280',
+    [BLOCKS.WELL]: '#555'
 };
 
-// Top down solid blocks: Water and Stone
-const SOLID_BLOCKS = [BLOCKS.STONE, BLOCKS.WATER];
+// Solid: Water, Stone, Fence, House, Well
+const SOLID_BLOCKS = [BLOCKS.STONE, BLOCKS.WATER, BLOCKS.FENCE, BLOCKS.HOUSE, BLOCKS.WELL];
 
 // World Data
 let world = [];
@@ -43,22 +51,32 @@ function generateWorld() {
     for (let y = 0; y < WORLD_ROWS; y++) {
         world[y] = [];
         for (let x = 0; x < WORLD_COLS; x++) {
-            // Updated generator
-            const dist = Math.sqrt(Math.pow(x-50,2) + Math.pow(y-50,2));
-            if (dist > 45) {
-                world[y][x] = BLOCKS.WATER;
-            } else {
-                const noise = Math.random();
-                if (noise < 0.1) world[y][x] = BLOCKS.DIRT;
-                else if (noise < 0.15) world[y][x] = BLOCKS.STONE;
-                else world[y][x] = BLOCKS.GRASS;
-            }
-        }
-    }
-    // Clear start area so player isn't stuck
-    for(let y=48; y<52; y++){
-        for(let x=48; x<52; x++){
+            // Default: Grass
             world[y][x] = BLOCKS.GRASS;
+            
+            // LAKE (Bottom Left)
+            if (x >= 1 && x <= 7 && y >= 18 && y <= 26) world[y][x] = BLOCKS.WATER;
+            
+            // HOUSE (Top Center)
+            if (x >= 12 && x <= 20 && y >= 3 && y <= 9) world[y][x] = BLOCKS.HOUSE;
+            
+            // FENCES (Perimeter of the main yard)
+            if ((y === 2 || y === 28) && x >= 4 && x <= 27) world[y][x] = BLOCKS.FENCE;
+            if ((x === 4 || x === 27) && y >= 2 && y <= 28) world[y][x] = BLOCKS.FENCE;
+            
+            // FARM PATCHES (Center)
+            // Left Patch (Empty/Tillable)
+            if (x >= 8 && x <= 13 && y >= 14 && y <= 23) world[y][x] = BLOCKS.DIRT;
+            // Right Patch (Crops)
+            if (x >= 17 && x <= 22 && y >= 14 && y <= 23) world[y][x] = BLOCKS.CROPS;
+            
+            // PATHS
+            if (x === 15 && y > 9 && y < 28) world[y][x] = BLOCKS.PATH; // vertical
+            if (y === 12 && x >= 8 && x <= 22) world[y][x] = BLOCKS.PATH; // horizontal top of patches
+            if (y === 25 && x >= 8 && x <= 22) world[y][x] = BLOCKS.PATH; // horizontal bottom
+            
+            // WELL (Right side)
+            if (x >= 24 && x <= 26 && y >= 14 && y <= 16) world[y][x] = BLOCKS.WELL;
         }
     }
 }
@@ -67,8 +85,8 @@ generateWorld();
 
 // Player
 const player = {
-    x: 50 * tileSize,
-    y: 50 * tileSize,
+    x: 15 * tileSize,
+    y: 11 * tileSize,
     width: 32,
     height: 48,
     vx: 0,
@@ -256,7 +274,7 @@ function drawWorld() {
         for (let x = startCol; x < endCol; x++) {
             const block = world[y][x];
             
-            if (tilesetLoaded) {
+            if (tilesetLoaded && block < 5) {
                  // Slicing the tileset (1x5 layout)
                  const sourceW = tileset.width / 5;
                  const sourceH = tileset.height;
@@ -266,7 +284,7 @@ function drawWorld() {
                     x * tileSize, y * tileSize, tileSize, tileSize
                  );
             } else {
-                // Fallback while loading
+                // Fallback for new tiles or while loading
                 ctx.fillStyle = BLOCK_COLORS[block] || "#000";
                 ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
             }
