@@ -14,10 +14,10 @@ mapImage.src = 'farm_map.png';
 let mapLoaded = false;
 mapImage.onload = () => { mapLoaded = true; };
 
-// Player - Precise start and realistic hitbox
+// Player - Realistic speed and hitbox
 const player = {
-    x: 512, // Start middle bottom path
-    y: 800,
+    x: 512,
+    y: 512,
     width: 24,
     height: 38,
     speed: 5,
@@ -28,7 +28,7 @@ const camera = {
     x: 0,
     y: 0,
     width: canvas.width,
-    height: canvas.height
+    height: camera.height
 };
 
 window.addEventListener('resize', () => {
@@ -77,8 +77,6 @@ window.addEventListener('keydown', (e) => {
         } else if (e.key === 'Enter') {
             const action = menuOptions[currentMenuIndex].getAttribute('data-action');
             if (action === 'play') startGame();
-            else if (action === 'settings') alert("Settings coming soon!");
-            else if (action === 'quit') alert("Bye!");
         }
         return;
     }
@@ -88,43 +86,12 @@ window.addEventListener('keyup', (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
-// ============================================
-// PRECISE PIXEL COLLISION (Tightened for the Farm Image)
-// ============================================
+// Move physics
 function checkCollision(px, py, pw, ph) {
     const fx = px + pw / 2;
-    const fy = py + ph - 4; // Check feet area only
-
-    // 1. OUTER BOUNDS
-    if (fx < 30 || fx > 994 || fy < 30 || fy > 994) return true;
-
-    // 2. HOUSE (Central-Top)
-    // House area: x: 380 to 640, y: < 220
-    if (fx > 380 && fx < 640 && fy < 230) return true;
-
-    // 3. POND (Bottom-Left)
-    // Pond area: x: < 250, y: > 800
-    if (fx < 250 && fy > 800) return true;
-
-    // 4. FENCES (Perimeter)
-    // Left fence line: x offset 60px
-    if (fx < 100 && fy < 900) return true;
-    // Right fence line: x offset 940px
-    if (fx > 940 && fy < 900) return true;
-    // Top fence line (excluding gap for house)
-    if (fy < 100 && (fx < 380 || fx > 640)) return true;
-    // Bottom fence line (excluding gate at x: 480-550)
-    if (fy > 930 && (fx < 480 || fx > 550)) return true;
-
-    // 5. DECORATIONS (Well, Trees at corners)
-    // Well: right side mid
-    if (fx > 840 && fx < 920 && fy > 440 && fy < 540) return true;
-    // Trees at corners
-    if (fx < 120 && fy < 120) return true; // Top left
-    if (fx > 900 && fy < 120) return true; // Top right
-    if (fx > 900 && fy > 900) return true; // Bottom right
-    if (fx < 120 && fy > 900) return true; // Bottom left corner
-
+    const fy = py + ph - 4;
+    // Map Bounds Only
+    if (fx < 16 || fx > 1008 || fy < 16 || fy > 1008) return true;
     return false;
 }
 
@@ -140,19 +107,15 @@ function applyPhysics() {
         vy *= 0.707;
     }
     
-    if (!checkCollision(player.x + vx, player.y, player.width, player.height)) {
-        player.x += vx;
-    }
-    
-    if (!checkCollision(player.x, player.y + vy, player.width, player.height)) {
-        player.y += vy;
-    }
+    if (!checkCollision(player.x + vx, player.y, player.width, player.height)) player.x += vx;
+    if (!checkCollision(player.x, player.y + vy, player.width, player.height)) player.y += vy;
 
-    camera.x = player.x + player.width/2 - camera.width/2;
-    camera.y = player.y + player.height/2 - camera.height/2;
+    // Camera follow
+    camera.x = player.x + player.width/2 - canvas.width/2;
+    camera.y = player.y + player.height/2 - canvas.height/2;
     
-    camera.x = Math.max(0, Math.min(camera.x, MAP_PX - camera.width));
-    camera.y = Math.max(0, Math.min(camera.y, MAP_PX - camera.height));
+    camera.x = Math.max(0, Math.min(camera.x, MAP_PX - canvas.width));
+    camera.y = Math.max(0, Math.min(camera.y, MAP_PX - canvas.height));
 }
 
 function drawWorld() {
@@ -172,6 +135,7 @@ function drawPlayer() {
     const px = Math.floor(player.x);
     const py = Math.floor(player.y);
     
+    // Shadow
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
     ctx.ellipse(px + 12, py + 36, 10, 4, 0, 0, Math.PI * 2);
@@ -214,8 +178,6 @@ menuOptions.forEach((opt, idx) => {
         currentMenuIndex = idx;
         const action = opt.getAttribute('data-action');
         if (action === 'play') startGame();
-        else if (action === 'settings') alert("Settings!");
-        else if (action === 'quit') alert("Bye!");
     });
 });
 
