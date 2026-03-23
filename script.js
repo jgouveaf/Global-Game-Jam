@@ -27,7 +27,14 @@ const BLOCKS = {
     FENCE: 5,
     HOUSE: 6,
     PATH: 7,
-    WELL: 8
+    WELL: 8,
+    TREE: 9,
+    ROCK: 10,
+    HAY: 11,
+    CROP_WHEAT: 12,
+    CROP_CARROT: 13,
+    CROP_BEET: 14,
+    CROP_MELON: 15
 };
 
 const BLOCK_COLORS = {
@@ -38,12 +45,19 @@ const BLOCK_COLORS = {
     [BLOCKS.WATER]: '#1e90ff',
     [BLOCKS.FENCE]: '#4b2e1b',
     [BLOCKS.HOUSE]: '#a0522d',
-    [BLOCKS.PATH]: '#c2b280',
-    [BLOCKS.WELL]: '#555'
+    [BLOCKS.PATH]: '#d4b06a',
+    [BLOCKS.WELL]: '#555',
+    [BLOCKS.TREE]: '#2d5a27',
+    [BLOCKS.ROCK]: '#808080',
+    [BLOCKS.HAY]: '#ffd700',
+    [BLOCKS.CROP_WHEAT]: '#f5deb3',
+    [BLOCKS.CROP_CARROT]: '#ff8c00',
+    [BLOCKS.CROP_BEET]: '#8b0000',
+    [BLOCKS.CROP_MELON]: '#32cd32'
 };
 
-// Solid: Water, Stone, Fence, House, Well
-const SOLID_BLOCKS = [BLOCKS.STONE, BLOCKS.WATER, BLOCKS.FENCE, BLOCKS.HOUSE, BLOCKS.WELL];
+// Solid: Water, Stone, Fence, House, Well, Tree, Rock, Hay
+const SOLID_BLOCKS = [BLOCKS.STONE, BLOCKS.WATER, BLOCKS.FENCE, BLOCKS.HOUSE, BLOCKS.WELL, BLOCKS.TREE, BLOCKS.ROCK, BLOCKS.HAY];
 
 // World Data
 let world = [];
@@ -51,32 +65,53 @@ function generateWorld() {
     for (let y = 0; y < WORLD_ROWS; y++) {
         world[y] = [];
         for (let x = 0; x < WORLD_COLS; x++) {
-            // Default: Grass
             world[y][x] = BLOCKS.GRASS;
             
             // LAKE (Bottom Left)
-            if (x >= 1 && x <= 7 && y >= 18 && y <= 26) world[y][x] = BLOCKS.WATER;
+            if (x >= 0 && x <= 7 && y >= 16 && y <= 21) {
+                if (!(x === 7 && y === 16)) world[y][x] = BLOCKS.WATER;
+            }
+            if (x >= 0 && x <= 5 && y >= 21 && y <= 26) world[y][x] = BLOCKS.WATER;
             
             // HOUSE (Top Center)
-            if (x >= 12 && x <= 20 && y >= 3 && y <= 9) world[y][x] = BLOCKS.HOUSE;
+            if (x >= 12 && x <= 22 && y >= 3 && y <= 9) world[y][x] = BLOCKS.HOUSE;
             
-            // FENCES (Perimeter of the main yard)
-            if ((y === 2 || y === 28) && x >= 4 && x <= 27) world[y][x] = BLOCKS.FENCE;
-            if ((x === 4 || x === 27) && y >= 2 && y <= 28) world[y][x] = BLOCKS.FENCE;
-            
-            // FARM PATCHES (Center)
-            // Left Patch (Empty/Tillable)
-            if (x >= 8 && x <= 13 && y >= 14 && y <= 23) world[y][x] = BLOCKS.DIRT;
-            // Right Patch (Crops)
-            if (x >= 17 && x <= 22 && y >= 14 && y <= 23) world[y][x] = BLOCKS.CROPS;
+            // FENCES (Layout from image)
+            if (y === 3 && ((x >= 8 && x <= 11) || (x >= 23 && x <= 28))) world[y][x] = BLOCKS.FENCE;
+            if (x === 8 && y >= 3 && y <= 11) world[y][x] = BLOCKS.FENCE;
+            if (x === 28 && y >= 3 && y <= 27) world[y][x] = BLOCKS.FENCE;
+            if (y === 27 && x >= 10 && x <= 28) {
+                if (x !== 18) world[y][x] = BLOCKS.FENCE; // Small gate at 18
+            }
+            if (x === 10 && y >= 12 && y <= 27) world[y][x] = BLOCKS.FENCE;
             
             // PATHS
-            if (x === 15 && y > 9 && y < 28) world[y][x] = BLOCKS.PATH; // vertical
-            if (y === 12 && x >= 8 && x <= 22) world[y][x] = BLOCKS.PATH; // horizontal top of patches
-            if (y === 25 && x >= 8 && x <= 22) world[y][x] = BLOCKS.PATH; // horizontal bottom
+            if (x === 18 && y > 9 && y < 32) world[y][x] = BLOCKS.PATH; // Main vert path - shifted right
+            if (y === 11 && x >= 11 && x <= 18) world[y][x] = BLOCKS.PATH; // path around patches
+            if (y >= 10 && y <= 13 && x >= 9 && x <= 11) world[y][x] = BLOCKS.PATH; // dirt yard path
+            
+            // DIRT PATCH (Left - Empty)
+            if (x >= 11 && x <= 16 && y >= 14 && y <= 25) world[y][x] = BLOCKS.DIRT;
+            
+            // CROPS PATCH (Right - Detailed)
+            if (x >= 20 && x <= 25 && y >= 14 && y <= 25) {
+                if (y >= 14 && y <= 16) world[y][x] = BLOCKS.CROP_WHEAT;
+                else if (y >= 17 && y <= 19) world[y][x] = BLOCKS.CROP_CARROT;
+                else if (y >= 20 && y <= 22) world[y][x] = BLOCKS.CROP_BEET;
+                else world[y][x] = BLOCKS.CROP_MELON;
+            }
+            
+            // TREES
+            if ((x === 5 && y === 5) || (x === 29 && y === 4) || (x === 3 && y === 29) || (x === 30 && y === 17)) world[y][x] = BLOCKS.TREE;
+            
+            // ROCKS
+            if ((x === 26 && y === 3) || (x === 29 && y === 24) || (x === 27 && y === 26)) world[y][x] = BLOCKS.ROCK;
             
             // WELL (Right side)
-            if (x >= 24 && x <= 26 && y >= 14 && y <= 16) world[y][x] = BLOCKS.WELL;
+            if (x >= 25 && x <= 27 && y >= 11 && y <= 13) world[y][x] = BLOCKS.WELL;
+            
+            // HAY (Top Left inside yard)
+            if (x >= 9 && x <= 10 && y >= 5 && y <= 6) world[y][x] = BLOCKS.HAY;
         }
     }
 }
@@ -85,8 +120,8 @@ generateWorld();
 
 // Player
 const player = {
-    x: 15 * tileSize,
-    y: 11 * tileSize,
+    x: 18 * tileSize,
+    y: 28 * tileSize,
     width: 32,
     height: 48,
     vx: 0,
