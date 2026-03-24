@@ -1,4 +1,4 @@
-/* Global Game Jam - AgriCorp (Versão Limpa - Fullscreen & Mouse) */
+/* Global Game Jam - AgriCorp (Versão Sem Erros) */
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -8,13 +8,12 @@ function resizeCanvas() {
 }
 
 const mapImage = new Image();
-mapImage.src = 'sprites/world_map.png'; // Verifique se o nome está exato
+mapImage.src = 'sprites/world_map.png';
 let mapLoaded = false;
 mapImage.onload = () => { mapLoaded = true; };
 
 window.addEventListener('resize', resizeCanvas);
 
-// Posição do Mouse para interações
 const mouse = { x: 0, y: 0, clicked: false };
 
 window.addEventListener('mousemove', (e) => {
@@ -29,15 +28,13 @@ function draw() {
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. DESENHA O MAPA EM TELA CHEIA (Fullscreen)
     if (mapLoaded) {
         ctx.drawImage(mapImage, 0, 0, canvas.width, canvas.height);
     } else {
-        ctx.fillStyle = '#68a838'; // Cor de fundo se o mapa falhar
+        ctx.fillStyle = '#68a838';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // 2. EFEITO DE CLIQUE DO MOUSE
     if (mouse.clicked) {
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
         ctx.lineWidth = 2;
