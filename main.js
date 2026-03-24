@@ -1,6 +1,8 @@
 // ============================================================
 //   AgriCorp – Mapa com câmera controlada pelo mouse
 // ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 let W, H;
@@ -27,24 +29,27 @@ mapImage.onload = () => {
 };
 
 // ========================= ESTADO DO JOGO =========================
-let gameState = 'PLAYING'; // PLAYING, ASK_SHOP, IN_SHOP
+let gameState = 'PLAYING'; // PLAYING, IN_SHOP
 
-// Área da Casa Cinza (Loja na direita) — x:1040 para pegar a construção final
+// Área da Casa Cinza (Loja na direita do mapa)
 const BARN_ZONE = { x: 1040, y: 100, w: 230, h: 240 };
 
 // Moedas
 let moedas = 0;
 const coinsValueEl = document.getElementById('hud-coins-value');
 
-// ========================= UI SELECTORS =========================
+// ========================= UI DA LOJA =========================
 const shopOverlay = document.getElementById('shop-overlay');
-const btnVoltar = document.getElementById('btn-shop-voltar');
+const btnVoltar   = document.getElementById('btn-shop-voltar');
 
-// LISTENERS
-btnVoltar.onclick = () => { gameState = 'PLAYING'; shopOverlay.classList.add('hidden'); };
+if (btnVoltar) {
+    btnVoltar.onclick = () => {
+        gameState = 'PLAYING';
+        shopOverlay.classList.add('hidden');
+    };
+}
 
-
-canvas.onclick = (e) => {
+canvas.addEventListener('click', (e) => {
     if (gameState !== 'PLAYING') return;
 
     const worldX = e.clientX + camera.x;
@@ -56,7 +61,7 @@ canvas.onclick = (e) => {
         gameState = 'IN_SHOP';
         shopOverlay.classList.remove('hidden');
     }
-};
+});
 
 // ========================= CÂMERA (mouse) =========================
 const camera = { x: 0, y: 0 };
@@ -83,7 +88,6 @@ function updateCamera() {
     if (mouseY < topZone)    camera.y -= CAM_SPEED;
     if (mouseY > bottomZone) camera.y += CAM_SPEED;
 
-    // Limitar câmera ao mapa
     camera.x = Math.max(0, Math.min(camera.x, WW - W));
     camera.y = Math.max(0, Math.min(camera.y, WH - H));
 }
@@ -95,12 +99,12 @@ const hpValue = document.getElementById('hud-value');
 
 function updateHUD() {
     const pct = Math.max(0, Math.min(comunidade, 100));
-    hpBar.style.width = pct + '%';
-    hpValue.textContent = Math.round(pct);
-    // Barra sempre vermelha
-    hpBar.style.background = 'linear-gradient(90deg, #8b0000, #dd0000, #ff4444)';
-    // Moedas
-    coinsValueEl.textContent = moedas;
+    if (hpBar) {
+        hpBar.style.width = pct + '%';
+        hpBar.style.background = 'linear-gradient(90deg, #8b0000, #dd0000, #ff4444)';
+    }
+    if (hpValue) hpValue.textContent = Math.round(pct);
+    if (coinsValueEl) coinsValueEl.textContent = moedas;
 }
 
 // ========================= LOOP PRINCIPAL =========================
@@ -116,15 +120,13 @@ function loop(){
         ctx.fillText('Carregando mapa...', W/2 - 80, H/2);
     } else {
         ctx.drawImage(mapImage, -camera.x, -camera.y);
-        
+
         // Texto "LOJA" em cima do celeiro
         ctx.save();
-        ctx.font = '16px "Press Start 2P", cursive';
+        ctx.font = '16px "Press Start 2P", monospace';
         ctx.textAlign = 'center';
-        // Sombra/Borda
         ctx.fillStyle = '#000';
         ctx.fillText('LOJA', BARN_ZONE.x + BARN_ZONE.w/2 - camera.x + 2, BARN_ZONE.y - camera.y - 10 + 2);
-        // Texto Principal
         ctx.fillStyle = '#fff';
         ctx.fillText('LOJA', BARN_ZONE.x + BARN_ZONE.w/2 - camera.x, BARN_ZONE.y - camera.y - 10);
         ctx.restore();
@@ -135,3 +137,5 @@ function loop(){
 }
 
 requestAnimationFrame(loop);
+
+}); // fim DOMContentLoaded
