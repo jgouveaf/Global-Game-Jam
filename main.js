@@ -124,8 +124,17 @@ function loop(){
     } else {
         ctx.drawImage(mapImage, -camera.x, -camera.y);
         
-        // Debug: Mostrar área de clique do celeiro (opcional, deixar invisível depois)
-        // ctx.strokeStyle = "red"; ctx.strokeRect(BARN_ZONE.x - camera.x, BARN_ZONE.y - camera.y, BARN_ZONE.w, BARN_ZONE.h);
+        // Texto "LOJA" em cima do celeiro
+        ctx.save();
+        ctx.font = '16px "Press Start 2P", cursive';
+        ctx.textAlign = 'center';
+        // Sombra/Borda
+        ctx.fillStyle = '#000';
+        ctx.fillText('LOJA', BARN_ZONE.x + BARN_ZONE.w/2 - camera.x + 2, BARN_ZONE.y - camera.y - 10 + 2);
+        // Texto Principal
+        ctx.fillStyle = '#fff';
+        ctx.fillText('LOJA', BARN_ZONE.x + BARN_ZONE.w/2 - camera.x, BARN_ZONE.y - camera.y - 10);
+        ctx.restore();
     }
 
     updateHUD();
