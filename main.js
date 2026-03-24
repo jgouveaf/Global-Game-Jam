@@ -4,7 +4,13 @@
 
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
-let W, H;
+let selectedSlot = 0;
+let isWatering = false;
+let wateringTimer = 0;
+const crops = [];
+
+// Definição do Único Terreno permitido por enquanto (Superior Esquerdo)
+const field1 = { x: 140, y: 240, w: 700, h: 440 };
 
 function resize(){
     canvas.width  = window.innerWidth;
@@ -76,7 +82,6 @@ function updateHUD() {
 }
 
 // ========================= INVENTÁRIO =========================
-let selectedSlot = 0;
 window.addEventListener('keydown', (e) => {
     if (e.key >= '1' && e.key <= '9') {
         selectedSlot = parseInt(e.key) - 1;
@@ -95,6 +100,52 @@ function updateHotbarVisual() {
     });
 }
 
+// ========================= CONTROLE DE PLANTIO =========================
+const btnWater = document.getElementById('btn-water');
+const timerUI = document.getElementById('planting-timer');
+const timerSec = document.getElementById('timer-sec');
+
+btnWater.addEventListener('click', () => {
+    if (isWatering) return; // Evita cliques múltiplos
+    
+    isWatering = true;
+    wateringTimer = 10;
+    timerUI.classList.remove('hidden');
+    timerSec.textContent = wateringTimer;
+    
+    const countdown = setInterval(() => {
+        wateringTimer--;
+        timerSec.textContent = wateringTimer;
+        
+        if (wateringTimer <= 0) {
+            clearInterval(countdown);
+            isWatering = false;
+            timerUI.classList.add('hidden');
+        }
+    }, 1000);
+});
+
+// Listener de clique no Mapa para plantar
+canvas.addEventListener('mousedown', (e) => {
+    if (isWatering && wateringTimer > 0) {
+        // Coordenadas mundo (considerando a câmera e o tamanho do canvas na tela)
+        const rect = canvas.getBoundingClientRect();
+        const mouseXCanvas = e.clientX - rect.left;
+        const mouseYCanvas = e.clientY - rect.top;
+        
+        const worldX = mouseXCanvas + camera.x;
+        const worldY = mouseYCanvas + camera.y;
+
+        // Verifica se clicou no Terreno 1 (Superior Esquerdo)
+        if (worldX > field1.x && worldX < field1.x + field1.w &&
+            worldY > field1.y && worldY < field1.y + field1.h) {
+            
+            // Planta Trigo 🌾
+            crops.push({ x: worldX, y: worldY, type: 'wheat' });
+        }
+    }
+});
+
 // ========================= LOOP =========================
 function loop(){
     updateCamera();
@@ -108,6 +159,12 @@ function loop(){
         ctx.fillText('Carregando mapa...', W/2 - 80, H/2);
     } else {
         ctx.drawImage(mapImage, -camera.x, -camera.y);
+        
+        // DESENHAR PLANTAÇÕES (Trigo)
+        crops.forEach(crop => {
+            ctx.font = '24px Arial';
+            ctx.fillText('🌾', crop.x - camera.x - 12, crop.y - camera.y + 12);
+        });
     }
 
     updateHUD();

@@ -38,8 +38,14 @@
         <div class="hotbar-slot" data-slot="10"><span class="slot-num">0</span></div>
     </div>
 
+    <!-- TIMER DE PLANTIO -->
+    <div id="planting-timer" class="hidden">
+        PREPARE-SE: <span id="timer-sec">10</span>s PARA PLANTAR!
+    </div>
+
     <!-- Botões de Ação (Canto Inferior Direito) -->
     <div id="action-buttons">
+        <button id="btn-water">💧 REGAR</button>
         <button id="btn-open-inventory" onclick="document.getElementById('inventory-overlay').classList.remove('hidden')">
             🎒 INVENTÁRIO
         </button>

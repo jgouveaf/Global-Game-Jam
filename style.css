@@ -25,6 +25,26 @@ canvas#gameCanvas {
     z-index: 0;
 }
 
+/* TIMER DE PLANTIO */
+#planting-timer {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 0, 0, 0.7);
+    color: #fff;
+    padding: 10px 20px;
+    border: 3px solid #fff;
+    z-index: 1000;
+    font-size: 12px;
+    animation: flash 1s infinite;
+}
+
+@keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
 /* HUD Superior */
 #hud-top {
     position: fixed;
