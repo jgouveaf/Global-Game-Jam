@@ -28,7 +28,7 @@ window.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; })
 window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 
 const playerImage = new Image();
-playerImage.src = 'player_sprite.png'; // No root
+playerImage.src = 'player_sprite.png'; // Na raiz do projeto
 let playerLoaded = false;
 playerImage.onload = () => { playerLoaded = true; };
 
@@ -38,7 +38,7 @@ let WW = 2000; // World Width (will update when image loads)
 let WH = 2000; // World Height
 
 const mapImage = new Image();
-mapImage.src = 'sprites/Gemini_Generated_Image_h3gzs5h3gzs5h3gz.png';
+mapImage.src = 'sprites/Mapa.png';
 let mapLoaded = false;
 mapImage.onload = () => { 
     mapLoaded = true;
