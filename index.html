@@ -8,7 +8,7 @@
 </head>
 <body>
 
-    <!-- HUD: Linha 1 – Barra de Comunidade -->
+    <!-- HUD: Barra de Comunidade -->
     <div id="hud-top">
         <span id="hud-label">COMUNIDADE</span>
         <div id="hp-bar-bg">
@@ -17,11 +17,16 @@
         <span id="hud-value">100</span>
     </div>
 
-    <!-- HUD: Linha 2 – Moedas -->
+    <!-- HUD: Moedas -->
     <div id="hud-coins">
         <span id="hud-coins-label">MOEDAS:</span>
         <span id="hud-coins-value">0</span>
     </div>
+
+    <!-- Botão Loja (canto inferior direito) -->
+    <button id="btn-open-shop" onclick="document.getElementById('shop-overlay').classList.remove('hidden')">
+        🏪 LOJA
+    </button>
 
     <!-- Overlay da Loja -->
     <div id="shop-overlay" class="hidden">
@@ -56,7 +61,7 @@
             </div>
 
         </div>
-        <button id="btn-shop-voltar">← VOLTAR</button>
+        <button id="btn-shop-voltar" onclick="document.getElementById('shop-overlay').classList.add('hidden'); ">← VOLTAR</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>

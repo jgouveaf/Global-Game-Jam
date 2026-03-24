@@ -1,7 +1,6 @@
 // ============================================================
 //   AgriCorp – Mapa com câmera controlada pelo mouse
 // ============================================================
-window.addEventListener('DOMContentLoaded', () => {
 
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
@@ -28,41 +27,6 @@ mapImage.onload = () => {
     WH = mapImage.height;
 };
 
-// ========================= ESTADO DO JOGO =========================
-let gameState = 'PLAYING'; // PLAYING, IN_SHOP
-
-// Área da Casa Cinza (Loja na direita do mapa)
-const BARN_ZONE = { x: 1040, y: 100, w: 230, h: 240 };
-
-// Moedas
-let moedas = 0;
-const coinsValueEl = document.getElementById('hud-coins-value');
-
-// ========================= UI DA LOJA =========================
-const shopOverlay = document.getElementById('shop-overlay');
-const btnVoltar   = document.getElementById('btn-shop-voltar');
-
-if (btnVoltar) {
-    btnVoltar.onclick = () => {
-        gameState = 'PLAYING';
-        shopOverlay.classList.add('hidden');
-    };
-}
-
-canvas.addEventListener('click', (e) => {
-    if (gameState !== 'PLAYING') return;
-
-    const worldX = e.clientX + camera.x;
-    const worldY = e.clientY + camera.y;
-
-    // Clicou na casa cinza (Loja) → abre a loja direto
-    if (worldX >= BARN_ZONE.x && worldX <= BARN_ZONE.x + BARN_ZONE.w &&
-        worldY >= BARN_ZONE.y && worldY <= BARN_ZONE.y + BARN_ZONE.h) {
-        gameState = 'IN_SHOP';
-        shopOverlay.classList.remove('hidden');
-    }
-});
-
 // ========================= CÂMERA (mouse) =========================
 const camera = { x: 0, y: 0 };
 let mouseX = 0, mouseY = 0;
@@ -76,8 +40,6 @@ window.addEventListener('mousemove', (e) => {
 });
 
 function updateCamera() {
-    if (gameState !== 'PLAYING') return;
-
     const leftZone   = W * EDGE;
     const rightZone  = W * (1 - EDGE);
     const topZone    = H * EDGE;
@@ -92,22 +54,18 @@ function updateCamera() {
     camera.y = Math.max(0, Math.min(camera.y, WH - H));
 }
 
-// ========================= HUD COMUNIDADE =========================
+// ========================= HUD =========================
 let comunidade = 100;
-const hpBar   = document.getElementById('hp-bar');
-const hpValue = document.getElementById('hud-value');
+let moedas = 0;
 
 function updateHUD() {
     const pct = Math.max(0, Math.min(comunidade, 100));
-    if (hpBar) {
-        hpBar.style.width = pct + '%';
-        hpBar.style.background = 'linear-gradient(90deg, #8b0000, #dd0000, #ff4444)';
-    }
-    if (hpValue) hpValue.textContent = Math.round(pct);
-    if (coinsValueEl) coinsValueEl.textContent = moedas;
+    document.getElementById('hp-bar').style.width = pct + '%';
+    document.getElementById('hud-value').textContent = Math.round(pct);
+    document.getElementById('hud-coins-value').textContent = moedas;
 }
 
-// ========================= LOOP PRINCIPAL =========================
+// ========================= LOOP =========================
 function loop(){
     updateCamera();
     ctx.clearRect(0, 0, W, H);
@@ -120,16 +78,6 @@ function loop(){
         ctx.fillText('Carregando mapa...', W/2 - 80, H/2);
     } else {
         ctx.drawImage(mapImage, -camera.x, -camera.y);
-
-        // Texto "LOJA" em cima do celeiro
-        ctx.save();
-        ctx.font = '16px "Press Start 2P", monospace';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#000';
-        ctx.fillText('LOJA', BARN_ZONE.x + BARN_ZONE.w/2 - camera.x + 2, BARN_ZONE.y - camera.y - 10 + 2);
-        ctx.fillStyle = '#fff';
-        ctx.fillText('LOJA', BARN_ZONE.x + BARN_ZONE.w/2 - camera.x, BARN_ZONE.y - camera.y - 10);
-        ctx.restore();
     }
 
     updateHUD();
@@ -137,5 +85,3 @@ function loop(){
 }
 
 requestAnimationFrame(loop);
-
-}); // fim DOMContentLoaded
