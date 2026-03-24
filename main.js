@@ -1,7 +1,7 @@
-// ==========================================
-//  AgriCorp - Canvas Top-Down Farm
-//  Visual Overhaul: rich pixel-art world
-// ==========================================
+// ============================================================
+//  AgriCorp – Canvas Farm Game
+//  Layout fiel à imagem de referência
+// ============================================================
 
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
@@ -16,66 +16,31 @@ function resize() {
 resize();
 window.addEventListener('resize', resize);
 
-// ==========================================
-//  PALETTE – Stardew / Harvest Moon vibes
-// ==========================================
-const P = {
-    // Terrain
-    sky        : '#afe0f0',
-    grassA     : '#78c850',
-    grassB     : '#60b040',
-    grassC     : '#50a030',
-    grassD     : '#408020',
-    pathA      : '#d8c090',
-    pathB      : '#c0a870',
-    pathC      : '#a89058',
-    dirt       : '#a87840',
-    dirtD      : '#886030',
-    soil       : '#6b4a28',
-    soilW      : '#4a2e12',
-    soilLine   : '#3a2008',
-    // Buildings
-    barn       : '#c0392b',
-    barnSide   : '#a02828',
-    barnRoof   : '#2c1c10',
-    barnRoofL  : '#483018',
-    wood       : '#7b4a28',
-    woodD      : '#5a3018',
-    silo       : '#b8c0b0',
-    siloD      : '#909890',
-    siloRoof   : '#70887a',
-    house      : '#e8d898',
-    houseWall  : '#d8c880',
-    houseRoof  : '#882218',
-    stone      : '#8a9888',
-    stoneD     : '#6a7868',
-    stoneL     : '#aab8a8',
-    water      : '#3878c8',
-    waterL     : '#60a0f0',
-    // Decor
-    treeT      : '#30a030',
-    treeTL     : '#48c048',
-    treeTD     : '#208020',
-    treeTrunk  : '#5a3820',
-    hay        : '#d8a820',
-    hayD       : '#b08018',
-    fence      : '#9a7040',
-    fenceD     : '#7a5020',
-    // UI
-    uiBg       : 'rgba(20,12,8,0.85)',
-    uiBrd      : '#f0c040',
-    uiBrdD     : '#b89020',
-    uiGreen    : '#38c060',
-    uiRed      : '#c83828',
-    white      : '#ffffff',
-    black      : '#000000',
-    textYellow : '#f8d040',
-    textWhite  : '#f0f0f0',
+// ========================= PALETA =========================
+const C = {
+    grassA :'#78c050', grassB:'#68b040', grassC:'#509030', grassD:'#407820',
+    pathA  :'#d8c080', pathB :'#c8b070', pathEdge:'#b89860',
+    soilDry:'#a07840', soilWet:'#6a4c20', soilLine:'#88622e',
+    fenceP :'#7a5228', fenceR:'#6a4218',
+    barn   :'#c03020', barnS :'#9a2010', barnRoof:'#2a1808', barnHL:'#4a2c10',
+    wood   :'#8a5a30', woodD :'#6a3a10',
+    silo   :'#b0b8a8', siloD :'#8a9888', siloR:'#5a7860',
+    mill   :'#9aaa98', millD :'#7a8a78',
+    house  :'#e0d088', houseR:'#a02818', houseSide:'#c8b870',
+    tank   :'#9a7040', tankW :'#4888c0', tankWL:'#78b8f8',
+    truckB :'#2870c0', truckD:'#1850a0', truckW:'#98d0f8',
+    treeT  :'#30a828', treeTL:'#50c848', treeTD:'#208018',
+    treeTr :'#6a4020',
+    haySt  :'#d8a018', hayD  :'#a87810',
+    stone  :'#8a9a80', stoneD:'#6a7a60', stoneL:'#aaba98',
+    uiBg   :'rgba(8,5,2,0.88)',
+    gold   :'#f0c030', goldD :'#b09020',
+    uiGreen:'#38c060', uiRed:'#c03020',
+    white  :'#ffffff', black:'#000000',
+    txtY   :'#f8d040', txtW :'#f0f0f0',
 };
 
-// ==========================================
-//  GAME STATE
-// ==========================================
+// ========================= ESTADO =========================
 const CROPS = {
     wheat : { name:'Trigo',   icon:'🌾', grow:5000,  cost:5,  reward:10  },
     carrot: { name:'Cenoura', icon:'🥕', grow:10000, cost:10, reward:25  },
@@ -85,362 +50,287 @@ const CROPS = {
 const KEYS = Object.keys(CROPS);
 
 const G = {
-    coins: 50,
-    happy: 0,
-    inv  : { wheat:0, carrot:0, tomato:0, corn:0 },
-    seed : 'wheat',
-    plots: Array(9).fill(null).map((_,i) => ({
-        id:i, state:'empty', crop:null, prog:0, t0:0
-    })),
-    reqs : [],
-    notif: null,
-    ntimer: 0,
+    coins:50, happy:0,
+    inv  :{ wheat:0, carrot:0, tomato:0, corn:0 },
+    seed :'wheat',
+    plots: Array(9).fill(null).map((_,i)=>({ id:i, state:'empty', crop:null, prog:0, t0:0 })),
+    reqs :[], notif:null, ntimer:0,
 };
 
-function addReq() {
-    if (G.reqs.length >= 4) return;
-    const k = KEYS[Math.floor(Math.random()*KEYS.length)];
-    const n = Math.floor(Math.random()*3)+2;
+function addReq(){
+    if(G.reqs.length>=4) return;
+    const k=KEYS[Math.floor(Math.random()*KEYS.length)];
+    const n=Math.floor(Math.random()*3)+2;
     G.reqs.push({ id:Math.random(), crop:k, n, coins:Math.floor(CROPS[k].reward*n*1.5), happy:n*2 });
 }
-addReq();
-setInterval(addReq, 8000);
+addReq(); setInterval(addReq,8000);
+function notif(m,c='#38c060'){ G.notif={m,c}; G.ntimer=160; }
 
-function notif(m, c='#27ae60') { G.notif={m,c}; G.ntimer=150; }
+// ========================= HELPERS =========================
+const pxT=(text,x,y,col,sz)=>{ ctx.font=`${sz}px 'Press Start 2P',monospace`; ctx.fillStyle=col; ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.fillText(text,x,y); };
+const emo=(e,cx,cy,sz)=>{ ctx.font=`${sz}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(e,cx,cy); ctx.textAlign='left'; ctx.textBaseline='alphabetic'; };
+const box=(x,y,w,h,f,s='',lw=2)=>{ ctx.fillStyle=f; ctx.fillRect(x,y,w,h); if(s){ctx.strokeStyle=s;ctx.lineWidth=lw;ctx.strokeRect(x,y,w,h);} };
+const tri=(pts,f,s='',lw=2)=>{ ctx.beginPath(); ctx.moveTo(...pts[0]); pts.slice(1).forEach(p=>ctx.lineTo(...p)); ctx.closePath(); ctx.fillStyle=f; ctx.fill(); if(s){ctx.strokeStyle=s;ctx.lineWidth=lw;ctx.stroke();} };
+const circ=(cx,cy,r,f,s='',lw=2)=>{ ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle=f; ctx.fill(); if(s){ctx.strokeStyle=s;ctx.lineWidth=lw;ctx.stroke();} };
+function bevel(x,y,w,h,t=3){ ctx.fillStyle='rgba(255,255,255,0.18)'; ctx.fillRect(x,y,w,t); ctx.fillRect(x,y,t,h); ctx.fillStyle='rgba(0,0,0,0.28)'; ctx.fillRect(x,y+h-t,w,t); ctx.fillRect(x+w-t,y,t,h); }
 
-// ==========================================
-//  LAYOUT helpers
-// ==========================================
-function plotRect(i) {
+// ========================= LAYOUT =========================
+// O campo de cultivo fica na região centro-direita,
+// replicando a posição da imagem de referência
+function fieldOrigin(){ return { x: W*0.48, y: H*0.22 }; }
+function plotRect(i){
     const col=i%3, row=Math.floor(i/3);
-    const pw=Math.min(H*0.15, W*0.09);
-    const gap=10;
-    const gw= pw*3 + gap*2;
-    const gh= pw*3 + gap*2;
-    const gx= W*0.35 ;
-    const gy= H*0.25;
-    return { x: gx+col*(pw+gap), y: gy+row*(pw+gap), w:pw, h:pw };
+    const pw=Math.min(H*0.135, W*0.085);
+    const gap=8;
+    const {x:ox,y:oy}=fieldOrigin();
+    return { x:ox+col*(pw+gap)+24, y:oy+row*(pw+gap)+24, w:pw, h:pw };
 }
-function seedBtn(i) {
-    const bw=140, bh=64, gap=14;
-    const total = KEYS.length*(bw+gap)-gap;
-    return { x:(W-total)/2+i*(bw+gap), y:H-80, w:bw, h:bh };
+function seedBtn(i){
+    const bw=136,bh=62,gap=12;
+    const total=KEYS.length*(bw+gap)-gap;
+    return { x:(W-total)/2+i*(bw+gap), y:H-78, w:bw, h:bh };
 }
-function reqCard(i) {
-    const rx=W-230, ry=H*0.17+i*118;
-    return { x:rx, y:ry, w:210, h:108 };
-}
+function reqCard(i){ return { x:W-232, y:H*0.18+i*116, w:218, h:106 }; }
 
-// ==========================================
-//  DRAW HELPERS
-// ==========================================
-const px = (text,x,y,color,size) => {
-    ctx.font=`${size}px 'Press Start 2P',monospace`;
-    ctx.fillStyle=color;
-    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
-    ctx.fillText(text,x,y);
-};
-const emoji = (e,cx,cy,sz) => {
-    ctx.font=`${sz}px serif`;
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(e,cx,cy);
-    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
-};
-const rect = (x,y,w,h,fill,stroke,lw=2)=>{
-    ctx.fillStyle=fill; ctx.fillRect(x,y,w,h);
-    if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.strokeRect(x,y,w,h); }
-};
-const tri=(pts,fill,stroke,lw=2)=>{
-    ctx.beginPath(); ctx.moveTo(...pts[0]);
-    pts.slice(1).forEach(p=>ctx.lineTo(...p)); ctx.closePath();
-    ctx.fillStyle=fill; ctx.fill();
-    if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke(); }
-};
-const circle=(cx,cy,r,fill,stroke,lw=2)=>{
-    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
-    ctx.fillStyle=fill; ctx.fill();
-    if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke(); }
-};
-
-// Pixel border – raised bevel effect
-function pixelBorder(x,y,w,h, light='rgba(255,255,255,0.25)', dark='rgba(0,0,0,0.35)', bw=4){
-    ctx.fillStyle=light;
-    ctx.fillRect(x,y,w,bw); ctx.fillRect(x,y,bw,h);
-    ctx.fillStyle=dark;
-    ctx.fillRect(x,y+h-bw,w,bw); ctx.fillRect(x+w-bw,y,bw,h);
-}
-
-// ==========================================
-//  TERRAIN
-// ==========================================
-function drawTerrain(){
-    // Checkerboard grass
+// ========================= TERRENO =========================
+function drawGrass(){
+    // Base checker
     for(let gx=0;gx<W;gx+=32){
         for(let gy=0;gy<H;gy+=32){
-            ctx.fillStyle=(Math.floor(gx/32)+Math.floor(gy/32))%2===0?P.grassA:P.grassB;
+            ctx.fillStyle=(Math.floor(gx/32+gy/32))%2===0?C.grassA:C.grassB;
             ctx.fillRect(gx,gy,32,32);
         }
     }
     // Grass tufts
-    ctx.fillStyle=P.grassC;
-    for(let gx=16;gx<W;gx+=48){
-        for(let gy=20;gy<H;gy+=48){
-            ctx.fillRect(gx,gy,3,6); ctx.fillRect(gx+5,gy+2,3,4);
-            ctx.fillStyle=P.grassD; ctx.fillRect(gx+2,gy+1,2,4); ctx.fillStyle=P.grassC;
-        }
-    }
-
-    // Horizontal path
-    for(let x=0;x<W;x+=2){
-        ctx.fillStyle=(x/2)%2===0?P.pathA:P.pathB;
-        ctx.fillRect(x,H*0.60,2,H*0.14);
-    }
-    // Path edges
-    ctx.fillStyle=P.pathC; ctx.fillRect(0,H*0.60,W,4);
-    ctx.fillStyle=P.pathC; ctx.fillRect(0,H*0.74-4,W,4);
-    // Path stones
-    ctx.fillStyle=P.stoneD;
-    for(let x=30;x<W;x+=60){
-        ctx.fillRect(x, H*0.60+10, 14, 8);
-        ctx.fillRect(x+30, H*0.60+24, 10, 6);
-    }
-
-    // Vertical path
-    for(let y=0;y<H;y+=2){
-        ctx.fillStyle=(y/2)%2===0?P.pathA:P.pathB;
-        ctx.fillRect(W*0.30,y,W*0.05,2);
-    }
-    ctx.fillStyle=P.pathC;
-    ctx.fillRect(W*0.30,0,4,H); ctx.fillRect(W*0.35-4,0,4,H);
-
-    // Farm soil area
-    ctx.fillStyle=P.dirtD;
-    ctx.fillRect(W*0.35-8, H*0.22-8, W*0.42+16, H*0.40+16);
-    ctx.fillStyle=P.dirt;
-    ctx.fillRect(W*0.35, H*0.22, W*0.42, H*0.40);
-    // Soil rows
-    ctx.fillStyle=P.dirtD;
-    for(let i=0;i<W*0.42;i+=14){
-        ctx.fillRect(W*0.35+i, H*0.22, 2, H*0.40);
-    }
-    for(let j=0;j<H*0.40;j+=14){
-        ctx.fillRect(W*0.35, H*0.22+j, W*0.42, 2);
-    }
+    ctx.fillStyle=C.grassC;
+    for(let gx=14;gx<W;gx+=44){ for(let gy=18;gy<H;gy+=44){
+        ctx.fillRect(gx,gy,3,7); ctx.fillRect(gx+6,gy+3,3,5);
+        ctx.fillStyle=C.grassD; ctx.fillRect(gx+1,gy+1,2,5); ctx.fillStyle=C.grassC;
+    }}
 }
 
-// ==========================================
-//  BUILDINGS
-// ==========================================
-function drawBarn(){
-    const bx=W*0.06, by=H*0.10;
-    const bw=150, bh=110;
-    // Shadow
-    ctx.fillStyle='rgba(0,0,0,0.15)';
-    ctx.fillRect(bx+12,by+12,bw,bh);
-    // Front wall
-    rect(bx, by, bw, bh, P.barn, P.barnD, 3);
-    // Side shadow
-    rect(bx+bw, by+10, 18, bh-8, P.barnSide, null);
-    ctx.strokeStyle=P.black; ctx.lineWidth=2;
-    ctx.strokeRect(bx,by,bw,bh);
-    // White horizontal planks
-    ctx.fillStyle='rgba(255,255,255,0.08)';
-    for(let i=0;i<bh;i+=16) ctx.fillRect(bx+2,by+i,bw-4,8);
-    // Roof
-    tri([[bx-12,by],[bx+bw/2,by-60],[bx+bw+12,by]], P.barnRoof, P.black, 3);
-    // Roof highlight
-    ctx.fillStyle=P.barnRoofL;
-    ctx.fillRect(bx+bw/2-4,by-60,8,60);
-    // Door (double)
-    rect(bx+38, by+60, 28, bh-60, P.woodD, P.black, 2);
-    rect(bx+68, by+60, 28, bh-60, P.woodD, P.black, 2);
-    rect(bx+40, by+62, 24, bh-64, P.wood, null);
-    rect(bx+70, by+62, 24, bh-64, P.wood, null);
-    // Door handle
-    circle(bx+65, by+bh-25, 4, '#d0a840', P.black, 1);
-    // Window
-    rect(bx+8, by+30, 30, 24, P.woodD, P.black, 2);
-    rect(bx+10, by+32, 26, 20, '#b8ddf8', null);
-    // Window cross
-    ctx.fillStyle=P.woodD;
-    ctx.fillRect(bx+22, by+32, 2, 20); ctx.fillRect(bx+10, by+42, 26, 2);
+function drawPaths(){
+    // Horizontal main path (runs left-right, center of image)
+    const py=H*0.585, ph=H*0.13;
+    for(let x=0;x<W;x+=2){ ctx.fillStyle=(x/2)%2===0?C.pathA:C.pathB; ctx.fillRect(x,py,2,ph); }
+    box(0,py,W,4,C.pathEdge); box(0,py+ph-4,W,4,C.pathEdge);
+    // Pebbles on path
+    ctx.fillStyle=C.stoneD;
+    for(let x=28;x<W;x+=52){ ctx.fillRect(x,py+10,12,7); ctx.fillRect(x+26,py+22,9,5); ctx.fillRect(x+10,py+34,15,6); }
+
+    // Small vertical connector path between barn area and crop field
+    const vpx=W*0.455, vph=H*0.585-H*0.22;
+    for(let y=H*0.22;y<H*0.585;y+=2){ ctx.fillStyle=(y/2)%2===0?C.pathA:C.pathB; ctx.fillRect(vpx,y,W*0.04,2); }
+    box(vpx,H*0.22,4,vph,C.pathEdge); box(vpx+W*0.04-4,H*0.22,4,vph,C.pathEdge);
 }
 
-function drawSilo(){
-    const sx=W*0.06+175, sy=H*0.10+5;
-    const sr=24, sh=90;
-    // Shadow
-    ctx.fillStyle='rgba(0,0,0,0.12)';
-    ctx.fillRect(sx-sr+8, sy+8, sr*2, sh);
-    // Body
-    rect(sx-sr, sy, sr*2, sh, P.silo, P.black, 2);
-    // Vertical lines
-    ctx.fillStyle=P.siloD;
-    for(let x=sx-sr+8;x<sx+sr;x+=10) ctx.fillRect(x, sy, 2, sh);
-    // Dome top
-    ctx.fillStyle=P.siloRoof;
-    ctx.beginPath(); ctx.ellipse(sx, sy, sr, sr*0.6, 0, Math.PI, 0, true); ctx.fill();
-    ctx.strokeStyle=P.black; ctx.lineWidth=2; ctx.stroke();
-    // Cone roof
-    tri([[sx-sr-5,sy],[sx,sy-30],[sx+sr+5,sy]], P.siloD, P.black, 2);
+// ========================= CERCA DO CAMPO =========================
+function drawFieldFence(){
+    const {x:ox,y:oy}=fieldOrigin();
+    const pw=Math.min(H*0.135,W*0.085), gap=8;
+    const fw=3*(pw+gap)+16, fh=3*(pw+gap)+16;
+    const fx=ox, fy=oy, gateW=40;
+
+    // Top rail
+    for(let x=0;x<fw;x+=18){ box(fx+x,fy,5,22,C.fenceP); box(fx+x,fy+4,18,4,C.fenceR); box(fx+x,fy+14,18,4,C.fenceR); }
+    // Left rail
+    for(let y=22;y<fh;y+=18){ box(fx,fy+y,5,22,C.fenceP); box(fx+2,fy+y,4,18,C.fenceR); box(fx+10,fy+y,4,18,C.fenceR); }
+    // Bottom rail – has gate opening in middle
+    for(let x=0;x<fw;x+=18){
+        const cx=fx+x;
+        if(cx>fx+fw*0.35&&cx<fx+fw*0.35+gateW) continue; // gate gap
+        box(cx,fy+fh-4,5,22,C.fenceP); box(cx,fy+fh-1,18,4,C.fenceR); box(cx,fy+fh+9,18,4,C.fenceR);
+    }
+    // Right rail
+    for(let y=22;y<fh;y+=18){ box(fx+fw,fy+y,5,22,C.fenceP); box(fx+fw+2,fy+y,4,18,C.fenceR); box(fx+fw+10,fy+y,4,18,C.fenceR); }
 }
 
+// ========================= ÁRVORES =========================
+function drawTree(x,y,s=1){
+    box(x-4*s,y+14*s,9*s,26*s,C.treeTr,C.black,1);
+    circ(x,y+8*s,24*s,C.treeTD,C.black,1);
+    circ(x+2*s,y+4*s,20*s,C.treeT,null);
+    circ(x-7*s,y+2*s,14*s,C.treeTL,null);
+    circ(x+10*s,y+10*s,12*s,C.treeTL,null);
+}
+
+// ========================= FENO =========================
+function drawHay(x,y){
+    box(x,y,34,24,C.haySt,C.black,2);
+    ctx.fillStyle=C.hayD; for(let i=5;i<24;i+=7) ctx.fillRect(x,y+i,34,3);
+    ctx.fillStyle='rgba(0,0,0,0.1)'; ctx.fillRect(x+4,y+24,34,5);
+}
+
+// ========================= MOINHO =========================
 function drawWindmill(){
-    const mx=W*0.14, my=H*0.10;
+    // Position: far left, slightly top
+    const mx=W*0.07, my=H*0.12;
     const t=Date.now()/1000;
-    // Tower
-    ctx.fillStyle=P.stone;
-    ctx.beginPath();
-    ctx.moveTo(mx-22, my+100); ctx.lineTo(mx-14, my+20);
-    ctx.lineTo(mx+14, my+20); ctx.lineTo(mx+22, my+100);
-    ctx.closePath(); ctx.fill();
-    ctx.strokeStyle=P.black; ctx.lineWidth=2; ctx.stroke();
-    // Stone lines
-    ctx.fillStyle=P.stoneD;
-    for(let y=my+30;y<my+100;y+=12) ctx.fillRect(mx-20+(y-my)/6, y, 38-(y-my)/4, 2);
-    // Door
-    rect(mx-8, my+75, 16, 25, P.woodD, P.black, 2);
-    // Blades
-    ctx.save(); ctx.translate(mx, my+30);
+    // Base/foundation
+    box(mx-14,my+96,28,12,C.stoneD,C.black,2);
+    // Tower (trapezoidal)
+    ctx.fillStyle=C.mill;
+    ctx.beginPath(); ctx.moveTo(mx-20,my+98); ctx.lineTo(mx-13,my+22); ctx.lineTo(mx+13,my+22); ctx.lineTo(mx+20,my+98); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle=C.black; ctx.lineWidth=2; ctx.stroke();
+    // Stone stripes
+    ctx.fillStyle=C.millD; for(let y=my+30;y<my+98;y+=10) ctx.fillRect(mx-18+(y-my)/7,y,32-(y-my)/5,2);
+    // Door arch
+    ctx.fillStyle=C.woodD;
+    ctx.beginPath(); ctx.arc(mx,my+86,10,Math.PI,0); ctx.lineTo(mx+10,my+98); ctx.lineTo(mx-10,my+98); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle=C.black; ctx.lineWidth=1; ctx.stroke();
+    // Blades – animated
+    ctx.save(); ctx.translate(mx,my+28);
     for(let i=0;i<4;i++){
-        ctx.save(); ctx.rotate(t*0.7+i*Math.PI/2);
-        // Blade
-        ctx.fillStyle='#e8d898'; ctx.strokeStyle=P.black; ctx.lineWidth=1;
-        ctx.beginPath(); ctx.moveTo(-4,2); ctx.lineTo(4,2); ctx.lineTo(3,38); ctx.lineTo(-3,38); ctx.closePath();
+        ctx.save(); ctx.rotate(t*0.65+i*Math.PI/2);
+        // Blade (wider, tapered)
+        ctx.fillStyle='#e8d898'; ctx.strokeStyle=C.black; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(-5,3); ctx.lineTo(5,3); ctx.lineTo(3,42); ctx.lineTo(-3,42); ctx.closePath();
         ctx.fill(); ctx.stroke();
+        // Cross brace
+        ctx.strokeStyle=C.woodD; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(0,5); ctx.lineTo(0,40); ctx.stroke();
         ctx.restore();
     }
-    circle(0,0,8,P.wood,P.black,2); ctx.restore();
+    circ(0,0,7,C.wood,C.black,2); ctx.restore();
 }
 
-function drawWaterTower(){
-    const tx=W*0.14, ty=H*0.65;
-    const tw=56;
-    // Legs
-    ctx.fillStyle=P.woodD; ctx.lineWidth=2;
-    ctx.fillRect(tx+4, ty+46, 6, 35);
-    ctx.fillRect(tx+tw-10, ty+46, 6, 35);
-    // Cross brace
-    ctx.strokeStyle=P.wood; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(tx+7,ty+52); ctx.lineTo(tx+tw-7,ty+76); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(tx+tw-7,ty+52); ctx.lineTo(tx+7,ty+76); ctx.stroke();
-    // Tank
-    rect(tx, ty, tw, 46, P.woodD, P.black, 2);
-    rect(tx+2, ty+2, tw-4, 30, P.water, null);
-    ctx.fillStyle=P.waterL;
-    ctx.fillRect(tx+2, ty+2, tw-4, 6);
+// ========================= CELEIRO =========================
+function drawBarn(){
+    const bx=W*0.22, by=H*0.12;
+    const bw=160, bh=115;
+    // Shadow
+    ctx.fillStyle='rgba(0,0,0,0.14)'; ctx.fillRect(bx+12,by+12,bw,bh);
+    // Main wall
+    box(bx,by,bw,bh,C.barn,C.black,3);
+    // Plank texture
+    ctx.fillStyle='rgba(0,0,0,0.07)'; for(let i=0;i<bh;i+=18) ctx.fillRect(bx+2,by+i,bw-4,10);
+    // Cross boards (diagonal X on doors)
+    ctx.strokeStyle='rgba(0,0,0,0.2)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(bx+38,by+62); ctx.lineTo(bx+100,by+bh); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx+100,by+62); ctx.lineTo(bx+38,by+bh); ctx.stroke();
     // Roof
-    tri([[tx-4,ty],[tx+tw/2,ty-16],[tx+tw+4,ty]], P.wood, P.black, 2);
-    // Bands
-    ctx.fillStyle=P.wood;
-    ctx.fillRect(tx, ty+14, tw, 4); ctx.fillRect(tx, ty+32, tw, 4);
+    tri([[bx-14,by],[bx+bw/2,by-62],[bx+bw+14,by]],C.barnRoof,C.black,3);
+    ctx.fillStyle=C.barnHL; ctx.fillRect(bx+bw/2-4,by-62,8,62); // ridge
+    // Roof accent
+    ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(bx+bw/2-40,by-58,38,58); ctx.fillRect(bx+bw/2+4,by-52,35,52);
+    // Left window
+    box(bx+8,by+28,32,26,C.woodD,C.black,2);
+    box(bx+10,by+30,28,22,'#b0d8f0',null);
+    ctx.fillStyle=C.woodD; ctx.fillRect(bx+23,by+30,2,22); ctx.fillRect(bx+10,by+41,28,2);
+    // Double doors
+    box(bx+38,by+62,30,bh-62,C.woodD,C.black,2);
+    box(bx+40,by+64,28,bh-66,C.wood,null);
+    box(bx+70,by+62,30,bh-62,C.woodD,C.black,2);
+    box(bx+72,by+64,28,bh-66,C.wood,null);
+    circ(bx+69,by+bh-25,4,'#d0a040',C.black,1);
+    // Side panel
+    ctx.fillStyle=C.barnS; ctx.fillRect(bx+bw,by+15,22,bh-10);
+    ctx.strokeStyle=C.black; ctx.lineWidth=2; ctx.strokeRect(bx+bw,by+15,22,bh-10);
+    ctx.fillStyle='rgba(0,0,0,0.08)'; for(let i=0;i<bh-10;i+=16) ctx.fillRect(bx+bw+2,by+15+i,18,9);
 }
 
+// ========================= SILO =========================
+function drawSilo(){
+    const sx=W*0.22+192, sy=H*0.12+8;
+    const sr=24, sh=96;
+    ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(sx-sr+8,sy+8,sr*2,sh);
+    box(sx-sr,sy,sr*2,sh,C.silo,C.black,2);
+    ctx.fillStyle=C.siloD; for(let x=sx-sr+8;x<sx+sr;x+=10) ctx.fillRect(x,sy,2,sh);
+    // Dome
+    ctx.fillStyle=C.siloR; ctx.beginPath(); ctx.ellipse(sx,sy,sr,sr*0.55,0,Math.PI,0,true); ctx.fill(); ctx.strokeStyle=C.black; ctx.lineWidth=2; ctx.stroke();
+    // Cone roof
+    tri([[sx-sr-5,sy],[sx,sy-28],[sx+sr+5,sy]],C.siloD,C.black,2);
+    // Vent ring at top
+    circ(sx,sy-28,5,'#7a8870',C.black,1);
+}
+
+// ========================= FARMHOUSE (TOP-RIGHT) =========================
 function drawFarmhouse(){
-    const hx=W*0.84, hy=H*0.09;
-    const hw=100, hh=80;
-    // Shadow
-    ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(hx+8,hy+28,hw,hh);
+    const hx=W*0.78, hy=H*0.09;
+    const hw=95, hh=75;
+    ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(hx+10,hy+30,hw,hh);
     // Walls
-    rect(hx, hy+20, hw, hh, P.house, P.black, 2);
-    // Side shading
-    rect(hx+hw, hy+28, 14, hh-6, P.houseWall, null);
+    box(hx,hy+22,hw,hh,C.house,C.black,2);
+    box(hx+hw,hy+28,14,hh-6,C.houseSide,null); ctx.strokeStyle=C.black; ctx.lineWidth=1; ctx.strokeRect(hx+hw,hy+28,14,hh-6);
     // Roof
-    tri([[hx-8,hy+20],[hx+hw/2,hy-15],[hx+hw+8,hy+20]], P.houseRoof, P.black, 2);
-    ctx.fillStyle='rgba(255,255,255,0.1)';
-    ctx.fillRect(hx+hw/2-3,hy-15,6,35);
+    tri([[hx-10,hy+22],[hx+hw/2,hy-12],[hx+hw+10,hy+22]],C.houseR,C.black,2);
+    ctx.fillStyle='rgba(255,255,255,0.08)'; ctx.fillRect(hx+hw/2-3,hy-12,6,34);
     // Chimney
-    rect(hx+hw-28, hy-20, 14, 35, P.stone, P.black, 2);
-    ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(hx+hw-28,hy-22,14,6);
+    box(hx+hw-28,hy-20,12,34,C.stoneD,C.black,2);
+    ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.fillRect(hx+hw-28,hy-22,12,5);
     // Door
-    rect(hx+38, hy+60, 24, hh-40, P.wood, P.black, 2);
-    circle(hx+50, hy+90, 3, '#d0a840', P.black, 1);
+    box(hx+34,hy+62,22,hh-42,C.wood,C.black,2);
+    circ(hx+45,hy+87,3,'#d0a040',C.black,1);
     // Windows
-    rect(hx+6, hy+36, 24, 20, P.woodD, P.black, 2);
-    rect(hx+8, hy+38, 20, 16, '#b8ddf8', null);
-    ctx.fillStyle=P.woodD; ctx.fillRect(hx+17,hy+38,2,16); ctx.fillRect(hx+8,hy+46,20,2);
-    rect(hx+70, hy+36, 24, 20, P.woodD, P.black, 2);
-    rect(hx+72, hy+38, 20, 16, '#b8ddf8', null);
-    ctx.fillStyle=P.woodD; ctx.fillRect(hx+81,hy+38,2,16); ctx.fillRect(hx+72,hy+46,20,2);
+    box(hx+4,hy+38,22,18,C.woodD,C.black,2);
+    box(hx+6,hy+40,18,14,'#b0d8f0',null);
+    ctx.fillStyle=C.woodD; ctx.fillRect(hx+14,hy+40,2,14); ctx.fillRect(hx+6,hy+47,18,2);
+    box(hx+68,hy+38,22,18,C.woodD,C.black,2);
+    box(hx+70,hy+40,18,14,'#b0d8f0',null);
+    ctx.fillStyle=C.woodD; ctx.fillRect(hx+78,hy+40,2,14); ctx.fillRect(hx+70,hy+47,18,2);
+    // Porch sign
+    box(hx+20,hy+20,54,14,'#c8b060',C.black,1);
+    pxT('LOJA',hx+24,hy+31,'#5a2000',6);
 }
 
+// ========================= CAIXA D'ÁGUA =========================
+function drawWaterTower(){
+    const tx=W*0.88, ty=H*0.62;
+    const tw=54, th=42;
+    // Legs & braces
+    ctx.fillStyle=C.woodD; ctx.fillRect(tx+6,ty+th,6,34); ctx.fillRect(tx+tw-12,ty+th,6,34);
+    ctx.strokeStyle=C.wood; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(tx+9,ty+th+4); ctx.lineTo(tx+tw-9,ty+th+30); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(tx+tw-9,ty+th+4); ctx.lineTo(tx+9,ty+th+30); ctx.stroke();
+    // Tank body
+    box(tx,ty,tw,th,C.tank,C.black,2);
+    // Water visible
+    box(tx+3,ty+4,tw-6,20,C.tankW,null);
+    ctx.fillStyle=C.tankWL; ctx.fillRect(tx+3,ty+4,tw-6,5);
+    // Barrel bands
+    ctx.fillStyle=C.wood; ctx.fillRect(tx,ty+14,tw,4); ctx.fillRect(tx,ty+30,tw,4);
+    // Roof
+    tri([[tx-4,ty],[tx+tw/2,ty-14],[tx+tw+4,ty]],C.woodD,C.black,2);
+    // Pipe
+    box(tx+tw/2-4,ty+th,8,8,C.stoneD,C.black,1);
+}
+
+// ========================= TRATOR =========================
 function drawTractor(){
-    const tx=W*0.17, ty=H*0.615;
+    // Reference image: tractor (blue) on the horizontal path, center-left of image
+    const t0x=W*0.20, t0y=H*0.595;
     // Big rear wheel
-    circle(tx+14, ty+44, 22, '#1a1a1a', P.black, 2);
-    circle(tx+14, ty+44, 12, '#3a3a3a', null);
-    ctx.fillStyle='#555'; [0,60,120,180,240,300].forEach(a=>{
-        const r=a*Math.PI/180;
-        ctx.fillRect(tx+14+Math.cos(r)*7-2, ty+44+Math.sin(r)*7-2,4,4);
-    });
+    circ(t0x+16,t0y+42,22,C.black,C.black,2);
+    circ(t0x+16,t0y+42,12,'#3a3a3a',null);
+    ctx.fillStyle='#666'; [0,60,120,180,240,300].forEach(a=>{ const r=a*Math.PI/180; ctx.fillRect(t0x+16+Math.cos(r)*8-2,t0y+42+Math.sin(r)*8-2,4,4); });
     // Body
-    rect(tx, ty+10, 72, 36, '#2878c0', P.black, 2);
+    box(t0x,t0y+10,74,38,C.truckB,C.black,2);
     // Hood
-    rect(tx+44, ty-4, 32, 26, '#1858a0', P.black, 2);
+    box(t0x+46,t0y-2,30,28,C.truckD,C.black,2);
     // Exhaust
-    rect(tx+66, ty-16, 8, 18, '#888', P.black, 1);
-    ctx.fillStyle='#555'; ctx.fillRect(tx+64, ty-17, 12, 4);
+    box(t0x+68,t0y-18,7,20,'#888',C.black,1); box(t0x+66,t0y-20,11,4,'#555',C.black,1);
     // Cab window
-    rect(tx+46, ty-2, 28, 20, '#9ad0f8', P.black,2);
-    // Anti-glare
-    ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.fillRect(tx+48, ty, 10, 10);
-    // Front small wheel
-    circle(tx+62, ty+46, 14, '#1a1a1a', P.black, 2);
-    circle(tx+62, ty+46, 7, '#3a3a3a', null);
-    // Head light
-    circle(tx+76, ty+20, 5, '#f8f060', P.black, 1);
+    box(t0x+48,t0y,26,20,C.truckW,C.black,2);
+    ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.fillRect(t0x+50,t0y+2,10,10);
+    // Front wheel
+    circ(t0x+64,t0y+44,14,C.black,C.black,2);
+    circ(t0x+64,t0y+44,7,'#3a3a3a',null);
+    // Headlight
+    circ(t0x+78,t0y+22,5,'#f8f050',C.black,1);
 }
 
-function drawFences(){
-    // Top of soil area
-    const fx=W*0.35-6, fy=H*0.22-6;
-    const fw=W*0.42+12;
-    ctx.fillStyle=P.fence;
-    for(let x=0;x<fw;x+=20){
-        ctx.fillRect(fx+x, fy, 5, 24);      // post
-        ctx.fillStyle=P.fenceD; ctx.fillRect(fx+x,fy+3,20,4);  // rail
-        ctx.fillStyle=P.fence;  ctx.fillRect(fx+x,fy+13,20,4); // rail 2
-    }
-    // Left side
-    const fh=H*0.40+12;
-    for(let y=24;y<fh;y+=20){
-        ctx.fillRect(fx, fy+y, 5, 24);
-        ctx.fillStyle=P.fenceD; ctx.fillRect(fx,fy+y+3,20,4);
-        ctx.fillStyle=P.fence;  ctx.fillRect(fx,fy+y+13,20,4);
-    }
-}
-
-function drawTree(x,y){
-    // Trunk
-    rect(x-5, y+15, 12, 28, P.treeTrunk, P.black, 1);
-    // Canopy layers
-    circle(x, y+10, 28, P.treeTD,  P.black, 1);
-    circle(x+2, y+6, 24, P.treeT,   null);
-    circle(x-6, y+4, 18, P.treeTL,  null);
-    circle(x+10,y+12,14, P.treeTL,  null);
-}
-
-function drawHay(x,y){
-    rect(x,y,36,26,P.hay,P.black,2);
-    ctx.fillStyle=P.hayD;
-    for(let i=5;i<26;i+=7) ctx.fillRect(x,y+i,36,3);
-    // Shadow
-    ctx.fillStyle='rgba(0,0,0,0.1)'; ctx.fillRect(x+4,y+26,36,5);
-}
-
+// ========================= MAPA COMPLETO =========================
 function drawMap(){
-    drawTerrain();
-    drawFences();
-    // Trees
-    drawTree(W*0.05, H*0.38+20);
-    drawTree(W*0.24, H*0.36);
-    drawTree(W*0.92, H*0.40);
-    drawTree(W*0.96, H*0.36);
-    drawTree(W*0.89, H*0.14);
-    // Hay bales
-    drawHay(W*0.20, H*0.22);
-    drawHay(W*0.24, H*0.27);
-    // Buildings
+    drawGrass();
+    drawPaths();
+    drawFieldFence();
+    drawTree(W*0.02+5, H*0.35);
+    drawTree(W*0.04,   H*0.68, 0.85);
+    drawTree(W*0.935,  H*0.38);
+    drawTree(W*0.965,  H*0.32, 0.9);
+    drawTree(W*0.73,   H*0.10, 0.8);
+    drawHay(W*0.175, H*0.24);
+    drawHay(W*0.22,  H*0.30);
     drawBarn();
     drawSilo();
     drawWindmill();
@@ -449,222 +339,156 @@ function drawMap(){
     drawTractor();
 }
 
-// ==========================================
-//  PLOTS
-// ==========================================
-let hovered=-1;
+// ========================= CANTEIROS =========================
+let hov=-1;
 function drawPlots(){
     G.plots.forEach((p,i)=>{
         const r=plotRect(i);
-        // Wet/dry soil
-        const isHov=hovered===i;
-        ctx.fillStyle=p.state==='empty'?P.soil:P.soilW;
-        ctx.fillRect(r.x,r.y,r.w,r.h);
-        // Soil texture lines
-        ctx.fillStyle=P.soilLine;
-        for(let k=0;k<r.w;k+=10) ctx.fillRect(r.x+k,r.y,2,r.h);
-        for(let k=0;k<r.h;k+=10) ctx.fillRect(r.x,r.y+k,r.w,2);
-        // Border
-        ctx.strokeStyle=isHov?'#fff':P.fenceD;
-        ctx.lineWidth=isHov?3:2;
-        ctx.strokeRect(r.x,r.y,r.w,r.h);
-        if(isHov){
-            ctx.strokeStyle='rgba(255,255,200,0.4)';
-            ctx.lineWidth=1;
-            ctx.strokeRect(r.x+3,r.y+3,r.w-6,r.h-6);
-        }
-        // Crop
+        const isH=hov===i;
+        // Solo
+        box(r.x,r.y,r.w,r.h,p.state==='empty'?C.soilDry:C.soilWet);
+        // Arado – listras horizontais e verticais, estilo plantation
+        ctx.fillStyle=C.soilLine;
+        for(let k=0;k<r.h;k+=9) ctx.fillRect(r.x,r.y+k,r.w,2);
+        for(let k=0;k<r.w;k+=12) ctx.fillRect(r.x+k,r.y,2,r.h);
+        // Borda
+        ctx.strokeStyle=isH?'#fff':C.fenceR; ctx.lineWidth=isH?3:2; ctx.strokeRect(r.x,r.y,r.w,r.h);
+        if(isH){ ctx.strokeStyle='rgba(255,255,180,0.4)'; ctx.lineWidth=1; ctx.strokeRect(r.x+3,r.y+3,r.w-6,r.h-6); }
+
         if(p.state==='growing'){
-            // Progress bar background
-            ctx.fillStyle='rgba(0,0,0,0.5)';
-            ctx.fillRect(r.x+4,r.y+r.h-14,r.w-8,10);
-            ctx.fillStyle='#38c060';
-            ctx.fillRect(r.x+4,r.y+r.h-14,(r.w-8)*(p.prog/100),10);
-            ctx.strokeStyle='rgba(255,255,255,0.4)';
-            ctx.lineWidth=1; ctx.strokeRect(r.x+4,r.y+r.h-14,r.w-8,10);
-            emoji('🌱',r.x+r.w/2,r.y+r.h/2,r.w*0.45);
+            ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(r.x+5,r.y+r.h-14,r.w-10,10);
+            const g=ctx.createLinearGradient(r.x+5,0,r.x+5+(r.w-10)*(p.prog/100),0);
+            g.addColorStop(0,'#48e070'); g.addColorStop(1,'#a0f040');
+            ctx.fillStyle=g; ctx.fillRect(r.x+5,r.y+r.h-14,(r.w-10)*(p.prog/100),10);
+            ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1; ctx.strokeRect(r.x+5,r.y+r.h-14,r.w-10,10);
+            emo('🌱',r.x+r.w/2,r.y+r.h/2,r.w*0.48);
         } else if(p.state==='ready'){
-            const b=Math.sin(Date.now()/180)*5;
-            emoji(CROPS[p.crop].icon, r.x+r.w/2, r.y+r.h/2+b, r.w*0.55);
-            // Shine effect
-            ctx.fillStyle='rgba(255,255,100,0.15)';
-            ctx.beginPath(); ctx.arc(r.x+r.w/2,r.y+r.h/2,r.w*0.40,0,Math.PI*2); ctx.fill();
+            const b=Math.sin(Date.now()/160)*6;
+            ctx.fillStyle='rgba(255,255,100,0.12)'; ctx.beginPath(); ctx.arc(r.x+r.w/2,r.y+r.h/2,r.w*0.38,0,Math.PI*2); ctx.fill();
+            emo(CROPS[p.crop].icon,r.x+r.w/2,r.y+r.h/2+b,r.w*0.54);
         }
     });
 }
 
-// ==========================================
-//  HUD
-// ==========================================
+// ========================= HUD =========================
 function drawHUD(){
-    const hh=60;
-    // Top bar bg
-    ctx.fillStyle='rgba(10,6,2,0.90)';
-    ctx.fillRect(0,0,W,hh);
-    ctx.fillStyle=P.uiBrd; ctx.fillRect(0,hh-4,W,4); // gold line
-    pixelBorder(0,0,W,hh,'rgba(255,255,255,0.12)','rgba(0,0,0,0.4)',4);
+    // Top bar
+    ctx.fillStyle='rgba(8,4,2,0.90)'; ctx.fillRect(0,0,W,58);
+    ctx.fillStyle=C.gold; ctx.fillRect(0,54,W,4);
+    bevel(0,0,W,58,3);
 
-    px(`MOEDAS: ${G.coins}`, 24, 36, P.textYellow, 12);
+    pxT(`MOEDAS: ${G.coins}`, 20, 35, C.txtY, 12);
 
-    // Happiness bar
-    const bx=W/2-120, by=16, bw=240, bh=28;
-    px('HAPPY', bx-80, by+20, P.textYellow, 9);
+    // Happiness
+    const bx=W/2-130, by=14, bw=260, bh=28;
+    pxT('HAPPY', bx-76, by+20, C.txtY, 9);
     ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(bx,by,bw,bh);
-    // Gradient bar
-    const grad=ctx.createLinearGradient(bx,0,bx+bw,0);
-    grad.addColorStop(0,'#38c060'); grad.addColorStop(0.6,'#80d040'); grad.addColorStop(1,'#f0e000');
-    ctx.fillStyle=grad;
-    ctx.fillRect(bx,by,bw*(G.happy/100),bh);
-    ctx.strokeStyle=P.uiBrd; ctx.lineWidth=2; ctx.strokeRect(bx,by,bw,bh);
-    px(`${G.happy}%`, bx+bw/2-14, by+20, P.textWhite, 8);
+    const grd=ctx.createLinearGradient(bx,0,bx+bw,0);
+    grd.addColorStop(0,'#30c060'); grd.addColorStop(0.6,'#80d040'); grd.addColorStop(1,'#f8e000');
+    ctx.fillStyle=grd; ctx.fillRect(bx,by,bw*(G.happy/100),bh);
+    ctx.strokeStyle=C.gold; ctx.lineWidth=2; ctx.strokeRect(bx,by,bw,bh);
+    bevel(bx,by,bw,bh,2);
+    pxT(`${G.happy}%`, bx+bw/2-14, by+20, C.txtW, 8);
 
     // Inventory
-    let ix=W-440;
-    px('INV', ix-50, 36, P.textYellow, 8);
-    Object.entries(G.inv).forEach(([k,v])=>{
-        if(v>0){
-            ctx.fillStyle='rgba(255,255,255,0.12)';
-            ctx.fillRect(ix-2,8,44,44);
-            emoji(CROPS[k].icon,ix+18,30,22);
-            px(`${v}`,ix+4,54,P.textWhite,7);
-            ix+=50;
-        }
-    });
+    let ix=W-440; pxT('INV',ix-52,36,C.txtY,8);
+    Object.entries(G.inv).forEach(([k,v])=>{ if(v>0){
+        ctx.fillStyle='rgba(255,255,255,0.10)'; ctx.fillRect(ix-2,8,44,44);
+        emo(CROPS[k].icon,ix+18,30,22); pxT(`${v}`,ix+4,54,C.txtW,7); ix+=50;
+    }});
 
-    // --- SEED BUTTONS ---
+    // Seed buttons (bottom)
     KEYS.forEach((k,i)=>{
-        const r=seedBtn(i);
-        const active=G.seed===k;
-        const t=Date.now()/1000;
-        if(active){
-            const g2=ctx.createLinearGradient(r.x,r.y,r.x,r.y+r.h);
-            g2.addColorStop(0,'#f8e040'); g2.addColorStop(1,'#c09010');
-            ctx.fillStyle=g2;
-        } else {
-            ctx.fillStyle='rgba(10,6,2,0.85)';
-        }
+        const r=seedBtn(i), act=G.seed===k;
+        if(act){ const g2=ctx.createLinearGradient(r.x,r.y,r.x,r.y+r.h); g2.addColorStop(0,'#f8e040'); g2.addColorStop(1,'#b09010'); ctx.fillStyle=g2; }
+        else     ctx.fillStyle='rgba(8,4,2,0.88)';
         ctx.fillRect(r.x,r.y,r.w,r.h);
-        ctx.strokeStyle=active?P.white:P.uiBrd; ctx.lineWidth=active?3:2;
-        ctx.strokeRect(r.x,r.y,r.w,r.h);
-        pixelBorder(r.x,r.y,r.w,r.h,'rgba(255,255,255,0.2)','rgba(0,0,0,0.3)',3);
-        emoji(CROPS[k].icon, r.x+26, r.y+28, 26);
-        px(CROPS[k].name, r.x+42, r.y+22, active?P.black:P.textWhite, 6);
-        px(`$${CROPS[k].cost}`, r.x+42, r.y+42, active?'#555':P.textYellow, 7);
+        ctx.strokeStyle=act?C.white:C.gold; ctx.lineWidth=act?3:2; ctx.strokeRect(r.x,r.y,r.w,r.h);
+        bevel(r.x,r.y,r.w,r.h,3);
+        emo(CROPS[k].icon,r.x+26,r.y+30,26);
+        pxT(CROPS[k].name,r.x+42,r.y+24,act?C.black:C.txtW,6);
+        pxT(`$${CROPS[k].cost}`,r.x+42,r.y+44,act?'#444':C.txtY,7);
     });
 
-    // --- VILA PANEL ---
-    const px2=W-240, py2=62, pw2=235, ph2=H-62-90;
-    ctx.fillStyle='rgba(8,4,2,0.90)';
-    ctx.fillRect(px2,py2,pw2,ph2);
-    ctx.strokeStyle=P.uiBrd; ctx.lineWidth=3; ctx.strokeRect(px2,py2,pw2,ph2);
-    pixelBorder(px2,py2,pw2,ph2,'rgba(255,210,30,0.15)','rgba(0,0,0,0.4)',4);
-
-    // Title
-    ctx.fillStyle='rgba(255,200,30,0.15)'; ctx.fillRect(px2,py2,pw2,28);
-    px('VILA', px2+70, py2+20, P.textYellow, 11);
+    // Vila panel (right side)
+    const vx=W-240, vy=58, vw=236, vh=H-58-84;
+    ctx.fillStyle='rgba(8,4,2,0.90)'; ctx.fillRect(vx,vy,vw,vh);
+    ctx.fillStyle=C.gold; ctx.fillRect(vx,vy,vw,4); ctx.strokeStyle=C.gold; ctx.lineWidth=2; ctx.strokeRect(vx,vy,vw,vh);
+    bevel(vx,vy,vw,vh,3);
+    ctx.fillStyle='rgba(255,200,30,0.10)'; ctx.fillRect(vx,vy,vw,30);
+    pxT('VILA',vx+76,vy+22,C.txtY,11);
 
     G.reqs.forEach((req,i)=>{
-        const r=reqCard(i);
-        if(r.y+r.h>H-100) return;
+        const r=reqCard(i); if(r.y+r.h>H-90) return;
         const has=G.inv[req.crop]>=req.n;
-        // Card bg
-        ctx.fillStyle=has?'rgba(30,80,40,0.9)':'rgba(40,20,10,0.9)';
-        ctx.fillRect(r.x,r.y,r.w,r.h);
-        ctx.strokeStyle=has?P.uiGreen:'#886030';
-        ctx.lineWidth=2; ctx.strokeRect(r.x,r.y,r.w,r.h);
-        pixelBorder(r.x,r.y,r.w,r.h,'rgba(255,255,255,0.1)','rgba(0,0,0,0.3)',3);
-        // Content
-        emoji(CROPS[req.crop].icon, r.x+20, r.y+28, 26);
-        px(`${req.n}x ${CROPS[req.crop].name}`, r.x+36, r.y+22, P.textWhite, 6);
-        ctx.fillStyle='#80e0a0'; ctx.font='8px Press Start 2P,monospace';
-        ctx.fillText(`+$${req.coins}`, r.x+36, r.y+42);
-        // Distribute button
-        const by2=r.y+r.h-32, bh2=24;
+        ctx.fillStyle=has?'rgba(20,60,30,0.92)':'rgba(42,20,10,0.92)'; ctx.fillRect(r.x,r.y,r.w,r.h);
+        ctx.strokeStyle=has?C.uiGreen:'#806030'; ctx.lineWidth=2; ctx.strokeRect(r.x,r.y,r.w,r.h);
+        bevel(r.x,r.y,r.w,r.h,3);
+        emo(CROPS[req.crop].icon,r.x+20,r.y+28,24);
+        pxT(`${req.n}x ${CROPS[req.crop].name}`,r.x+36,r.y+22,C.txtW,6);
+        ctx.fillStyle='#80e090'; ctx.font='8px Press Start 2P,monospace'; ctx.fillText(`+$${req.coins}`,r.x+36,r.y+42);
+
+        const by2=r.y+r.h-30, bh2=22;
         const bg=ctx.createLinearGradient(r.x+6,by2,r.x+6,by2+bh2);
-        if(has){ bg.addColorStop(0,'#48d070'); bg.addColorStop(1,'#28904a'); }
-        else    { bg.addColorStop(0,'#605040'); bg.addColorStop(1,'#483828'); }
+        if(has){ bg.addColorStop(0,'#50d878'); bg.addColorStop(1,'#28944a'); }
+        else    { bg.addColorStop(0,'#685040'); bg.addColorStop(1,'#503828'); }
         ctx.fillStyle=bg; ctx.fillRect(r.x+6,by2,r.w-12,bh2);
-        ctx.strokeStyle=has?'#80f0a0':'#807060'; ctx.lineWidth=1;
-        ctx.strokeRect(r.x+6,by2,r.w-12,bh2);
-        pixelBorder(r.x+6,by2,r.w-12,bh2,'rgba(255,255,255,0.2)','rgba(0,0,0,0.2)',2);
-        px(has?'DISTRIBUIR':'FALTANDO', r.x+16, by2+16, P.textWhite, 6);
+        ctx.strokeStyle=has?'#80f0a0':'#807060'; ctx.lineWidth=1; ctx.strokeRect(r.x+6,by2,r.w-12,bh2);
+        bevel(r.x+6,by2,r.w-12,bh2,2);
+        pxT(has?'DISTRIBUIR':'FALTANDO',r.x+16,by2+15,C.txtW,5);
     });
 
-    // --- NOTIFICATION ---
-    if(G.notif && G.ntimer>0){
-        const alpha=Math.min(1,G.ntimer/30);
-        ctx.globalAlpha=alpha;
-        const nw=320,nh=56,nx=W/2-nw/2,ny=H*0.42;
+    // Notificação central
+    if(G.notif&&G.ntimer>0){
+        const a=Math.min(1,G.ntimer/30);
+        ctx.globalAlpha=a;
+        const nw=340,nh=58,nx=W/2-nw/2,ny=H*0.44;
         ctx.fillStyle=G.notif.c; ctx.fillRect(nx,ny,nw,nh);
         ctx.strokeStyle='#fff'; ctx.lineWidth=4; ctx.strokeRect(nx,ny,nw,nh);
-        pixelBorder(nx,ny,nw,nh,'rgba(255,255,255,0.35)','rgba(0,0,0,0.3)',4);
-        px(G.notif.m, nx+18, ny+34, '#fff', 9);
-        ctx.globalAlpha=1;
-        G.ntimer--;
+        bevel(nx,ny,nw,nh,4);
+        pxT(G.notif.m,nx+18,ny+36,'#fff',9);
+        ctx.globalAlpha=1; G.ntimer--;
     }
 }
 
-// ==========================================
-//  INPUT
-// ==========================================
+// ========================= INPUT =========================
 canvas.addEventListener('mousemove',e=>{
-    const mx=e.clientX, my=e.clientY;
-    hovered=-1;
-    G.plots.forEach((_,i)=>{
-        const r=plotRect(i);
-        if(mx>=r.x&&mx<=r.x+r.w&&my>=r.y&&my<=r.y+r.h) hovered=i;
-    });
-    canvas.style.cursor=hovered>=0?'pointer':'default';
+    const mx=e.clientX,my=e.clientY; hov=-1;
+    G.plots.forEach((_,i)=>{ const r=plotRect(i); if(mx>=r.x&&mx<=r.x+r.w&&my>=r.y&&my<=r.y+r.h) hov=i; });
+    canvas.style.cursor=hov>=0?'pointer':'default';
 });
-
 canvas.addEventListener('click',e=>{
-    const mx=e.clientX, my=e.clientY;
-    // Plots
+    const mx=e.clientX,my=e.clientY;
     G.plots.forEach((p,i)=>{
-        const r=plotRect(i);
-        if(mx<r.x||mx>r.x+r.w||my<r.y||my>r.y+r.h) return;
+        const r=plotRect(i); if(mx<r.x||mx>r.x+r.w||my<r.y||my>r.y+r.h) return;
         if(p.state==='empty'){
             const c=CROPS[G.seed];
-            if(G.coins>=c.cost){
-                G.coins-=c.cost; p.state='growing'; p.crop=G.seed; p.t0=Date.now();
-                notif(`Plantado: ${c.name}`);
-            } else notif('Sem moedas!', P.uiRed);
+            if(G.coins>=c.cost){ G.coins-=c.cost; p.state='growing'; p.crop=G.seed; p.t0=Date.now(); notif(`Plantado: ${c.name}`); }
+            else notif('Sem moedas!',C.uiRed);
         } else if(p.state==='ready'){
-            G.inv[p.crop]++; notif(`Colhido! ${CROPS[p.crop].icon}`);
-            p.state='empty'; p.crop=null;
+            G.inv[p.crop]++; notif(`Colhido! ${CROPS[p.crop].icon}`); p.state='empty'; p.crop=null;
         }
     });
-    // Seed buttons
     KEYS.forEach((k,i)=>{ const r=seedBtn(i); if(mx>=r.x&&mx<=r.x+r.w&&my>=r.y&&my<=r.y+r.h) G.seed=k; });
-    // Distribute buttons
     G.reqs.forEach(req=>{
         const r=reqCard(G.reqs.indexOf(req));
-        const by2=r.y+r.h-32;
-        if(mx>=r.x+6&&mx<=r.x+r.w-6&&my>=by2&&my<=by2+24){
+        const by2=r.y+r.h-30;
+        if(mx>=r.x+6&&mx<=r.x+r.w-6&&my>=by2&&my<=by2+22){
             if(G.inv[req.crop]>=req.n){
-                G.inv[req.crop]-=req.n; G.coins+=req.coins;
-                G.happy=Math.min(100,G.happy+req.happy);
-                G.reqs=G.reqs.filter(r=>r.id!==req.id);
-                notif('Vila agradecida! ❤️');
+                G.inv[req.crop]-=req.n; G.coins+=req.coins; G.happy=Math.min(100,G.happy+req.happy);
+                G.reqs=G.reqs.filter(r2=>r2.id!==req.id); notif('Vila agradecida! ❤️');
             }
         }
     });
 });
 
-// ==========================================
-//  MAIN LOOP
-// ==========================================
+// ========================= LOOP =========================
 function loop(){
     G.plots.forEach(p=>{
-        if(p.state==='growing'){
-            p.prog=Math.min(100,(Date.now()-p.t0)/CROPS[p.crop].grow*100);
-            if(p.prog>=100) p.state='ready';
-        }
+        if(p.state==='growing'){ p.prog=Math.min(100,(Date.now()-p.t0)/CROPS[p.crop].grow*100); if(p.prog>=100) p.state='ready'; }
     });
     ctx.clearRect(0,0,W,H);
-    drawMap();
-    drawPlots();
-    drawHUD();
+    drawMap(); drawPlots(); drawHUD();
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
