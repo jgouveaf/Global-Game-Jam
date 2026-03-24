@@ -50,8 +50,18 @@ function updateCamera() {
     if (mouseY < topZone)    camera.y -= CAM_SPEED;
     if (mouseY > bottomZone) camera.y += CAM_SPEED;
 
-    camera.x = Math.max(0, Math.min(camera.x, WW - W));
-    camera.y = Math.max(0, Math.min(camera.y, WH - H));
+    // Se o mapa for menor que a tela, centraliza (evita bordas pretas)
+    if (WW < W) {
+        camera.x = -(W - WW) / 2;
+    } else {
+        camera.x = Math.max(0, Math.min(camera.x, WW - W));
+    }
+
+    if (WH < H) {
+        camera.y = -(H - WH) / 2;
+    } else {
+        camera.y = Math.max(0, Math.min(camera.y, WH - H));
+    }
 }
 
 // ========================= HUD =========================
