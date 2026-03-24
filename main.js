@@ -8,10 +8,10 @@ let selectedSlot = 0;
 let isWatering = false;
 let wateringTimer = 0;
 const crops = [];
-let W, H; // Variáveis globais para largura e altura do canvas
+let W, H;
 
-// Definição do Terreno 1 (Superior Esquerdo)
-const field1 = { x: 140, y: 240, w: 700, h: 440 };
+// Terreno central (com a escadinha e muro de pedra no topo)
+const field1 = { x: 1000, y: 580, w: 1050, h: 630 };
 
 function resize(){
     canvas.width  = window.innerWidth;
