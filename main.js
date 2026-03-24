@@ -37,17 +37,12 @@ let moedas = 0;
 const coinsValueEl = document.getElementById('hud-coins-value');
 
 // ========================= UI SELECTORS =========================
-const shopConfirm = document.getElementById('shop-confirm');
 const shopOverlay = document.getElementById('shop-overlay');
-
-const btnSim    = document.getElementById('btn-shop-sim');
-const btnNao    = document.getElementById('btn-shop-nao');
 const btnVoltar = document.getElementById('btn-shop-voltar');
 
 // LISTENERS
-btnSim.onclick    = () => { gameState = 'IN_SHOP'; shopConfirm.classList.add('hidden'); shopOverlay.classList.remove('hidden'); };
-btnNao.onclick    = () => { gameState = 'PLAYING'; shopConfirm.classList.add('hidden'); };
 btnVoltar.onclick = () => { gameState = 'PLAYING'; shopOverlay.classList.add('hidden'); };
+
 
 canvas.onclick = (e) => {
     if (gameState !== 'PLAYING') return;
