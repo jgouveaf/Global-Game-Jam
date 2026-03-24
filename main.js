@@ -65,6 +65,26 @@ function updateHUD() {
     document.getElementById('hud-coins-value').textContent = moedas;
 }
 
+// ========================= INVENTÁRIO =========================
+let selectedSlot = 0;
+window.addEventListener('keydown', (e) => {
+    if (e.key >= '1' && e.key <= '9') {
+        selectedSlot = parseInt(e.key) - 1;
+        updateHotbarVisual();
+    } else if (e.key === '0') {
+        selectedSlot = 9;
+        updateHotbarVisual();
+    }
+});
+
+function updateHotbarVisual() {
+    const slots = document.querySelectorAll('.hotbar-slot');
+    slots.forEach((slot, index) => {
+        if (index === selectedSlot) slot.classList.add('active');
+        else slot.classList.remove('active');
+    });
+}
+
 // ========================= LOOP =========================
 function loop(){
     updateCamera();

@@ -1,50 +1,101 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgriCorp - Farming Manager</title>
+    <title>AgriCorp – Global Game Jam</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
-
 <body>
-    <div id="ui-overlay">
-        <header>
-            <div class="logo">Agri<span>Corp</span></div>
-            <div class="stats">
-                <div class="stat">🪙 <span id="money">1000</span></div>
-                <div class="stat">📆 Dia <span id="day">1</span></div>
-            </div>
-        </header>
 
-        <div id="sidebar">
-            <div class="tool-btn active" data-tool="select">✋ Mover</div>
-            <div class="tool-btn" data-tool="till">🚜 Arar</div>
-            <div class="tool-btn" data-tool="plant">🌱 Plantar</div>
-            <div class="tool-btn" data-tool="water">💧 Regar</div>
+    <!-- HUD: Barra de Comunidade -->
+    <div id="hud-top">
+        <span id="hud-label">COMUNIDADE</span>
+        <div id="hp-bar-bg">
+            <div id="hp-bar" style="width: 100%;"></div>
         </div>
-
-        <div id="inventory-hotbar">
-            <!-- Slots serão gerados via JS -->
-        </div>
-
-        <div id="active-upgrades">
-            <!-- Upgrades ativos aparecerão aqui -->
-        </div>
-
-        <div id="game-container">
-            <canvas id="game-canvas"></canvas>
-            <div id="cursor-info"></div>
-        </div>
-
-        <footer>
-            <p>1-0 para selecionar itens | WASD para mover</p>
-        </footer>
+        <span id="hud-value">100</span>
     </div>
 
-    <script src="game.js"></script>
-</body>
+    <!-- HUD: Moedas -->
+    <div id="hud-coins">
+        <span id="hud-coins-label">MOEDAS:</span>
+        <span id="hud-coins-value">0</span>
+    </div>
 
+    <!-- INVENTÁRIO (HOTBAR DE 10 SLOTS) -->
+    <div id="hotbar-container">
+        <div class="hotbar-slot active" data-slot="1"><span class="slot-num">1</span></div>
+        <div class="hotbar-slot" data-slot="2"><span class="slot-num">2</span></div>
+        <div class="hotbar-slot" data-slot="3"><span class="slot-num">3</span></div>
+        <div class="hotbar-slot" data-slot="4"><span class="slot-num">4</span></div>
+        <div class="hotbar-slot" data-slot="5"><span class="slot-num">5</span></div>
+        <div class="hotbar-slot" data-slot="6"><span class="slot-num">6</span></div>
+        <div class="hotbar-slot" data-slot="7"><span class="slot-num">7</span></div>
+        <div class="hotbar-slot" data-slot="8"><span class="slot-num">8</span></div>
+        <div class="hotbar-slot" data-slot="9"><span class="slot-num">9</span></div>
+        <div class="hotbar-slot" data-slot="10"><span class="slot-num">0</span></div>
+    </div>
+
+    <!-- Botões de Ação (Canto Inferior Direito) -->
+    <div id="action-buttons">
+        <button id="btn-open-inventory" onclick="document.getElementById('inventory-overlay').classList.remove('hidden')">
+            🎒 INVENTÁRIO
+        </button>
+        <button id="btn-open-shop" onclick="document.getElementById('shop-overlay').classList.remove('hidden')">
+            🏪 LOJA
+        </button>
+    </div>
+
+    <!-- Overlay da Loja -->
+    <div id="shop-overlay" class="hidden">
+        <h2>🏪 LOJA DA FAZENDA</h2>
+        <div class="shop-cards">
+            <div class="shop-card">
+                <div class="card-icon">🐖</div>
+                <h3>NOVOS<br>ANIMAIS</h3>
+                <p>Porcos e Galinhas</p>
+                <div class="stars">☆☆☆☆☆☆</div>
+                <div class="card-price">💰 500</div>
+                <button class="buy-btn">COMPRAR</button>
+            </div>
+            <div class="shop-card">
+                <div class="card-icon">🌱</div>
+                <h3>NOVAS<br>PLANTAS</h3>
+                <p>Girassol e Milho</p>
+                <div class="stars">☆☆☆☆☆☆</div>
+                <div class="card-price">💰 300</div>
+                <button class="buy-btn">COMPRAR</button>
+            </div>
+            <div class="shop-card card-highlight">
+                <div class="card-icon">⚡</div>
+                <h3>VELOCIDADE<br>PLANTIO</h3>
+                <p>Mais agilidade</p>
+                <div class="stars">☆☆☆☆☆☆</div>
+                <div class="card-price">💰 800</div>
+                <button class="buy-btn">COMPRAR</button>
+            </div>
+        </div>
+        <button id="btn-shop-voltar" onclick="document.getElementById('shop-overlay').classList.add('hidden')">← VOLTAR</button>
+    </div>
+
+    <!-- Overlay do Inventário -->
+    <div id="inventory-overlay" class="hidden">
+        <h2>🎒 MEU INVENTÁRIO</h2>
+        <div class="inventory-container">
+            <div class="inv-section">
+                <h3>🎒 Itens</h3>
+                <div class="inv-grid">
+                    <!-- Itens serão carregados aqui -->
+                    <div class="inv-empty">Vazio</div>
+                </div>
+            </div>
+        </div>
+        <button id="btn-inv-voltar" onclick="document.getElementById('inventory-overlay').classList.add('hidden')">← VOLTAR</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+    <script src="main.js"></script>
+</body>
 </html>
