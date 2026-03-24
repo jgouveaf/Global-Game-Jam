@@ -163,122 +163,124 @@ function drawWindmill(){
     circ(0,0,8,C.wo,C.bk,2); ctx.restore();
 }
 
-// ========================= CELEIRO (estilo pixel art da referência) =========================
+// ========================= CELEIRO (fiel à imagem pixel art) =========================
 function drawBarn(){
-    const bx=W*0.22, by=H*0.10;
-    const bw=Math.min(180,W*0.165), bh=Math.min(120,H*0.33);
+    // Âncora dinâmica
+    const CX = W*0.295;        // centro horizontal do celeiro
+    const BASE = H*0.52;       // base do celeiro (bottom)
 
-    // --- Paredes laterais em "L" (flancos mais baixos, como na imagem) ---
-    const wingW = bw*0.18, wingH = bh*0.62;
-    const wingY  = by + bh - wingH;
+    // Dimensões escaladas pela tela
+    const S   = Math.min(W/12, H/6.5);  // fator de escala
+    const BW  = S*5;    // largura do corpo central
+    const BH  = S*3.5;  // altura do corpo central
+    const WW  = S*1.6;  // largura das asas
+    const WH  = S*2.4;  // altura das asas
 
-    // Sombra geral
-    ctx.fillStyle='rgba(0,0,0,0.16)'; ctx.fillRect(bx+10,by+14,bw+wingW,bh+8);
+    // Posições derivadas
+    const bx = CX - BW/2;      // esquerda do corpo
+    const by = BASE - BH;      // topo do corpo
+    const wx_L = bx - WW;      // esquerda da asa esq
+    const wy   = BASE - WH;    // topo das asas
+
+    // --- SOMBRA ---
+    ctx.fillStyle='rgba(0,0,0,0.15)';
+    ctx.fillRect(wx_L+6, wy+8, BW+2*WW, WH+6);
+
+    // ======================== CORPO & ASAS ========================
+    // Função para desenhar parede de troncos laranja
+    function logWall(x,y,w,h){
+        // Fundo laranja
+        ctx.fillStyle='#d86828';
+        ctx.fillRect(x,y,w,h);
+        // Linhas de tronco (mais escuras)
+        const lh = Math.max(4, S*0.4);
+        for(let i=0;i<h;i+=lh){
+            ctx.fillStyle='#b85020';
+            ctx.fillRect(x, y+i, w, Math.max(1,lh*0.35));
+            // Highlight topo do tronco
+            ctx.fillStyle='rgba(255,180,100,0.22)';
+            ctx.fillRect(x, y+i, w, Math.max(1,lh*0.2));
+        }
+        ctx.strokeStyle='#000'; ctx.lineWidth=2; ctx.strokeRect(x,y,w,h);
+    }
 
     // Asa esquerda
-    box(bx - wingW, wingY, wingW, wingH, '#c87038', C.bk, 2);
-    // Tábuas horizontais asa esquerda
-    ctx.fillStyle='#a85c28'; for(let i=6;i<wingH;i+=10) ctx.fillRect(bx-wingW+2,wingY+i,wingW-4,6);
-
+    logWall(wx_L, wy, WW, WH);
     // Asa direita
-    box(bx + bw, wingY, wingW, wingH, '#c87038', C.bk, 2);
-    ctx.fillStyle='#a85c28'; for(let i=6;i<wingH;i+=10) ctx.fillRect(bx+bw+2,wingY+i,wingW-4,6);
+    logWall(bx+BW, wy, WW, WH);
+    // Corpo central (desenhado por cima para sobrepor bordas das asas)
+    logWall(bx, by, BW, BH);
 
-    // Corpo central (frente)
-    box(bx, by + bh*0.18, bw, bh*0.82, '#d87840', C.bk, 2);
-    // Tábuas horizontais (linhas de tronco)
-    ctx.fillStyle='#b86030';
-    for(let i=0;i<bh*0.82;i+=10) ctx.fillRect(bx+2,by+bh*0.18+i,bw-4,6);
-    // Highlight topo das tábuas
-    ctx.fillStyle='rgba(255,200,140,0.18)';
-    for(let i=0;i<bh*0.82;i+=10) ctx.fillRect(bx+2,by+bh*0.18+i,bw-4,2);
+    // ======================== TETOS ========================
+    // Função para drawn um telhado com listras de tábua HORIZONTAIS
+    // paralelas à calha (como na imagem de ref)
+    function plankRoof(px, py, pw, peek_x, peek_y) {
+        // Duas faces: esquerda e direita do pico
+        const faces = [
+            { pts: [[px, py], [peek_x, peek_y], [peek_x, py]], side:'L' },
+            { pts: [[peek_x, peek_y], [px+pw, py], [peek_x, py]], side:'R' },
+        ];
+        const stripeH = Math.max(4, S*0.35);
+        const cLight = '#e8d090', cDark = '#c8a858';
 
-    // --- TETO (duas faces com tábuas diagonais estilo pixel art da imagem) ---
-    const roofPeak = by - bh*0.28;
-    const roofMidY = by + bh*0.18;
-    const roofL    = bx - wingW - 6;
-    const roofR    = bx + bw + wingW + 6;
-    const cx2      = bx + bw/2;
+        faces.forEach(face => {
+            ctx.save();
+            ctx.beginPath();
+            face.pts.forEach(([fx,fy], i) => i===0 ? ctx.moveTo(fx,fy) : ctx.lineTo(fx,fy));
+            ctx.closePath();
+            ctx.clip();
 
-    // Face esquerda do teto
-    ctx.save();
-    ctx.beginPath(); ctx.moveTo(roofL, roofMidY); ctx.lineTo(cx2, roofPeak); ctx.lineTo(cx2, roofMidY); ctx.closePath();
-    ctx.clip();
-    // Listras diagonais alternadas bege/castanho
-    const strW = 16;
-    for(let s=-bw;s<bw+bh;s+=strW*2){
-        ctx.fillStyle='#e8d098';
-        ctx.fillRect(roofL+s, roofPeak-10, strW, (roofMidY-roofPeak)+20);
-        ctx.fillStyle='#c8a060';
-        ctx.fillRect(roofL+s+strW, roofPeak-10, strW, (roofMidY-roofPeak)+20);
+            // Listras horizontais
+            const top = peek_y - stripeH;
+            const bot = py + stripeH;
+            for(let y2=top; y2<bot; y2+=stripeH){
+                ctx.fillStyle = Math.floor((y2-top)/stripeH)%2===0 ? cLight : cDark;
+                ctx.fillRect(px-4, y2, pw+8, stripeH);
+            }
+            ctx.restore();
+
+            // Borda do triângulo
+            ctx.beginPath();
+            face.pts.forEach(([fx,fy],i) => i===0 ? ctx.moveTo(fx,fy) : ctx.lineTo(fx,fy));
+            ctx.closePath();
+            ctx.strokeStyle='#000'; ctx.lineWidth=2; ctx.stroke();
+        });
     }
-    ctx.restore();
 
-    // Face direita do teto
-    ctx.save();
-    ctx.beginPath(); ctx.moveTo(cx2, roofPeak); ctx.lineTo(roofR, roofMidY); ctx.lineTo(cx2, roofMidY); ctx.closePath();
-    ctx.clip();
-    for(let s=-bw;s<bw+bh;s+=strW*2){
-        ctx.fillStyle='#c8a060';
-        ctx.fillRect(cx2+s, roofPeak-10, strW, (roofMidY-roofPeak)+20);
-        ctx.fillStyle='#e8d098';
-        ctx.fillRect(cx2+s+strW, roofPeak-10, strW, (roofMidY-roofPeak)+20);
-    }
-    ctx.restore();
+    // Teto da asa esquerda
+    plankRoof(wx_L-3, wy, WW+3, wx_L+WW/2+2, wy - WH*0.48);
+    // Teto da asa direita
+    plankRoof(bx+BW-3, wy, WW+6, bx+BW+WW/2+1, wy - WH*0.48);
+    // Teto principal (mais alto)
+    plankRoof(wx_L-4, by, BW+2*WW+8, CX, by - BH*0.65);
 
-    // Teto das asas (menores)
-    // asa esquerda
-    ctx.save();
-    ctx.beginPath(); ctx.moveTo(bx-wingW-4,wingY); ctx.lineTo(bx-wingW/2,wingY-wingH*0.45); ctx.lineTo(bx+4,wingY); ctx.closePath(); ctx.clip();
-    for(let s=-wingW;s<wingW;s+=strW*2){
-        ctx.fillStyle='#e8d098'; ctx.fillRect(bx-wingW+s,wingY-wingH,strW,wingH+10);
-        ctx.fillStyle='#c8a060'; ctx.fillRect(bx-wingW+s+strW,wingY-wingH,strW,wingH+10);
-    }
-    ctx.restore();
-    // asa direita
-    ctx.save();
-    ctx.beginPath(); ctx.moveTo(bx+bw-4,wingY); ctx.lineTo(bx+bw+wingW/2,wingY-wingH*0.45); ctx.lineTo(bx+bw+wingW+4,wingY); ctx.closePath(); ctx.clip();
-    for(let s=-wingW;s<wingW*2;s+=strW*2){
-        ctx.fillStyle='#c8a060'; ctx.fillRect(bx+bw+s,wingY-wingH,strW,wingH+10);
-        ctx.fillStyle='#e8d098'; ctx.fillRect(bx+bw+s+strW,wingY-wingH,strW,wingH+10);
-    }
-    ctx.restore();
+    // Cume do topo
+    const peakY = by - BH*0.65;
+    circ(CX, peakY, S*0.18, '#b89050', '#000', 1);
 
-    // Borda dos tetos
-    ctx.strokeStyle=C.bk; ctx.lineWidth=2;
-    tri([[roofL,roofMidY],[cx2,roofPeak],[roofR,roofMidY]],'rgba(0,0,0,0)',C.bk,2);
-    tri([[bx-wingW-4,wingY],[bx-wingW/2,wingY-wingH*0.45],[bx+4,wingY]],'rgba(0,0,0,0)',C.bk,2);
-    tri([[bx+bw-4,wingY],[bx+bw+wingW/2,wingY-wingH*0.45],[bx+bw+wingW+4,wingY]],'rgba(0,0,0,0)',C.bk,2);
+    // ======================== JANELAS ========================
+    const winW = S*0.7, winH = S*0.6;
+    const winY = wy + WH*0.32;
+    // Asa esquerda
+    const wL = wx_L + WW*0.15;
+    box(wL, winY, winW, winH, '#8a5020', '#000', 2);
+    box(wL+2, winY+2, winW-4, winH-4, '#f0c860', null);
+    ctx.fillStyle='#8a5020'; ctx.fillRect(wL,winY+winH/2-1,winW,2); ctx.fillRect(wL+winW/2-1,winY,2,winH);
+    // Asa direita
+    const wR = bx+BW + WW*0.15;
+    box(wR, winY, winW, winH, '#8a5020', '#000', 2);
+    box(wR+2, winY+2, winW-4, winH-4, '#f0c860', null);
+    ctx.fillStyle='#8a5020'; ctx.fillRect(wR,winY+winH/2-1,winW,2); ctx.fillRect(wR+winW/2-1,winY,2,winH);
 
-    // Cume do teto (ridge)
-    ctx.fillStyle='#b89050';
-    ctx.beginPath(); ctx.arc(cx2, roofPeak, 5, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle=C.bk; ctx.lineWidth=1; ctx.stroke();
-
-    // --- JANELAS (laterais, pequenas, com travessa) ---
-    const winY = by + bh*0.30;
-    const winW=24, winH=22;
-    // Janela esquerda
-    box(bx+10, winY, winW, winH, '#8a5a28', C.bk, 2);
-    box(bx+12, winY+2, winW-4, winH-4, '#e8c878', null);
-    ctx.fillStyle='#8a5a28'; ctx.fillRect(bx+10,winY+10,winW,2); ctx.fillRect(bx+21,winY+2,2,winH-4);
-    // Janela direita
-    box(bx+bw-10-winW, winY, winW, winH, '#8a5a28', C.bk, 2);
-    box(bx+bw-10-winW+2, winY+2, winW-4, winH-4, '#e8c878', null);
-    ctx.fillStyle='#8a5a28'; ctx.fillRect(bx+bw-10-winW,winY+10,winW,2); ctx.fillRect(bx+bw-10-winW+winW/2,winY+2,2,winH-4);
-
-    // --- PORTA CENTRAL (escura, dupla) ---
-    const doorW=bw*0.22, doorH=bh*0.42;
-    const doorX=bx+bw/2-doorW/2, doorY=by+bh*0.18+bh*0.82-doorH;
-    box(doorX, doorY, doorW/2-1, doorH, '#5a3010', C.bk, 2);
-    box(doorX+doorW/2+1, doorY, doorW/2-1, doorH, '#5a3010', C.bk, 2);
-    // Destaque na porta
-    ctx.fillStyle='rgba(255,180,80,0.08)'; ctx.fillRect(doorX+2,doorY+2,doorW/2-5,doorH-4);
-    ctx.fillStyle='rgba(255,180,80,0.08)'; ctx.fillRect(doorX+doorW/2+3,doorY+2,doorW/2-5,doorH-4);
-    // Dobradiças
-    ctx.fillStyle='#d0a040';
-    ctx.fillRect(doorX+2,doorY+8,4,4); ctx.fillRect(doorX+2,doorY+doorH-12,4,4);
-    ctx.fillRect(doorX+doorW-6,doorY+8,4,4); ctx.fillRect(doorX+doorW-6,doorY+doorH-12,4,4);
+    // ======================== PORTA ========================
+    const doorW = BW*0.25, doorH = BH*0.45;
+    const doorX = CX - doorW/2, doorY2 = BASE - doorH;
+    box(doorX, doorY2, doorW, doorH, '#5a3010', '#000', 2);
+    // Tábuas verticais na porta
+    ctx.fillStyle='#7a4820';
+    for(let d=doorX+Math.floor(S*0.25);d<doorX+doorW-2;d+=Math.floor(S*0.22)) ctx.fillRect(d,doorY2+2,2,doorH-4);
+    // Highlight porta
+    ctx.fillStyle='rgba(255,180,60,0.10)'; ctx.fillRect(doorX+2,doorY2+2,doorW-4,doorH*0.4);
 }
 
 // ========================= SILO =========================
