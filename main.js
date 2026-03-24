@@ -26,29 +26,49 @@ mapImage.onload = () => {
     WH = mapImage.height;
 };
 
-// ========================= MOEDAS =========================
+// ========================= ESTADO DO JOGO =========================
+let gameState = 'PLAYING'; // PLAYING, ASK_SHOP, IN_SHOP
+
+// Área do Celeiro Cinza (World Coordinates)
+const BARN_ZONE = { x: 2320, y: 100, w: 200, h: 250 };
+
+// Moedas
 let moedas = 0;
 const coinsValueEl = document.getElementById('hud-coins-value');
 
-// Carrega sprite de moeda ÚNICA e desenha no mini-canvas do HUD
-const coinImg = new Image();
-coinImg.src = 'sprites/Moeda.png';
-coinImg.onload = () => {
-    const coinCanvas = document.getElementById('coin-icon');
-    const coinCtx = coinCanvas.getContext('2d');
-    coinCtx.imageSmoothingEnabled = false;
-    coinCtx.clearRect(0,0,36,36); // Limpa canvas
-    // Desenha centralizado
-    coinCtx.drawImage(coinImg, 0, 0, 36, 36);
-};
+// ========================= UI SELECTORS =========================
+const shopConfirm = document.getElementById('shop-confirm');
+const shopOverlay = document.getElementById('shop-overlay');
 
+const btnSim    = document.getElementById('btn-shop-sim');
+const btnNao    = document.getElementById('btn-shop-nao');
+const btnVoltar = document.getElementById('btn-shop-voltar');
+
+// LISTENERS
+btnSim.onclick    = () => { gameState = 'IN_SHOP'; shopConfirm.classList.add('hidden'); shopOverlay.classList.remove('hidden'); };
+btnNao.onclick    = () => { gameState = 'PLAYING'; shopConfirm.classList.add('hidden'); };
+btnVoltar.onclick = () => { gameState = 'PLAYING'; shopOverlay.classList.add('hidden'); };
+
+canvas.onclick = (e) => {
+    if (gameState !== 'PLAYING') return;
+
+    // Converter clique na tela para coordenadas do mundo
+    const worldX = e.clientX + camera.x;
+    const worldY = e.clientY + camera.y;
+
+    // Verificar se clicou no celeiro
+    if (worldX >= BARN_ZONE.x && worldX <= BARN_ZONE.x + BARN_ZONE.w &&
+        worldY >= BARN_ZONE.y && worldY <= BARN_ZONE.y + BARN_ZONE.h) {
+        gameState = 'ASK_SHOP';
+        shopConfirm.classList.remove('hidden');
+    }
+};
 
 // ========================= CÂMERA (mouse) =========================
 const camera = { x: 0, y: 0 };
 let mouseX = 0, mouseY = 0;
 
-// Zona "safe" central: movimento só quando o mouse vai para as bordas
-const EDGE = 0.18; // 18% da borda ativa scroll
+const EDGE = 0.18;
 const CAM_SPEED = 6;
 
 window.addEventListener('mousemove', (e) => {
@@ -57,15 +77,17 @@ window.addEventListener('mousemove', (e) => {
 });
 
 function updateCamera() {
+    if (gameState !== 'PLAYING') return;
+
     const leftZone   = W * EDGE;
     const rightZone  = W * (1 - EDGE);
     const topZone    = H * EDGE;
     const bottomZone = H * (1 - EDGE);
 
-    if (mouseX < leftZone)   camera.x -= CAM_SPEED * (1 - mouseX / leftZone);
-    if (mouseX > rightZone)  camera.x += CAM_SPEED * ((mouseX - rightZone) / (W * EDGE));
-    if (mouseY < topZone)    camera.y -= CAM_SPEED * (1 - mouseY / topZone);
-    if (mouseY > bottomZone) camera.y += CAM_SPEED * ((mouseY - bottomZone) / (H * EDGE));
+    if (mouseX < leftZone)   camera.x -= CAM_SPEED;
+    if (mouseX > rightZone)  camera.x += CAM_SPEED;
+    if (mouseY < topZone)    camera.y -= CAM_SPEED;
+    if (mouseY > bottomZone) camera.y += CAM_SPEED;
 
     // Limitar câmera ao mapa
     camera.x = Math.max(0, Math.min(camera.x, WW - W));
@@ -74,34 +96,25 @@ function updateCamera() {
 
 // ========================= HUD COMUNIDADE =========================
 let comunidade = 100;
-
 const hpBar   = document.getElementById('hp-bar');
 const hpValue = document.getElementById('hud-value');
 
 function updateHUD() {
-    // Barra de comunidade
     const pct = Math.max(0, Math.min(comunidade, 100));
     hpBar.style.width = pct + '%';
     hpValue.textContent = Math.round(pct);
-    if (pct > 60) {
-        hpBar.style.background = 'linear-gradient(90deg, #8b0000, #e00000, #ff4444)';
-    } else if (pct > 30) {
-        hpBar.style.background = 'linear-gradient(90deg, #7a3000, #cc5500, #ff8800)';
-    } else {
-        hpBar.style.background = 'linear-gradient(90deg, #5a0000, #990000, #cc0000)';
-    }
-
+    
+    if (pct > 60) hpBar.style.background = 'url("sprites/barac.png") left center / auto 100%';
+    
     // Moedas
     coinsValueEl.textContent = moedas;
 }
-
 
 // ========================= LOOP PRINCIPAL =========================
 function loop(){
     updateCamera();
     ctx.clearRect(0, 0, W, H);
 
-    // Fundo verde escuro enquanto mapa carrega
     if (!mapLoaded) {
         ctx.fillStyle = '#2d5a1b';
         ctx.fillRect(0, 0, W, H);
@@ -109,8 +122,10 @@ function loop(){
         ctx.font = '16px monospace';
         ctx.fillText('Carregando mapa...', W/2 - 80, H/2);
     } else {
-        // Desenha o mapa com offset da câmera
         ctx.drawImage(mapImage, -camera.x, -camera.y);
+        
+        // Debug: Mostrar área de clique do celeiro (opcional, deixar invisível depois)
+        // ctx.strokeStyle = "red"; ctx.strokeRect(BARN_ZONE.x - camera.x, BARN_ZONE.y - camera.y, BARN_ZONE.w, BARN_ZONE.h);
     }
 
     updateHUD();
