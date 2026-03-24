@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 /* Global Game Jam - AgriCorp Styles */
+=======
+/* AgriCorp UI System */
+>>>>>>> f3c2e9b220bc255987e89e594e6c25ff7f527f8e
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 * { 
@@ -13,6 +17,7 @@ body {
     overflow: hidden; 
     width: 100vw; 
     height: 100vh; 
+<<<<<<< HEAD
     font-family: 'Press+Start+2P', cursive;
 }
 
@@ -20,6 +25,14 @@ canvas {
     display: block; 
 }
 
+=======
+    font-family: 'Press Start 2P', cursive;
+}
+
+canvas { display: block; }
+
+/* Overlay da Interface */
+>>>>>>> f3c2e9b220bc255987e89e594e6c25ff7f527f8e
 #game-ui {
     position: fixed;
     top: 20px;
@@ -28,28 +41,46 @@ canvas {
     pointer-events: none;
     display: flex;
     flex-direction: column;
+<<<<<<< HEAD
     gap: 15px;
+=======
+    gap: 12px;
+>>>>>>> f3c2e9b220bc255987e89e594e6c25ff7f527f8e
 }
 
 .ui-element {
     display: flex;
     align-items: center;
     gap: 10px;
+<<<<<<< HEAD
     padding: 10px;
     background: rgba(0, 0, 0, 0.4);
     border: 3px solid #fff;
+=======
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #fff;
+>>>>>>> f3c2e9b220bc255987e89e594e6c25ff7f527f8e
     border-radius: 4px;
 }
 
 #health-bar-container {
+<<<<<<< HEAD
     width: 200px;
     height: 40px;
     background: url('sprites/health_bars.png') no-repeat;
     background-size: cover;
+=======
+    width: 160px;
+    height: 32px;
+    background: url('sprites/health_bars.png') no-repeat;
+    background-size: contain;
+>>>>>>> f3c2e9b220bc255987e89e594e6c25ff7f527f8e
 }
 
 #money-container {
     color: #ffd700;
+<<<<<<< HEAD
     font-size: 14px;
     text-shadow: 2px 2px #000;
 }
@@ -60,4 +91,15 @@ canvas {
     background: url('sprites/currency.png') no-repeat;
     background-size: 400%; /* Just a guess, since it's a sheet */
     background-position: 0% 0%;
+=======
+    font-size: 10px;
+}
+
+#money-icon {
+    width: 24px;
+    height: 24px;
+    background: url('sprites/currency.png') no-repeat;
+    background-size: 400%; /* Ajuste baseado na sua folha de sprites */
+    background-position: center;
+>>>>>>> f3c2e9b220bc255987e89e594e6c25ff7f527f8e
 }
