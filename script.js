@@ -22,7 +22,7 @@ mapImage.src = 'new_map_debug.png?v=' + new Date().getTime();
 let mapLoaded = false;
 mapImage.onload = () => { 
     mapLoaded = true; 
-    console.log("MAP V14 LOADED WITH FENCES!");
+    console.log("MAP LOADED WITH FENCES!");
 };
 
 // Player
@@ -38,27 +38,14 @@ const player = {
 window.addEventListener('resize', resizeCanvas);
 
 // Menu System
-let gameState = 'SPLASH';
-const menuOptions = document.querySelectorAll('.menu-option');
-const splashScreen = document.getElementById('splash-screen');
+let gameState = 'MENU'; // Start directly in MENU
 const startMenu = document.getElementById('start-menu');
 const gameUI = document.getElementById('game-ui');
 
-// Auto transition from Splash to Menu
-setTimeout(() => {
-    if (gameState === 'SPLASH') {
-        gameState = 'MENU';
-        if(splashScreen) splashScreen.style.display = 'none';
-        if(startMenu) startMenu.style.display = 'flex'; // Usually flex/block based on CSS
-        console.log("Transitioned to MENU");
-    }
-}, 3000);
-
 function startGame() {
-    console.log("Starting Game... V14");
+    console.log("Starting Game... V15 (Force Play)");
     gameState = 'PLAYING';
-    if(startMenu) startMenu.style.display = 'none';
-    if(splashScreen) splashScreen.style.display = 'none';
+    if(startMenu) startMenu.setAttribute('style', 'display: none !important'); // Force hide
     if(gameUI) gameUI.style.display = 'block';
 }
 
@@ -74,31 +61,32 @@ window.addEventListener('keyup', (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
-// Click handlers for menu
-menuOptions.forEach(opt => {
-    opt.addEventListener('click', (e) => {
-        e.preventDefault();
-        const action = opt.getAttribute('data-action');
-        console.log("Clicked:", action);
-        if (action === 'play') startGame();
-        else if (action === 'settings') alert("Settings!");
-    });
-});
+// Click handlers for the new button
+const playButton = document.querySelector('[data-action="play"]');
+if (playButton) {
+    playButton.onclick = (e) => {
+        console.log("Button Clicked!");
+        startGame();
+    };
+} else {
+    console.error("Play button not found!");
+}
 
-// Collision
+// Precise Collision
 function checkCollision(px, py, pw, ph) {
     const fx = px + pw / 2;
     const fy = py + ph - 4;
     // Map bounds
     if (fx < 30 || fx > 994 || fy < 30 || fy > 994) return true;
     
-    // Fence Fence (approx rectangle in center)
-    // Left: 180, Right: 840, Top: 180, Bottom: 840
-    const GATE_L = 470, GATE_R = 554;
-    if (fx > 180 && fx < 210 && fy > 180 && fy < 840) return true; // Left
-    if (fx > 810 && fx < 840 && fy > 180 && fy < 840) return true; // Right
-    if (fy > 180 && fy < 210 && fx > 180 && fx < 840) return true; // Top
-    if (fy > 810 && fy < 840 && (fx < GATE_L || fx > GATE_R) && fx > 180 && fx < 840) return true; // Bottom
+    // Fence Enclosure (approx rectangle in center from new_map_debug.png)
+    const L = 160, R = 860, T = 160, B = 860;
+    const GL = 480, GR = 544;
+    
+    if (fx > L && fx < L+20 && fy > T && fy < B) return true; // Left
+    if (fx > R-20 && fx < R && fy > T && fy < B) return true; // Right
+    if (fy > T && fy < T+20 && fx > L && fx < R) return true; // Top
+    if (fy > B-20 && fy < B && (fx < GL || fx > GR) && fx > L && fx < R) return true; // Bottom
     
     return false;
 }
@@ -128,6 +116,12 @@ function draw() {
         ctx.translate(-Math.floor(camera.x), -Math.floor(camera.y));
         if (mapLoaded) ctx.drawImage(mapImage, 0, 0, MAP_PX, MAP_PX);
         
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath();
+        ctx.ellipse(Math.floor(player.x+12), Math.floor(player.y+36), 10, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Body
         ctx.fillStyle = '#800020';
         ctx.fillRect(Math.floor(player.x+4), Math.floor(player.y+16), 16, 16);
         ctx.restore();
@@ -136,4 +130,4 @@ function draw() {
 }
 resizeCanvas();
 draw();
-console.log("SCRIPT VERSION 14 - FULLY WORKING!");
+console.log("SCRIPT VERSION 15 - READY!");
