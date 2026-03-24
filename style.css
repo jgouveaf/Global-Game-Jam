@@ -5,7 +5,8 @@
 }
 
 body {
-    background-color: #1a1a1a;
+    /* Use the same green as the grass for the background */
+    background-color: #72967e; 
     color: #fff;
     font-family: 'Press Start 2P', cursive;
     display: flex;
@@ -17,52 +18,10 @@ body {
 
 #game-container {
     position: relative;
-    background-color: #87CEEB; /* Sky blue */
+    background-color: #72967e;
     overflow: hidden;
     width: 100vw;
     height: 100vh;
-}
-
-#splash-screen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 200;
-    animation: fadeOutSplash 1s forwards;
-    animation-delay: 2.5s;
-    pointer-events: none;
-}
-
-.splash-logo {
-    color: #fff;
-    font-size: 42px;
-    text-align: center;
-    opacity: 0;
-    text-shadow: none;
-    animation: fadeInOutLogo 2.5s forwards;
-}
-
-.splash-logo span {
-    font-size: 20px;
-    color: #888;
-}
-
-@keyframes fadeInOutLogo {
-    0% { opacity: 0; transform: scale(0.9); }
-    30% { opacity: 1; transform: scale(1); }
-    70% { opacity: 1; transform: scale(1); }
-    100% { opacity: 0; transform: scale(1.1); }
-}
-
-@keyframes fadeOutSplash {
-    from { opacity: 1; }
-    to { opacity: 0; visibility: hidden; }
 }
 
 #start-menu {
@@ -71,118 +30,41 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('menu_bg.png');
-    background-size: cover;
-    background-position: center;
-    image-rendering: pixelated;
+    background-color: rgba(0,0,0,0.8);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 100;
+    z-index: 1000;
 }
 
 .main-title {
     font-size: 48px;
     color: #ffaa00;
-    text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+    text-shadow: 4px 4px 0 #000;
     margin-bottom: 60px;
-    letter-spacing: 4px;
-}
-
-.menu-options {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
 }
 
 .menu-option {
     font-size: 24px;
     color: #fff;
-    text-shadow: 2px 2px 0 #000;
+    padding: 15px 30px;
+    background: #ffaa00;
+    border: 4px solid #fff;
     cursor: pointer;
+    font-family: inherit;
+}
+
+#game-ui {
     position: relative;
-    transition: color 0.1s;
-}
-
-.menu-option:hover {
-    color: #ffd700;
-}
-
-.menu-option.active {
-    color: #ffd700;
-}
-
-.menu-option.active::before {
-    content: '>';
-    position: absolute;
-    left: -35px;
-    color: #ffd700;
-    animation: blink 1s infinite;
-}
-
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+    width: 100%;
+    height: 100%;
+    display: none;
 }
 
 #gameCanvas {
     display: block;
     image-rendering: pixelated;
-}
-
-#ui {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-h1 {
-    font-size: 24px;
-    text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-    color: #ffd700;
-    text-align: center;
-}
-
-#hotbar {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    pointer-events: auto;
-}
-
-.slot {
-    width: 48px;
-    height: 48px;
-    border: 3px solid #555;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.slot.selected {
-    border-color: #fff;
-    transform: scale(1.1);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-}
-
-#controls-help {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 10px;
-    line-height: 1.5;
-    text-shadow: 1px 1px 0 #000;
 }
