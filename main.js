@@ -14,6 +14,41 @@ function resize(){
 resize();
 window.addEventListener('resize', resize);
 
+// ========================= PLAYER & INPUT (from script.js) =========================
+const player = {
+    x: 512,
+    y: 512,
+    width: 32,
+    height: 48,
+    speed: 5,
+    dir: 'down'
+};
+const keys = {};
+window.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; });
+window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+
+const camera = { x: 0, y: 0 };
+const WW = 1200; // World Width
+const WH = 900;  // World Height
+
+
+function applyPhysics() {
+    let vx = 0; let vy = 0;
+    if (keys['a'] || keys['arrowleft']) { vx = -player.speed; player.dir = 'left'; }
+    if (keys['d'] || keys['arrowright']) { vx = player.speed; player.dir = 'right'; }
+    if (keys['w'] || keys['arrowup']) { vy = -player.speed; player.dir = 'up'; }
+    if (keys['s'] || keys['arrowdown']) { vy = player.speed; player.dir = 'down'; }
+    if (vx !== 0 && vy !== 0) { vx *= 0.707; vy *= 0.707; }
+    
+    player.x += vx;
+    player.y += vy;
+
+    // Follow camera
+    camera.x = player.x + player.width/2 - W/2;
+    camera.y = player.y + player.height/2 - H/2;
+}
+
+
 // ========================= PALETA =========================
 const P = {
     grassA:'#68a838', grassB:'#58a030', grassC:'#489028', grassD:'#388020',
@@ -42,16 +77,16 @@ const tri=(pts,f,s,lw=1)=>{ctx.beginPath();ctx.moveTo(...pts[0]);pts.slice(1).fo
 
 // ========================= GRAMA =========================
 function drawGrass(){
-    for(let x=0;x<W;x+=16){
-        for(let y=0;y<H;y+=16){
+    for(let x=0;x<WW;x+=16){
+        for(let y=0;y<WH;y+=16){
             ctx.fillStyle=((x/16+y/16)%2===0)?P.grassA:P.grassB;
             ctx.fillRect(x,y,16,16);
         }
     }
     // Folhinhas de grama
     ctx.fillStyle=P.grassL;
-    for(let x=6;x<W;x+=28){
-        for(let y=8;y<H;y+=28){
+    for(let x=6;x<WW;x+=28){
+        for(let y=8;y<WH;y+=28){
             const s=(x*7+y*11)%100;
             if(s<40){ctx.fillRect(x,y,2,5);ctx.fillRect(x+5,y+2,2,4);}
         }
@@ -60,12 +95,12 @@ function drawGrass(){
 
 // ========================= CAMINHOS DE TERRA =========================
 function drawPaths(){
-    // Caminho horizontal principal (centro-baixo)
-    const py=H*0.62, ph=H*0.12;
+    // Caminho horizontal principal
+    const py=WH*0.62, ph=WH*0.12;
     ctx.fillStyle=P.dirtB;
-    ctx.fillRect(0, py, W, ph);
+    ctx.fillRect(0, py, WW, ph);
     // Textura
-    for(let x=0;x<W;x+=10){
+    for(let x=0;x<WW;x+=10){
         for(let y=py;y<py+ph;y+=10){
             const v=(x*3+y*7)%100;
             if(v<20){ctx.fillStyle=P.dirtL;ctx.fillRect(x,y,10,10);}
@@ -74,68 +109,55 @@ function drawPaths(){
     }
     // Bordas
     ctx.fillStyle=P.dirtD;
-    ctx.fillRect(0,py,W,3);ctx.fillRect(0,py+ph-3,W,3);
+    ctx.fillRect(0,py,WW,3);ctx.fillRect(0,py+ph-3,WW,3);
 
     // Caminho vertical (vai pro celeiro)
-    const vx=W*0.46, vw=W*0.08;
+    const vx=WW*0.46, vw=WW*0.08;
     ctx.fillStyle=P.dirtB;
-    ctx.fillRect(vx, H*0.10, vw, py-H*0.10+ph);
+    ctx.fillRect(vx, WH*0.10, vw, py-WH*0.10+ph);
     for(let x=vx;x<vx+vw;x+=10){
-        for(let y=H*0.10;y<py+ph;y+=10){
+        for(let y=WH*0.10;y<py+ph;y+=10){
             const v=(x*5+y*9)%100;
             if(v<20){ctx.fillStyle=P.dirtL;ctx.fillRect(x,y,10,10);}
             else if(v>80){ctx.fillStyle=P.dirtC;ctx.fillRect(x,y,10,10);}
         }
     }
     ctx.fillStyle=P.dirtD;
-    ctx.fillRect(vx,H*0.10,3,py-H*0.10+ph);ctx.fillRect(vx+vw-3,H*0.10,3,py-H*0.10+ph);
+    ctx.fillRect(vx,WH*0.10,3,py-WH*0.10+ph);ctx.fillRect(vx+vw-3,WH*0.10,3,py-WH*0.10+ph);
 
-    // Caminho inferior (acesso ao campo de trigo e horta)
+    // Caminho inferior
     ctx.fillStyle=P.dirtB;
-    ctx.fillRect(W*0.10, py, W*0.36, ph);
-    ctx.fillRect(W*0.54, py, W*0.30, ph);
+    ctx.fillRect(WW*0.10, py, WW*0.36, ph);
+    ctx.fillRect(WW*0.54, py, WW*0.30, ph);
 }
 
 // ========================= CAMPO DE TRIGO (ESQUERDA) =========================
 function drawWheatField(){
-    const fx=W*0.04, fy=H*0.15, fw=W*0.32, fh=H*0.42;
+    const fx=WW*0.04, fy=WH*0.15, fw=WW*0.32, fh=WH*0.42;
 
     // Solo base
     box(fx,fy,fw,fh,P.dirtC);
 
-    // Fileiras de trigo
+    // Fileiras de tilled soil (sem trigo)
     const rowH=12;
     for(let row=0;row<fh;row+=rowH){
         // Terra entre fileiras
         ctx.fillStyle=(Math.floor(row/rowH)%2===0)?'#8a6830':'#7a5828';
         ctx.fillRect(fx,fy+row,fw,rowH);
-
-        // Hastes de trigo
-        for(let x=fx+3;x<fx+fw-2;x+=6){
-            const h=rowH*0.85;
-            // Haste
-            ctx.fillStyle='#90a038';
-            ctx.fillRect(x,fy+row+rowH-h,2,h);
-            // Espiga (topo amarelo)
-            ctx.fillStyle=P.wheat;
-            ctx.fillRect(x-1,fy+row+rowH-h-2,4,4);
-            ctx.fillStyle=P.wheatL;
-            ctx.fillRect(x,fy+row+rowH-h-2,2,2);
-        }
     }
 
     // Borda do campo
     ctx.strokeStyle=P.dirtD;ctx.lineWidth=2;ctx.strokeRect(fx,fy,fw,fh);
 }
 
-// ========================= HORTA (DIREITA DO CELEIRO) =========================
+
 function drawVegetableGarden(){
-    const gx=W*0.62, gy=H*0.18, gw=W*0.22, gh=H*0.38;
+    const gx=WW*0.62, gy=WH*0.18, gw=WW*0.22, gh=WH*0.38;
 
     // Solo
     box(gx,gy,gw,gh,'#6a4a28');
 
-    // Grid de canteiros
+    // Grid de canteiros (sem plantinhas)
     const cellW=gw/5, cellH=gh/6;
     for(let col=0;col<5;col++){
         for(let row=0;row<6;row++){
@@ -143,32 +165,6 @@ function drawVegetableGarden(){
             // Solo do canteiro
             ctx.fillStyle=(row+col)%2===0?'#7a5a30':'#6a4a28';
             ctx.fillRect(cx+1,cy+1,cellW-2,cellH-2);
-
-            // Plantinha
-            const type=(col*3+row*7)%4;
-            const px=cx+cellW/2, py2=cy+cellH/2;
-            if(type===0){
-                // Cenoura (folha verde + raiz)
-                ctx.fillStyle=P.vegA;
-                ctx.fillRect(px-2,py2-4,4,4);ctx.fillRect(px-4,py2-6,2,3);ctx.fillRect(px+2,py2-6,2,3);
-                ctx.fillStyle='#e07020';
-                ctx.fillRect(px-1,py2,2,5);
-            } else if(type===1){
-                // Tomate
-                ctx.fillStyle=P.vegC;
-                ctx.fillRect(px-3,py2-3,6,3);
-                circ(px,py2+2,4,'#d03020');
-            } else if(type===2){
-                // Alface
-                circ(px,py2,5,P.vegA);
-                circ(px,py2-1,3,P.vegC);
-            } else {
-                // Milho
-                ctx.fillStyle=P.vegA;
-                ctx.fillRect(px-1,py2-6,2,10);
-                ctx.fillStyle='#e0c040';
-                ctx.fillRect(px-2,py2-2,4,5);
-            }
         }
     }
 
@@ -203,8 +199,8 @@ function drawFenceV(x,y,h){
 
 // ========================= CELEIRO VERMELHO =========================
 function drawBarn(){
-    const bx=W*0.40, by=H*0.14;
-    const bw=W*0.18, bh=H*0.40;
+    const bx=WW*0.40, by=WH*0.14;
+    const bw=WW*0.18, bh=WH*0.40;
 
     // Sombra
     ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(bx+8,by+8,bw,bh);
@@ -270,8 +266,8 @@ function drawBarn(){
 
 // ========================= SILO =========================
 function drawSilo(){
-    const sx=W*0.36, sy=H*0.08;
-    const sw=36, sh=H*0.50;
+    const sx=WW*0.36, sy=WH*0.08;
+    const sw=36, sh=WH*0.50;
 
     // Sombra
     ctx.fillStyle='rgba(0,0,0,0.12)';ctx.fillRect(sx+6,sy+6,sw,sh);
@@ -312,7 +308,7 @@ function drawHayBale(x,y,w=30,h=22){
 
 // ========================= CAMINHONETE AZUL =========================
 function drawTruck(){
-    const tx=W*0.47, ty=H*0.63;
+    const tx=WW*0.47, ty=WH*0.63;
     const tw=60, th=32;
 
     // Roda traseira
@@ -385,9 +381,9 @@ function drawMap(){
     drawVegetableGarden();
 
     // Fardos de feno (perto do silo)
-    drawHayBale(W*0.32, H*0.48);
-    drawHayBale(W*0.34, H*0.52, 26, 20);
-    drawHayBale(W*0.30, H*0.52, 24, 18);
+    drawHayBale(WW*0.32, WH*0.48);
+    drawHayBale(WW*0.34, WH*0.52, 26, 20);
+    drawHayBale(WW*0.30, WH*0.52, 24, 18);
 
     // Celeiro
     drawBarn();
@@ -399,34 +395,58 @@ function drawMap(){
     drawTruck();
 
     // Torre de água (direita)
-    drawWaterBarrel(W*0.86, H*0.38);
+    drawWaterBarrel(WW*0.86, WH*0.38);
 
     // Pinheiros (borda direita)
-    drawPine(W*0.90, H*0.08, 1.1);
-    drawPine(W*0.94, H*0.14, 0.9);
-    drawPine(W*0.92, H*0.22, 1.0);
-    drawPine(W*0.96, H*0.06, 0.8);
-    drawPine(W*0.88, H*0.30, 0.9);
+    drawPine(WW*0.90, WH*0.08, 1.1);
+    drawPine(WW*0.94, WH*0.14, 0.9);
+    drawPine(WW*0.92, WH*0.22, 1.0);
+    drawPine(WW*0.96, WH*0.06, 0.8);
+    drawPine(WW*0.88, WH*0.30, 0.9);
 
     // Árvores folhosas (topo e cantos)
-    drawTree(W*0.04, H*0.05, 1.0);
-    drawTree(W*0.10, H*0.03, 0.9);
-    drawTree(W*0.16, H*0.06, 0.8);
-    drawTree(W*0.04, H*0.60, 0.9);
-    drawTree(W*0.08, H*0.64, 0.8);
-    drawTree(W*0.86, H*0.60, 0.9);
+    drawTree(WW*0.04, WH*0.05, 1.0);
+    drawTree(WW*0.10, WH*0.03, 0.9);
+    drawTree(WW*0.16, WH*0.06, 0.8);
+    drawTree(WW*0.04, WH*0.60, 0.9);
+    drawTree(WW*0.08, WH*0.64, 0.8);
+    drawTree(WW*0.86, WH*0.60, 0.9);
 
     // Cerca ao redor do campo de trigo
-    drawFenceH(W*0.04-4, H*0.14, W*0.32+8);
-    drawFenceH(W*0.04-4, H*0.57, W*0.32+8);
-    drawFenceV(W*0.04-6, H*0.14, H*0.43);
-    drawFenceV(W*0.36+2, H*0.14, H*0.43);
+    drawFenceH(WW*0.04-4, WH*0.14, WW*0.32+8);
+    drawFenceH(WW*0.04-4, WH*0.57, WW*0.32+8);
+    drawFenceV(WW*0.04-6, WH*0.14, WH*0.43);
+    drawFenceV(WW*0.36+2, WH*0.14, WH*0.43);
+}
+
+
+// ========================= PLAYER RENDER =========================
+function drawPlayer(){
+    const px = Math.floor(player.x);
+    const py = Math.floor(player.y);
+    
+    // Sombra
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath();
+    ctx.ellipse(px + 16, py + 44, 12, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Player (simulado se não tiver sprite)
+    ctx.fillStyle = '#800020';
+    ctx.fillRect(px + 4, py + 16, 24, 24);
 }
 
 // ========================= LOOP =========================
 function loop(){
+    applyPhysics();
     ctx.clearRect(0,0,W,H);
+    
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
     drawMap();
+    drawPlayer();
+    ctx.restore();
+
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
