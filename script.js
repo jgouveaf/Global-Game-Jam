@@ -14,10 +14,10 @@ mapImage.src = 'farm_map.png';
 let mapLoaded = false;
 mapImage.onload = () => { mapLoaded = true; };
 
-// Player - Realistic speed and hitbox
+// Player - Precise collision hitbox
 const player = {
-    x: 512,
-    y: 512,
+    x: 512, // Start middle bottom (near the gate)
+    y: 850,
     width: 24,
     height: 38,
     speed: 5,
@@ -64,7 +64,6 @@ function startGame() {
     document.getElementById('game-ui').style.display = 'block';
 }
 
-// Inputs
 const keys = {};
 window.addEventListener('keydown', (e) => {
     if (gameState === 'MENU') {
@@ -86,12 +85,32 @@ window.addEventListener('keyup', (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
-// Move physics
+// ============================================
+// PRECISE FENCE COLLISION (based on a 600x600 yard in center)
+// ============================================
 function checkCollision(px, py, pw, ph) {
     const fx = px + pw / 2;
-    const fy = py + ph - 4;
-    // Map Bounds Only
-    if (fx < 16 || fx > 1008 || fy < 16 || fy > 1008) return true;
+    const fy = py + ph - 4; // Check feet area only
+
+    // OUTER MAP BOUNDS
+    if (fx < 20 || fx > 1004 || fy < 20 || fy > 1004) return true;
+
+    // FENCE ENCLOSURE (approx coordinates for the central yard)
+    // Yard is from x: 212-812, y: 212-812
+    const fenceOffset = 15; // Tightness
+    
+    // LEFT Fence line
+    if (fx > 200 && fx < 232 && fy > 200 && fy < 820) return true;
+    
+    // RIGHT Fence line
+    if (fx > 792 && fx < 824 && fy > 200 && fy < 820) return true;
+    
+    // TOP Fence line
+    if (fy > 200 && fy < 232 && fx > 200 && fx < 824) return true;
+    
+    // BOTTOM Fence line (with GATE at x: 480-544)
+    if (fy > 792 && fy < 824 && (fx < 480 || fx > 544) && fx > 200 && fx < 824) return true;
+
     return false;
 }
 
@@ -107,10 +126,14 @@ function applyPhysics() {
         vy *= 0.707;
     }
     
-    if (!checkCollision(player.x + vx, player.y, player.width, player.height)) player.x += vx;
-    if (!checkCollision(player.x, player.y + vy, player.width, player.height)) player.y += vy;
+    if (!checkCollision(player.x + vx, player.y, player.width, player.height)) {
+        player.x += vx;
+    }
+    
+    if (!checkCollision(player.x, player.y + vy, player.width, player.height)) {
+        player.y += vy;
+    }
 
-    // Camera follow
     camera.x = player.x + player.width/2 - canvas.width/2;
     camera.y = player.y + player.height/2 - canvas.height/2;
     
@@ -135,7 +158,6 @@ function drawPlayer() {
     const px = Math.floor(player.x);
     const py = Math.floor(player.y);
     
-    // Shadow
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
     ctx.ellipse(px + 12, py + 36, 10, 4, 0, 0, Math.PI * 2);
