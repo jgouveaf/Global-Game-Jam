@@ -18,13 +18,37 @@ window.addEventListener('resize', resize);
 const mapImage = new Image();
 mapImage.src = 'sprites/Mapa.png';
 let mapLoaded = false;
-let WW = 2800; // Tamanho padrão até a imagem carregar
+let WW = 2800;
 let WH = 1400;
 mapImage.onload = () => {
     mapLoaded = true;
     WW = mapImage.width;
     WH = mapImage.height;
 };
+
+// ========================= MOEDAS =========================
+let moedas = 0;
+const coinsValueEl = document.getElementById('hud-coins-value');
+
+// Carrega spritesheet de moeda e recorta no mini-canvas do HUD
+const currencySheet = new Image();
+currencySheet.src = 'sprites/currency.png';
+currencySheet.onload = () => {
+    const coinCanvas = document.getElementById('coin-icon');
+    const coinCtx = coinCanvas.getContext('2d');
+    coinCtx.imageSmoothingEnabled = false;
+    // A spritesheet é ~512x512; as moedas douradas ficam ~no canto inferior-direito
+    // Recortamos a moeda principal (aprox 320,300 de 80x80 pixels na imagem)
+    const sw = currencySheet.width;
+    const sh = currencySheet.height;
+    coinCtx.drawImage(
+        currencySheet,
+        sw * 0.60, sh * 0.55,   // sx, sy  – posição da moeda no sheet
+        sw * 0.15, sh * 0.18,   // sWidth, sHeight – tamanho do recorte
+        0, 0, 40, 40            // destino: preenche o canvas de 40x40
+    );
+};
+
 
 // ========================= CÂMERA (mouse) =========================
 const camera = { x: 0, y: 0 };
@@ -56,17 +80,16 @@ function updateCamera() {
 }
 
 // ========================= HUD COMUNIDADE =========================
-let comunidade = 100; // 0 a 100
+let comunidade = 100;
 
 const hpBar   = document.getElementById('hp-bar');
 const hpValue = document.getElementById('hud-value');
 
 function updateHUD() {
+    // Barra de comunidade
     const pct = Math.max(0, Math.min(comunidade, 100));
     hpBar.style.width = pct + '%';
     hpValue.textContent = Math.round(pct);
-
-    // Cor muda conforme valor
     if (pct > 60) {
         hpBar.style.background = 'linear-gradient(90deg, #8b0000, #e00000, #ff4444)';
     } else if (pct > 30) {
@@ -74,7 +97,11 @@ function updateHUD() {
     } else {
         hpBar.style.background = 'linear-gradient(90deg, #5a0000, #990000, #cc0000)';
     }
+
+    // Moedas
+    coinsValueEl.textContent = moedas;
 }
+
 
 // ========================= LOOP PRINCIPAL =========================
 function loop(){

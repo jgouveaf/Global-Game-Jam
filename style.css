@@ -85,3 +85,42 @@ canvas {
     text-align: right;
     text-shadow: 0 0 8px #ff0000;
 }
+
+/* ===== SEPARADOR ===== */
+#hud-sep {
+    width: 2px;
+    height: 40px;
+    background: rgba(255,255,255,0.2);
+    margin: 0 8px;
+    flex-shrink: 0;
+}
+
+/* ===== MOEDAS ===== */
+#hud-coins {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+#coin-icon {
+    image-rendering: pixelated;
+    flex-shrink: 0;
+}
+
+#hud-coins-label {
+    color: #ffd700;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 8px #ffaa00;
+    white-space: nowrap;
+}
+
+#hud-coins-value {
+    color: #ffe566;
+    font-size: 15px;
+    min-width: 60px;
+    text-shadow: 0 0 10px #ffcc00;
+    letter-spacing: 2px;
+}
+
