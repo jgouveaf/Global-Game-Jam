@@ -1,14 +1,17 @@
-// ========================= AgriCorp Game =========================
-const canvas = document.getElementById('gameCanvas');
+// ========================= AgriCorp Game (Versão Corrigida para Área Azul) =========================
+const canvas = document.getElementById('gameCanvas') || document.getElementById('game-canvas');
 const ctx    = canvas.getContext('2d');
 let selectedSlot = 0;
 let isWatering = false;
 let wateringTimer = 0;
 const crops = [];
-let W, H, WW = 2800, WH = 1400; // Valores padrão antes do load
+let W, H, WW = 2800, WH = 1400; 
 
 const mapImage = new Image();
-mapImage.src = 'sprites/Mapa.png';
+mapImage.src = 'sprites/Mapa.png'; // No GitHub
+// Se for rodar no rascunho, use 'tileset.jpg'
+if (!window.location.href.includes('github')) mapImage.src = 'tileset.jpg';
+
 let mapLoaded = false;
 
 function resize(){
@@ -35,40 +38,45 @@ window.addEventListener('mousemove', (e) => {
     mouseX = e.clientX; mouseY = e.clientY;
 });
 
-// LOGICA DE DETECÇÃO DO TERRENO ESPECÍFICO (MARROM)
-function isInsideBrownField(xw, yw) {
-    if (yw < 600 || yw > 1180 || xw > 2180) return false;
+// LOGICA DE DETECÇÃO DO TERRENO AZUL (Direita da Estrada)
+function isInsideBlueField(xw, yw) {
+    // Limites básicos para o terreno que você pintou de azul
+    if (yw < 580 || yw > 1120 || xw < 1550 || xw > 2480) return false;
     
-    // Escadinha do lado esquerdo
-    if (yw < 710) return xw > 1290;
-    if (yw < 805) return xw > 1110;
-    if (yw < 905) return xw > 960;
-    if (yw < 1005) return xw > 830;
+    // Escadinha no lado ESQUERDO desse terreno específico
+    if (yw < 695)  return xw > 1850;
+    if (yw < 800)  return xw > 1720;
+    if (yw < 910)  return xw > 1650;
     
-    return xw > 790;
+    return xw > 1580;
 }
 
 function updateCamera() {
-    // Escala para Modo 'Cover' (Preencher tela inteira sem bordas vazias)
     const scale = Math.max(W / WW, H / WH);
     const virtualWW = WW * scale;
     const virtualWH = WH * scale;
 
-    const leftZone   = W * EDGE;
-    const rightZone  = W * (1 - EDGE);
-    const topZone    = H * EDGE;
-    const bottomZone = H * (1 - EDGE);
-
-    if (mouseX < leftZone)   camera.x -= CAM_SPEED;
-    if (mouseX > rightZone)  camera.x += CAM_SPEED;
-    if (mouseY < topZone)    camera.y -= CAM_SPEED;
-    if (mouseY > bottomZone) camera.y += CAM_SPEED;
+    if (mouseX < W * EDGE)      camera.x -= CAM_SPEED;
+    if (mouseX > W * (1-EDGE)) camera.x += CAM_SPEED;
+    if (mouseY < H * EDGE)      camera.y -= CAM_SPEED;
+    if (mouseY > H * (1-EDGE)) camera.y += CAM_SPEED;
 
     camera.x = Math.max(0, Math.min(camera.x, virtualWW - W));
     camera.y = Math.max(0, Math.min(camera.y, virtualWH - H));
 }
 
-// ========================= CONTROLE DE PLANTIO =========================
+window.addEventListener('mousedown', (e) => {
+    if (isWatering && wateringTimer > 0) {
+        const scale = Math.max(W / WW, H / WH);
+        const worldX = (e.clientX + camera.x) / scale;
+        const worldY = (e.clientY + camera.y) / scale;
+        
+        if (isInsideBlueField(worldX, worldY)) {
+            crops.push({ x: worldX, y: worldY, type: 'wheat' });
+        }
+    }
+});
+
 const btnWater = document.getElementById('btn-water');
 const timerUI = document.getElementById('planting-timer');
 const timerSec = document.getElementById('timer-sec');
@@ -92,71 +100,41 @@ if(btnWater) {
     });
 }
 
-window.addEventListener('mousedown', (e) => {
-    if (isWatering && wateringTimer > 0) {
-        const scale = Math.max(W / WW, H / WH);
-        // Calcula a posição real no mundo escalonado do mapa
-        const worldX = (e.clientX + camera.x) / scale;
-        const worldY = (e.clientY + camera.y) / scale;
-
-        if (isInsideBrownField(worldX, worldY)) {
-            crops.push({ x: worldX, y: worldY, type: 'wheat' });
-        }
-    }
-});
-
-function updateHUD() {
-    const elHp = document.getElementById('hp-bar');
-    if (elHp) { elHp.style.width = '100%'; document.getElementById('hud-value').textContent = '100'; }
-    const elCoins = document.getElementById('hud-coins-value');
-    if (elCoins) elCoins.textContent = '0';
-}
-
 function loop(){
     updateCamera();
     ctx.clearRect(0, 0, W, H);
     const scale = Math.max(W / WW, H / WH);
-
-    if (!mapLoaded) {
-        ctx.fillStyle = '#325e22'; // Verde grama apenas no carregamento
-        ctx.fillRect(0, 0, W, H);
-    } else {
+    if (mapLoaded) {
         ctx.save();
         ctx.translate(-camera.x, -camera.y);
         ctx.scale(scale, scale);
-        
         ctx.drawImage(mapImage, 0, 0);
-
-        // DELIMITADOR DO TERRENO (Debug Visual modo Rega)
+        
         if (isWatering) {
-            ctx.strokeStyle = 'white';
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)'; // Borda azul para indicar a área do usuário
             ctx.setLineDash([10, 5]);
             ctx.lineWidth = 5;
             ctx.beginPath();
-            ctx.moveTo(1290, 600);
-            ctx.lineTo(2180, 600);
-            ctx.lineTo(2180, 1180);
-            ctx.lineTo(790, 1180);
-            ctx.lineTo(790, 1005);
-            ctx.lineTo(830, 1005);
-            ctx.lineTo(830, 905);
-            ctx.lineTo(960, 905);
-            ctx.lineTo(960, 805);
-            ctx.lineTo(1110, 805);
-            ctx.lineTo(1110, 710);
-            ctx.lineTo(1290, 710);
+            ctx.moveTo(1850, 580);
+            ctx.lineTo(2480, 580);
+            ctx.lineTo(2480, 1120);
+            ctx.lineTo(1580, 1120);
+            ctx.lineTo(1580, 910);
+            ctx.lineTo(1650, 910);
+            ctx.lineTo(1650, 800);
+            ctx.lineTo(1720, 800);
+            ctx.lineTo(1720, 695);
+            ctx.lineTo(1850, 695);
             ctx.closePath();
             ctx.stroke();
             ctx.setLineDash([]);
         }
-        
         crops.forEach(crop => {
             ctx.font = '32px Arial';
             ctx.fillText('🌾', crop.x - 16, crop.y + 16);
         });
         ctx.restore();
     }
-    updateHUD();
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
