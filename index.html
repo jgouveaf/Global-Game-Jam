@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Game Jam - AgriCorp</title>
+    <title>AgriCorp – Global Game Jam</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-ui">
-        <div class="ui-element">
-            <div id="health-bar-container"></div>
+
+    <!-- HUD: Barra de Comunidade no topo -->
+    <div id="hud">
+        <span id="hud-label">COMUNIDADE</span>
+        <div id="hp-bar-bg">
+            <div id="hp-bar" style="width: 100%;"></div>
         </div>
-        <div class="ui-element">
-            <div id="money-icon"></div>
-            <div id="money-container">$ 1,000</div>
-        </div>
+        <span id="hud-value">100</span>
     </div>
+
     <canvas id="gameCanvas"></canvas>
     <script src="main.js"></script>
 </body>

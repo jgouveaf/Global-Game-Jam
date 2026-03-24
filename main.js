@@ -1,6 +1,5 @@
 // ============================================================
-//   AgriCorp – Mapa estilo Stardew Valley (referência exata)
-//   Sem sistema de plantação ainda — apenas o mapa visual
+//   AgriCorp – Mapa com câmera controlada pelo mouse
 // ============================================================
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
@@ -9,136 +8,93 @@ let W, H;
 function resize(){
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    W = canvas.width; H = canvas.height;
+    W = canvas.width;
+    H = canvas.height;
 }
 resize();
 window.addEventListener('resize', resize);
 
-// ========================= PLAYER & INPUT (from script.js) =========================
-const player = {
-    x: 512,
-    y: 512,
-    width: 32,
-    height: 48,
-    speed: 5,
-    dir: 'down'
-};
-const keys = {};
-window.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; });
-window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
-
-const playerImage = new Image();
-playerImage.src = 'player_sprite.png'; // Na raiz do projeto
-let playerLoaded = false;
-playerImage.onload = () => { playerLoaded = true; };
-
-
-const camera = { x: 0, y: 0 };
-let WW = 2000; // World Width (will update when image loads)
-let WH = 2000; // World Height
-
+// ========================= MAPA =========================
 const mapImage = new Image();
 mapImage.src = 'sprites/Mapa.png';
 let mapLoaded = false;
-mapImage.onload = () => { 
+let WW = 2800; // Tamanho padrão até a imagem carregar
+let WH = 1400;
+mapImage.onload = () => {
     mapLoaded = true;
     WW = mapImage.width;
     WH = mapImage.height;
 };
 
+// ========================= CÂMERA (mouse) =========================
+const camera = { x: 0, y: 0 };
+let mouseX = 0, mouseY = 0;
 
+// Zona "safe" central: movimento só quando o mouse vai para as bordas
+const EDGE = 0.18; // 18% da borda ativa scroll
+const CAM_SPEED = 6;
 
-function applyPhysics() {
-    let vx = 0; let vy = 0;
-    if (keys['a'] || keys['arrowleft']) { vx = -player.speed; player.dir = 'left'; }
-    if (keys['d'] || keys['arrowright']) { vx = player.speed; player.dir = 'right'; }
-    if (keys['w'] || keys['arrowup']) { vy = -player.speed; player.dir = 'up'; }
-    if (keys['s'] || keys['arrowdown']) { vy = player.speed; player.dir = 'down'; }
-    if (vx !== 0 && vy !== 0) { vx *= 0.707; vy *= 0.707; }
-    
-    // Bounds check
-    const newX = player.x + vx;
-    const newY = player.y + vy;
-    if (newX >= 0 && newX <= WW - player.width) player.x = newX;
-    if (newY >= 0 && newY <= WH - player.height) player.y = newY;
+window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
 
-    // Follow camera
-    camera.x = player.x + player.width/2 - W/2;
-    camera.y = player.y + player.height/2 - H/2;
+function updateCamera() {
+    const leftZone   = W * EDGE;
+    const rightZone  = W * (1 - EDGE);
+    const topZone    = H * EDGE;
+    const bottomZone = H * (1 - EDGE);
+
+    if (mouseX < leftZone)   camera.x -= CAM_SPEED * (1 - mouseX / leftZone);
+    if (mouseX > rightZone)  camera.x += CAM_SPEED * ((mouseX - rightZone) / (W * EDGE));
+    if (mouseY < topZone)    camera.y -= CAM_SPEED * (1 - mouseY / topZone);
+    if (mouseY > bottomZone) camera.y += CAM_SPEED * ((mouseY - bottomZone) / (H * EDGE));
+
+    // Limitar câmera ao mapa
+    camera.x = Math.max(0, Math.min(camera.x, WW - W));
+    camera.y = Math.max(0, Math.min(camera.y, WH - H));
 }
 
+// ========================= HUD COMUNIDADE =========================
+let comunidade = 100; // 0 a 100
 
+const hpBar   = document.getElementById('hp-bar');
+const hpValue = document.getElementById('hud-value');
 
-// ========================= PALETA =========================
-const P = {
-    grassA:'#68a838', grassB:'#58a030', grassC:'#489028', grassD:'#388020',
-    grassL:'#78b848',
-    dirtA:'#c8a868', dirtB:'#b89858', dirtC:'#a88848', dirtD:'#907838',
-    dirtL:'#d8b878',
-    barn:'#c83028', barnD:'#a82018', barnL:'#d84838',
-    roofA:'#586878', roofB:'#485868', roofC:'#384858', roofD:'#283848',
-    wood:'#886030', woodD:'#684020', woodL:'#a87848',
-    silo:'#a0a8a8', siloD:'#808888', siloL:'#c0c8c8', siloTop:'#687078',
-    wheat:'#d8b840', wheatD:'#b89828', wheatL:'#e8c848',
-    vegA:'#48a030', vegB:'#389020', vegC:'#58b840', vegD:'#288018',
-    water:'#4080b8', waterL:'#60a0d0',
-    fence:'#987050', fenceD:'#785838',
-    hay:'#c8a028', hayD:'#a88018',
-    truck:'#3870a8', truckD:'#285890', truckW:'#90c0e0',
-    pine:'#286828', pineD:'#185018', pineL:'#388838',
-    stone:'#808888', stoneD:'#606868',
-    bk:'#000', wh:'#fff',
-};
+function updateHUD() {
+    const pct = Math.max(0, Math.min(comunidade, 100));
+    hpBar.style.width = pct + '%';
+    hpValue.textContent = Math.round(pct);
 
-// ========================= HELPERS =========================
-const box=(x,y,w,h,f,s,lw=1)=>{ctx.fillStyle=f;ctx.fillRect(x,y,w,h);if(s){ctx.strokeStyle=s;ctx.lineWidth=lw;ctx.strokeRect(x,y,w,h);}};
-const circ=(cx,cy,r,f,s,lw=1)=>{ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=f;ctx.fill();if(s){ctx.strokeStyle=s;ctx.lineWidth=lw;ctx.stroke();}};
-const tri=(pts,f,s,lw=1)=>{ctx.beginPath();ctx.moveTo(...pts[0]);pts.slice(1).forEach(p=>ctx.lineTo(...p));ctx.closePath();ctx.fillStyle=f;ctx.fill();if(s){ctx.strokeStyle=s;ctx.lineWidth=lw;ctx.stroke();}};
-
-// ========================= MAPA COMPLETO =========================
-function drawMap(){
-    if(mapLoaded){
-        ctx.drawImage(mapImage, 0, 0);
+    // Cor muda conforme valor
+    if (pct > 60) {
+        hpBar.style.background = 'linear-gradient(90deg, #8b0000, #e00000, #ff4444)';
+    } else if (pct > 30) {
+        hpBar.style.background = 'linear-gradient(90deg, #7a3000, #cc5500, #ff8800)';
     } else {
-        // Placeholder se a imagem demorar
-        ctx.fillStyle = '#68a838';
-        ctx.fillRect(0,0, WW, WH);
+        hpBar.style.background = 'linear-gradient(90deg, #5a0000, #990000, #cc0000)';
     }
 }
 
-
-
-// ========================= PLAYER RENDER =========================
-function drawPlayer(){
-    const px = Math.floor(player.x);
-    const py = Math.floor(player.y);
-    
-    // Sombra
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
-    ctx.beginPath();
-    ctx.ellipse(px + 16, py + 44, 12, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Player
-    if(playerLoaded){
-        ctx.drawImage(playerImage, px, py, player.width, player.height);
-    } else {
-        ctx.fillStyle = '#800020';
-        ctx.fillRect(px + 4, py + 16, 24, 24);
-    }
-}
-
-// ========================= LOOP =========================
+// ========================= LOOP PRINCIPAL =========================
 function loop(){
-    applyPhysics();
-    ctx.clearRect(0,0,W,H);
-    
-    ctx.save();
-    ctx.translate(-camera.x, -camera.y);
-    drawMap();
-    drawPlayer();
-    ctx.restore();
+    updateCamera();
+    ctx.clearRect(0, 0, W, H);
 
+    // Fundo verde escuro enquanto mapa carrega
+    if (!mapLoaded) {
+        ctx.fillStyle = '#2d5a1b';
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = '#fff';
+        ctx.font = '16px monospace';
+        ctx.fillText('Carregando mapa...', W/2 - 80, H/2);
+    } else {
+        // Desenha o mapa com offset da câmera
+        ctx.drawImage(mapImage, -camera.x, -camera.y);
+    }
+
+    updateHUD();
     requestAnimationFrame(loop);
 }
+
 requestAnimationFrame(loop);
