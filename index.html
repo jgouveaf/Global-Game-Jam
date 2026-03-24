@@ -24,39 +24,40 @@
         <span id="hud-coins-value">0</span>
     </div>
 
-    <!-- Modal de Confirmação da Loja -->
-    <div id="shop-confirm" class="hidden">
-        <p>Abrir Loja?</p>
-        <div class="modal-buttons">
-            <button id="btn-shop-sim">SIM</button>
-            <button id="btn-shop-nao">NÃO</button>
-        </div>
-    </div>
-
     <!-- Overlay da Loja -->
     <div id="shop-overlay" class="hidden">
-        <h2>LOJA DA FAZENDA</h2>
+        <h2>🏪 LOJA DA FAZENDA</h2>
         <div class="shop-cards">
+
             <div class="shop-card">
-                <h3>VELOCIDADE</h3>
-                <p>Plantação</p>
-                <div class="stars">★★★★☆☆</div>
-                <button class="buy-btn">UPGRADE</button>
-            </div>
-            <div class="shop-card">
-                <h3>NOVO LOTE</h3>
-                <p>Expansão</p>
+                <div class="card-icon">🐖</div>
+                <h3>NOVOS<br>ANIMAIS</h3>
+                <p>Adicione porcos,<br>galinhas e ovelhas</p>
                 <div class="stars">★★☆☆☆☆</div>
+                <div class="card-level">Nível 2 / 6</div>
                 <button class="buy-btn">COMPRAR</button>
             </div>
+
             <div class="shop-card">
-                <h3>ANIMAIS</h3>
-                <p>Novos Amigos</p>
-                <div class="stars">☆☆☆☆☆☆</div>
+                <div class="card-icon">🌱</div>
+                <h3>NOVAS<br>PLANTAS</h3>
+                <p>Desbloqueie novas<br>culturas para plantar</p>
+                <div class="stars">★★★★☆☆</div>
+                <div class="card-level">Nível 4 / 6</div>
                 <button class="buy-btn">COMPRAR</button>
             </div>
+
+            <div class="shop-card card-highlight">
+                <div class="card-icon">⚡</div>
+                <h3>VELOCIDADE<br>DE PLANTAÇÃO</h3>
+                <p>Plante mais rápido<br>e colha mais cedo</p>
+                <div class="stars">☆☆☆☆☆☆</div>
+                <div class="card-level">Nível 0 / 6</div>
+                <button class="buy-btn">COMPRAR</button>
+            </div>
+
         </div>
-        <button id="btn-shop-voltar">VOLTAR</button>
+        <button id="btn-shop-voltar">← VOLTAR</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>

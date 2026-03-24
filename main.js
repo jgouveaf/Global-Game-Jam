@@ -29,8 +29,8 @@ mapImage.onload = () => {
 // ========================= ESTADO DO JOGO =========================
 let gameState = 'PLAYING'; // PLAYING, ASK_SHOP, IN_SHOP
 
-// Área do Celeiro Cinza (World Coordinates)
-const BARN_ZONE = { x: 2320, y: 100, w: 200, h: 250 };
+// Área da Casa Cinza (Loja) — coordenadas no mundo (aprox. 63% x, 10%-25% y do mapa 1414x780)
+const BARN_ZONE = { x: 890, y: 75, w: 210, h: 200 };
 
 // Moedas
 let moedas = 0;
@@ -52,15 +52,14 @@ btnVoltar.onclick = () => { gameState = 'PLAYING'; shopOverlay.classList.add('hi
 canvas.onclick = (e) => {
     if (gameState !== 'PLAYING') return;
 
-    // Converter clique na tela para coordenadas do mundo
     const worldX = e.clientX + camera.x;
     const worldY = e.clientY + camera.y;
 
-    // Verificar se clicou no celeiro
+    // Clicou na casa cinza (Loja) → abre a loja direto
     if (worldX >= BARN_ZONE.x && worldX <= BARN_ZONE.x + BARN_ZONE.w &&
         worldY >= BARN_ZONE.y && worldY <= BARN_ZONE.y + BARN_ZONE.h) {
-        gameState = 'ASK_SHOP';
-        shopConfirm.classList.remove('hidden');
+        gameState = 'IN_SHOP';
+        shopOverlay.classList.remove('hidden');
     }
 };
 
@@ -103,9 +102,8 @@ function updateHUD() {
     const pct = Math.max(0, Math.min(comunidade, 100));
     hpBar.style.width = pct + '%';
     hpValue.textContent = Math.round(pct);
-    
-    if (pct > 60) hpBar.style.background = 'url("sprites/barac.png") left center / auto 100%';
-    
+    // Barra sempre vermelha
+    hpBar.style.background = 'linear-gradient(90deg, #8b0000, #dd0000, #ff4444)';
     // Moedas
     coinsValueEl.textContent = moedas;
 }
