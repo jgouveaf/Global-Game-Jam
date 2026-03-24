@@ -10,7 +10,7 @@ resizeCanvas();
 const MAP_PX = 1024;
 
 const mapImage = new Image();
-mapImage.src = 'farm_map.png';
+mapImage.src = 'farm_map_final.png';
 let mapLoaded = false;
 mapImage.onload = () => { mapLoaded = true; };
 
