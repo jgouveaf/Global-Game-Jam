@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fazendeiro Comunitário | Cultivando Juntos</title>
+    <title>Global Game Jam - AgriCorp</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,11 +11,15 @@
 </head>
 <body>
     <div id="game-container">
-        <!-- HUD -->
+        <!-- ÁREA HUD -->
         <header class="hud">
             <div class="stats-card">
                 <span class="stat-label">MOEDAS</span>
                 <span id="coins" class="stat-value">50</span>
+            </div>
+            <div class="stats-card">
+                <span class="stat-label">INVENTÁRIO</span>
+                <div class="crop-inventory" id="inventory-list"></div>
             </div>
             <div class="stats-card">
                 <span class="stat-label">FELICIDADE</span>
@@ -24,38 +28,36 @@
                     <span id="happiness-text">0%</span>
                 </div>
             </div>
-            <div class="inventory-card">
-                <div class="crop-inventory" id="inventory-list">
-                    <!-- Itens -->
-                </div>
-            </div>
         </header>
 
-        <main class="game-view">
-            <!-- Fazenda -->
-            <section id="farm-section" class="scene-section">
-                <h2 class="section-title">SUA FAZENDA</h2>
-                <div class="farm-grid" id="farm-grid">
-                    <!-- Grade 3x3 -->
-                </div>
-            </section>
+        <!-- ÁREA DA FAZENDA (TOPDOWN) -->
+        <section id="farm-section">
+            <h2 class="section-title">MINHA FAZENDA</h2>
+            <div class="farm-grid" id="farm-grid">
+                <!-- Grade 3x3 gerada via JS -->
+            </div>
+        </section>
 
-            <!-- Comunidade -->
-            <section id="community-section" class="scene-section">
-                <h2 class="section-title">VILA</h2>
-                <div class="requests-container" id="requests-list">
-                    <!-- Pedidos -->
-                </div>
-            </section>
-        </main>
-
-        <!-- Sementes -->
+        <!-- ÁREA DE LOJA/SEMENTES -->
         <footer class="shop-footer">
-            <div class="seed-selector" id="seed-shop"></div>
+            <h2 class="section-title">SEMENTES</h2>
+            <div class="seed-selector" id="seed-shop">
+                <!-- Gerado via JS -->
+            </div>
         </footer>
+
+        <!-- ÁREA DA COMUNIDADE/VILA -->
+        <section id="community-section">
+            <h2 class="section-title">PEDIDOS DA VILA</h2>
+            <div class="requests-container" id="requests-list">
+                <!-- Pedidos gerados via JS -->
+            </div>
+        </section>
     </div>
 
+    <!-- ÁREA DE NOTIFICAÇÃO -->
     <div id="notification-area"></div>
+
     <script src="main.js"></script>
 </body>
 </html>
