@@ -4,52 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Global Game Jam - AgriCorp</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; image-rendering: pixelated; }
+        body {
+            background: #000;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas { display: block; cursor: pointer; }
+    </style>
 </head>
 <body>
-    <div id="game-container">
-        <!-- HUD Superior -->
-        <header class="hud">
-            <div class="stats-card">
-                <span class="stat-label">MOEDAS</span>
-                <span id="coins" class="stat-value">50</span>
-            </div>
-            <div class="stats-card">
-                <span class="stat-label">INVENTARIO</span>
-                <div class="crop-inventory" id="inventory-list"></div>
-            </div>
-            <div class="stats-card">
-                <span class="stat-label">FELICIDADE</span>
-                <div class="progress-bar-container">
-                    <div id="happiness-bar" class="progress-bar"></div>
-                    <span id="happiness-text">0%</span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Seção Fazenda -->
-        <section id="farm-section">
-            <h2 class="section-title">MINHA FAZENDA</h2>
-            <div class="farm-grid" id="farm-grid"></div>
-        </section>
-
-        <!-- Seção Loja -->
-        <footer class="shop-footer">
-            <h2 class="section-title">SEMENTES</h2>
-            <div class="seed-selector" id="seed-shop"></div>
-        </footer>
-
-        <!-- Seção Vila -->
-        <section id="community-section">
-            <h2 class="section-title">PEDIDOS DA VILA</h2>
-            <div class="requests-container" id="requests-list"></div>
-        </section>
-    </div>
-
-    <div id="notification-area"></div>
+    <canvas id="gameCanvas"></canvas>
     <script src="main.js"></script>
 </body>
 </html>
