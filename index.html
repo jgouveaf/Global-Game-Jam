@@ -1,34 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgriCorp - 2D Farming Sandbox</title>
+    <title>Fazendeiro Comunitário | Cultivando Juntos</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <style>
-        /* Force visibility for debugging */
-        #splash-screen { display: none !important; }
-        #start-menu { display: flex !important; z-index: 1000; }
-        #game-ui { z-index: 1; }
-        .menu-option { pointer-events: auto !important; cursor: pointer !important; }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
-        <!-- Start Menu -->
-        <div id="start-menu">
-            <h1 class="main-title">AgriCorp</h1>
-            <div class="menu-options">
-                <button class="menu-option" data-action="play" style="padding: 20px 40px; font-family: inherit; font-size: 24px; background: #ffaa00; border: 4px solid #fff; cursor: pointer;">PLAY GAME</button>
+        <!-- HUD Superior -->
+        <header class="hud">
+            <div class="stats-card">
+                <span class="stat-label">Moedas:</span>
+                <span id="coins" class="stat-value">50</span>
             </div>
-        </div>
-        
-        <!-- Game Canvas -->
-        <div id="game-ui" style="display: none;">
-            <canvas id="gameCanvas"></canvas>
-        </div>
+            <div class="stats-card">
+                <span class="stat-label">Felicidade da Comunidade:</span>
+                <div class="progress-bar-container">
+                    <div id="happiness-bar" class="progress-bar"></div>
+                    <span id="happiness-text">0%</span>
+                </div>
+            </div>
+            <div class="inventory-card">
+                <div class="crop-inventory" id="inventory-list">
+                    <!-- Dinâmico -->
+                </div>
+            </div>
+        </header>
+
+        <main class="game-view">
+            <!-- Área da Fazenda -->
+            <section id="farm-section" class="scene-section">
+                <h2 class="section-title">Minha Fazenda</h2>
+                <div class="farm-grid" id="farm-grid">
+                    <!-- 9 Canteiros iniciais -->
+                </div>
+            </section>
+
+            <!-- Área da Comunidade -->
+            <section id="community-section" class="scene-section">
+                <h2 class="section-title">Necessidades da Vila</h2>
+                <div class="requests-container" id="requests-list">
+                    <!-- Pedidos dinâmicos -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Menu de Sementes -->
+        <footer class="shop-footer">
+            <div class="seed-selector" id="seed-shop">
+                <!-- Sementes para comprar/plantar -->
+            </div>
+        </footer>
     </div>
-    <script src="script.js"></script>
+
+    <!-- Modais/Notificações -->
+    <div id="notification-area"></div>
+
+    <script src="main.js"></script>
 </body>
 </html>

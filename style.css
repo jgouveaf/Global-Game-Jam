@@ -1,70 +1,304 @@
+:root {
+    --primary-green: #4ADE80;
+    --secondary-green: #22C55E;
+    --earth-brown: #78350F;
+    --warm-bg: #F0FDF4;
+    --accent-amber: #F59E0B;
+    --soft-white: rgba(255, 255, 255, 0.85);
+    --glass-bg: rgba(255, 255, 255, 0.4);
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --text-dark: #1F2937;
+    --text-muted: #6B7280;
+    --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
 }
 
 body {
-    /* Use the same green as the grass for the background */
-    background-color: #72967e; 
-    color: #fff;
-    font-family: 'Press Start 2P', cursive;
+    background-color: var(--warm-bg);
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(74, 222, 128, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 40%);
+    color: var(--text-dark);
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    overflow: hidden;
 }
 
 #game-container {
-    position: relative;
-    background-color: #72967e;
-    overflow: hidden;
-    width: 100vw;
-    height: 100vh;
-}
-
-#start-menu {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.8);
+    width: 95vw;
+    height: 95vh;
+    max-width: 1400px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.main-title {
-    font-size: 48px;
-    color: #ffaa00;
-    text-shadow: 4px 4px 0 #000;
-    margin-bottom: 60px;
-}
-
-.menu-option {
-    font-size: 24px;
-    color: #fff;
-    padding: 15px 30px;
-    background: #ffaa00;
-    border: 4px solid #fff;
-    cursor: pointer;
-    font-family: inherit;
-}
-
-#game-ui {
+    gap: 24px;
+    padding: 24px;
     position: relative;
-    width: 100%;
-    height: 100%;
-    display: none;
 }
 
-#gameCanvas {
-    display: block;
-    image-rendering: pixelated;
+/* --- HUD Superior --- */
+.hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.stats-card, .inventory-card {
+    background: var(--soft-white);
+    backdrop-filter: blur(12px);
+    border: 1.5px solid var(--glass-border);
+    padding: 16px 24px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.stat-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--earth-brown);
+}
+
+.progress-bar-container {
+    width: 200px;
+    height: 12px;
+    background: #E5E7EB;
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--primary-green), var(--secondary-green));
+    transition: width 0.6s var(--transition-smooth);
+}
+
+#happiness-text {
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-left: 8px;
+}
+
+/* --- Área de Jogo --- */
+.game-view {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 24px;
+    overflow: hidden;
+}
+
+.scene-section {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    border: 1.5px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.section-title {
+    font-weight: 800;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--earth-brown);
+}
+
+/* --- Grade da Fazenda --- */
+.farm-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    flex: 1;
+}
+
+.plot {
+    min-height: 120px;
+    background: #EED2BB;
+    border-radius: var(--radius-md);
+    border: 2px solid #D5B095;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.2s;
+    overflow: hidden;
+}
+
+.plot:hover {
+    transform: scale(1.03);
+    border-color: var(--primary-green);
+}
+
+.plot.empty::after {
+    content: '+';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    color: rgba(0, 0, 0, 0.1);
+}
+
+.crop-visual {
     width: 100%;
     height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 3rem;
+    position: relative;
+}
+
+.growth-timer {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.growth-progress {
+    height: 100%;
+    width: 0%;
+    background: var(--primary-green);
+}
+
+/* --- Lista de Pedidos --- */
+.requests-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+}
+
+.request-card {
+    background: var(--soft-white);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: slideIn 0.4s var(--transition-smooth);
+}
+
+.request-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.request-crop {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.request-reward {
+    font-size: 0.85rem;
+    color: var(--accent-amber);
+    font-weight: 600;
+}
+
+.distribute-btn {
+    padding: 8px 16px;
+    background: var(--secondary-green);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.distribute-btn:disabled {
+    background: #D1D5DB;
+    cursor: not-allowed;
+}
+
+/* --- Footer Shop --- */
+.shop-footer {
+    height: 100px;
+    background: var(--soft-white);
+    backdrop-filter: blur(12px);
+    border: 1.5px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+}
+
+.seed-selector {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    justify-content: center;
+}
+
+.seed-btn {
+    padding: 12px 24px;
+    background: white;
+    border: 2px solid #E5E7EB;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+}
+
+.seed-btn.active {
+    border-color: var(--primary-green);
+    background: var(--warm-bg);
+    transform: translateY(-4px);
+}
+
+.seed-icon {
+    font-size: 1.5rem;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.harvest-ready {
+    animation: pulse 1s infinite;
 }
