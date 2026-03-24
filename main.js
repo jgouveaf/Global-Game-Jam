@@ -29,8 +29,8 @@ mapImage.onload = () => {
 // ========================= ESTADO DO JOGO =========================
 let gameState = 'PLAYING'; // PLAYING, ASK_SHOP, IN_SHOP
 
-// Área da Casa Cinza (Loja) — coordenadas no mundo (aprox. 63% x, 10%-25% y do mapa 1414x780)
-const BARN_ZONE = { x: 890, y: 75, w: 210, h: 200 };
+// Área da Casa Cinza (Loja na direita) — x:1040 para pegar a construção final
+const BARN_ZONE = { x: 1040, y: 100, w: 230, h: 240 };
 
 // Moedas
 let moedas = 0;
