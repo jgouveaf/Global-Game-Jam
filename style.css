@@ -1,12 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 :root {
-    --pixel-grass-light: #76c641;
-    --pixel-grass-dark: #44891a;
-    --pixel-dirt-light: #d5b095;
-    --pixel-dirt-dark: #a26d3f;
-    --pixel-barn-red: #c42424;
-    --pixel-sky: #8ecae6;
+    --pixel-grass: #76c641;
+    --pixel-dirt: #a26d3f;
     --pixel-wood: #733e39;
     --pixel-yellow: #f4b41b;
     --font-pixel: 'Press Start 2P', cursive;
@@ -21,12 +17,7 @@
 }
 
 body {
-    background-color: var(--pixel-grass-dark);
-    /* Usando a imagem de fundo que você já tem no repositório */
-    background-image: url('menu_bg.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    background-color: #000;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -36,249 +27,171 @@ body {
 }
 
 #game-container {
-    width: 98vw;
-    height: 98vh;
-    max-width: 1400px;
-    display: grid;
-    grid-template-areas: 
-        "hud hud"
-        "farm shop"
-        "farm community";
-    grid-template-columns: 1.2fr 0.8fr;
-    grid-template-rows: auto 1fr 1.5fr;
-    gap: 12px;
-    padding: 12px;
+    width: 100vw;
+    height: 100vh;
     position: relative;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(2px);
+    /* Imagem de fundo da fazenda inteira */
+    background-image: url('menu_bg.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    flex-direction: column;
 }
 
-/* --- HUD Superior --- */
+/* --- HUD (Overlay Superior) --- */
 .hud {
-    grid-area: hud;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
     display: flex;
-    justify-content: space-around;
-    align-items: center;
-    background: var(--pixel-dirt-dark);
-    padding: 12px;
-    border: 6px solid var(--pixel-wood);
-    box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+    justify-content: space-between;
+    pointer-events: none; /* Deixa cliques passarem para o mapa, exceto nos cards */
 }
 
 .stats-card {
+    pointer-events: auto;
+    background: rgba(0, 0, 0, 0.7);
+    border: 4px solid var(--pixel-white, #fff);
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 6px;
+    gap: 5px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
 }
 
-.stat-label {
-    font-size: 10px;
-    color: var(--pixel-yellow);
-    text-shadow: 2px 2px 0 #000;
-}
-
-.stat-value {
-    font-size: 18px;
-    color: #fff;
-    text-shadow: 2px 2px 0 #000;
-}
+.stat-label { font-size: 8px; color: var(--pixel-yellow); }
+.stat-value { font-size: 12px; color: #fff; }
 
 .progress-bar-container {
-    width: 180px;
-    height: 20px;
+    width: 120px;
+    height: 12px;
     background: #000;
-    border: 3px solid #fff;
-    position: relative;
+    border: 2px solid #fff;
 }
 
-.progress-bar {
-    height: 100%;
-    background: linear-gradient(to bottom, #76c641, #44891a);
-}
+.progress-bar { height: 100%; background: var(--pixel-grass); }
 
-#happiness-text {
-    font-size: 8px;
-    position: absolute;
-    width: 100%;
-    text-align: center;
-    top: 5px;
-    color: #fff;
-    text-shadow: 1px 1px 0 #000;
-}
-
-/* --- Grade da Fazenda --- */
+/* --- A FAZENDA (O GRID de plantação integrado ao mapa) --- */
 #farm-section {
-    grid-area: farm;
-    background: rgba(255, 255, 255, 0.1);
-    border: 6px solid var(--pixel-wood);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    position: absolute;
+    top: 60%; /* Posicionado sobre a área de terra/grama do mapa */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(115, 62, 57, 0.3); /* Um leve tom de terra */
+    padding: 10px;
+    border: 4px solid var(--pixel-wood);
 }
 
 .farm-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    gap: 15px;
-    height: 100%;
+    grid-template-columns: repeat(3, 80px);
+    grid-template-rows: repeat(3, 80px);
+    gap: 8px;
 }
 
 .plot {
-    background: var(--pixel-dirt-dark);
-    border: 6px solid var(--pixel-wood);
-    box-shadow: inset -6px -6px 0 rgba(0,0,0,0.3);
+    background: rgba(162, 109, 63, 0.8);
+    border: 3px solid #000;
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
-    transition: transform 0.1s;
 }
 
-.plot:hover {
-    transform: scale(1.05);
-    background: var(--pixel-dirt-light);
-}
+.plot:hover { border-color: #fff; background: var(--pixel-dirt); }
 
-.plot.growing { background: #5d3a1a; }
-.plot.ready { background: #8b5a2b; }
-
-.crop-visual {
-    font-size: 50px;
-    z-index: 2;
-}
-
-.plot.growing::before {
-    content: '🌱';
-    font-size: 30px;
-    position: absolute;
-}
+.crop-visual { font-size: 24px; }
 
 .growth-timer {
     position: absolute;
-    bottom: 5px;
-    left: 5px;
-    right: 5px;
-    height: 6px;
+    bottom: 2px;
+    left: 2px;
+    right: 2px;
+    height: 4px;
     background: #000;
-    border: 1px solid #fff;
 }
 
-.growth-progress {
-    height: 100%;
-    background: #76c641;
-}
+.growth-progress { height: 100%; background: var(--pixel-grass); }
 
-/* --- Shop de Sementes --- */
+/* --- SHOP (Overlay Inferior) --- */
 .shop-footer {
-    grid-area: shop;
-    background: var(--pixel-dirt-dark);
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 4px solid var(--pixel-wood);
     padding: 10px;
-    border: 6px solid var(--pixel-wood);
 }
 
 .seed-selector {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     gap: 8px;
 }
 
 .seed-btn {
-    padding: 12px 6px;
+    padding: 8px;
     background: var(--pixel-wood);
+    border: 3px solid #000;
     color: #fff;
-    border: 4px solid #000;
-    font-size: 7px;
+    font-size: 6px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
 }
 
-.seed-btn.active {
-    background: var(--pixel-yellow);
-    color: #000;
-    border-color: #fff;
-    transform: translateY(-2px);
-}
+.seed-btn.active { background: var(--pixel-yellow); color: #000; border-color: #fff; }
 
-/* --- Área da Comunidade --- */
+/* --- COMUNIDADE (Painel Lateral) --- */
 #community-section {
-    grid-area: community;
-    background: rgba(0, 0, 0, 0.5);
-    border: 6px solid var(--pixel-wood);
-    padding: 15px;
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    width: 200px;
+    height: 300px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 4px solid var(--pixel-wood);
+    padding: 10px;
     overflow-y: auto;
 }
 
-.section-title {
-    font-size: 10px;
-    color: var(--pixel-yellow);
-    margin-bottom: 12px;
-    text-align: center;
-}
-
-.requests-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
+.section-title { font-size: 10px; color: var(--pixel-yellow); margin-bottom: 10px; }
 
 .request-card {
     background: #fff;
     color: #000;
-    padding: 10px;
-    border: 4px solid var(--pixel-wood);
+    padding: 8px;
+    margin-bottom: 8px;
+    border: 2px solid #000;
     display: flex;
     justify-content: space-between;
-    align-items: center;
 }
 
-.request-info {
-    font-size: 7px;
-    line-height: 1.5;
-}
+.request-info { font-size: 6px; }
 
-.distribute-btn {
-    padding: 8px 4px;
-    background: var(--pixel-grass-light);
-    border: 3px solid #000;
-    font-size: 7px;
-    cursor: pointer;
-    font-weight: bold;
-}
+.distribute-btn { font-size: 6px; padding: 4px; cursor: pointer; background: var(--pixel-grass); }
 
-.distribute-btn:disabled {
-    background: #aaa;
-}
-
-/* Notificações */
+/* Notificações de Pixel */
 .notification {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 20px;
-    border: 6px solid #000;
-    font-size: 10px;
-    z-index: 1000;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background: #fff;
     color: #000;
+    border: 4px solid #000;
+    padding: 10px;
+    font-size: 8px;
+    z-index: 2000;
 }
 
-.notification-success { border-color: var(--pixel-grass-light); }
-.notification-error { border-color: var(--pixel-barn-red); }
-
-/* Animações */
 @keyframes pulse {
     0% { transform: scale(1); }
-    50% { transform: scale(1.15); }
+    50% { transform: scale(1.1); }
     100% { transform: scale(1); }
 }
 
-.harvest-ready {
-    animation: pulse 0.8s infinite steps(4);
-}
+.harvest-ready { animation: pulse 0.5s infinite steps(2); }

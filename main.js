@@ -183,6 +183,8 @@ class FarmGame {
                 item.style.padding = '4px';
                 item.style.border = '2px solid #000';
                 item.style.fontSize = '8px';
+                item.style.background = '#000';
+                item.style.color = '#fff';
                 item.innerHTML = `${this.crops[id].icon}${count}`;
                 this.inventoryList.appendChild(item);
             }

@@ -11,7 +11,7 @@
 </head>
 <body>
     <div id="game-container">
-        <!-- ÁREA HUD -->
+        <!-- HUD (Overlays) -->
         <header class="hud">
             <div class="stats-card">
                 <span class="stat-label">MOEDAS</span>
@@ -30,32 +30,28 @@
             </div>
         </header>
 
-        <!-- ÁREA DA FAZENDA (TOPDOWN) -->
+        <!-- GRADE DE CULTIVO (Integrada ao Mapa) -->
         <section id="farm-section">
-            <h2 class="section-title">MINHA FAZENDA</h2>
             <div class="farm-grid" id="farm-grid">
-                <!-- Grade 3x3 gerada via JS -->
+                <!-- 3x3 -->
             </div>
         </section>
 
-        <!-- ÁREA DE LOJA/SEMENTES -->
+        <!-- LOJA DE SEMENTES -->
         <footer class="shop-footer">
-            <h2 class="section-title">SEMENTES</h2>
-            <div class="seed-selector" id="seed-shop">
-                <!-- Gerado via JS -->
-            </div>
+            <div class="seed-selector" id="seed-shop"></div>
         </footer>
 
-        <!-- ÁREA DA COMUNIDADE/VILA -->
+        <!-- VILA / COMUNIDADE -->
         <section id="community-section">
             <h2 class="section-title">PEDIDOS DA VILA</h2>
             <div class="requests-container" id="requests-list">
-                <!-- Pedidos gerados via JS -->
+                <!-- Projetado via JS -->
             </div>
         </section>
     </div>
 
-    <!-- ÁREA DE NOTIFICAÇÃO -->
+    <!-- NOTIFICAÇÕES -->
     <div id="notification-area"></div>
 
     <script src="main.js"></script>
