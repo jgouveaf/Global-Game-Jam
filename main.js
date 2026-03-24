@@ -30,23 +30,16 @@ mapImage.onload = () => {
 let moedas = 0;
 const coinsValueEl = document.getElementById('hud-coins-value');
 
-// Carrega spritesheet de moeda e recorta no mini-canvas do HUD
-const currencySheet = new Image();
-currencySheet.src = 'sprites/currency.png';
-currencySheet.onload = () => {
+// Carrega sprite de moeda ÚNICA e desenha no mini-canvas do HUD
+const coinImg = new Image();
+coinImg.src = 'sprites/Moeda.png';
+coinImg.onload = () => {
     const coinCanvas = document.getElementById('coin-icon');
     const coinCtx = coinCanvas.getContext('2d');
     coinCtx.imageSmoothingEnabled = false;
-    // A spritesheet é ~512x512; as moedas douradas ficam ~no canto inferior-direito
-    // Recortamos a moeda principal (aprox 320,300 de 80x80 pixels na imagem)
-    const sw = currencySheet.width;
-    const sh = currencySheet.height;
-    coinCtx.drawImage(
-        currencySheet,
-        sw * 0.60, sh * 0.55,   // sx, sy  – posição da moeda no sheet
-        sw * 0.15, sh * 0.18,   // sWidth, sHeight – tamanho do recorte
-        0, 0, 40, 40            // destino: preenche o canvas de 40x40
-    );
+    coinCtx.clearRect(0,0,36,36); // Limpa canvas
+    // Desenha centralizado
+    coinCtx.drawImage(coinImg, 0, 0, 36, 36);
 };
 
 
