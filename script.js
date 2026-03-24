@@ -28,7 +28,7 @@ const camera = {
     x: 0,
     y: 0,
     width: canvas.width,
-    height: camera.height
+    height: canvas.height
 };
 
 window.addEventListener('resize', () => {
