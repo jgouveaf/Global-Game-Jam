@@ -1,4 +1,63 @@
-/* Canvas Game - CSS Minimal */
-* { margin: 0; padding: 0; box-sizing: border-box; image-rendering: pixelated; }
-body { background: #000; overflow: hidden; width: 100vw; height: 100vh; }
-canvas { display: block; }
+/* Global Game Jam - AgriCorp Styles */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    image-rendering: pixelated; 
+}
+
+body { 
+    background: #000; 
+    overflow: hidden; 
+    width: 100vw; 
+    height: 100vh; 
+    font-family: 'Press+Start+2P', cursive;
+}
+
+canvas { 
+    display: block; 
+}
+
+#game-ui {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.ui-element {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 3px solid #fff;
+    border-radius: 4px;
+}
+
+#health-bar-container {
+    width: 200px;
+    height: 40px;
+    background: url('sprites/health_bars.png') no-repeat;
+    background-size: cover;
+}
+
+#money-container {
+    color: #ffd700;
+    font-size: 14px;
+    text-shadow: 2px 2px #000;
+}
+
+#money-icon {
+    width: 32px;
+    height: 32px;
+    background: url('sprites/currency.png') no-repeat;
+    background-size: 400%; /* Just a guess, since it's a sheet */
+    background-position: 0% 0%;
+}

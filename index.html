@@ -4,25 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Global Game Jam - AgriCorp</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; image-rendering: pixelated; }
-        body {
-            background: #000;
-            overflow: hidden;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        canvas { display: block; cursor: pointer; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="game-ui">
+        <div class="ui-element">
+            <div id="health-bar-container"></div>
+        </div>
+        <div class="ui-element">
+            <div id="money-icon"></div>
+            <div id="money-container">$ 1,000</div>
+        </div>
+    </div>
     <canvas id="gameCanvas"></canvas>
-    <script src="main.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

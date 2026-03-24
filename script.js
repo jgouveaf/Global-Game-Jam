@@ -18,12 +18,12 @@ function resizeCanvas() {
 const MAP_PX = 1024;
 
 const mapImage = new Image();
-mapImage.src = 'new_map_debug.png?v=' + new Date().getTime();
+mapImage.src = 'sprites/world_map.png';
 let mapLoaded = false;
 mapImage.onload = () => { mapLoaded = true; };
 
 const playerImage = new Image();
-playerImage.src = 'player_sprite.png';
+playerImage.src = 'sprites/player_sprite.png'; // Updated path
 let playerLoaded = false;
 playerImage.onload = () => { playerLoaded = true; };
 
@@ -91,9 +91,9 @@ function applyPhysics() {
     if (keys['d'] || keys['arrowright']) { vx = player.speed; player.dir = 'right'; }
     if (keys['w'] || keys['arrowup']) { vy = -player.speed; player.dir = 'up'; }
     if (keys['s'] || keys['arrowdown']) { vy = player.speed; player.dir = 'down'; }
-    
+
     if (vx !== 0 && vy !== 0) { vx *= 0.707; vy *= 0.707; }
-    
+
     if (!checkCollision(player.x + vx, player.y, player.width, player.height)) player.x += vx;
     if (!checkCollision(player.x, player.y + vy, player.width, player.height)) player.y += vy;
 
@@ -117,7 +117,7 @@ function draw() {
         // 2. DRAW PLAYER
         const px = Math.floor(player.x);
         const py = Math.floor(player.y);
-        
+
         // Simple Shadow
         ctx.fillStyle = 'rgba(0,0,0,0.2)';
         ctx.beginPath();
@@ -132,23 +132,15 @@ function draw() {
         }
 
         // 3. DEPTH SORTING (Draw fences OVER player if player is "behind" them)
-        // If player is north of the top fence, or west of the left fence, etc.
-        // But the most common is the top fence.
         const L=160, R=860, T=160, B=860;
-        
-        // If player is "behind" the top fence (y < 210 approx)
+
+        // If player is "behind" the top fence
         if (player.y + player.height < T + 40) {
-            // Draw ONLY the top fence part from the map image again
             ctx.drawImage(mapImage, L, T, R-L, 40, L, T, R-L, 40);
         }
-        
-        // If player is behind bottom fence (y < 860) but we usually want player BEHIND bottom fence when Y is less than fence Y.
-        // Actually, player is behind if player.y + height is less than object.y.
-        
-        // Simple heuristic: Redraw all fence layers on top if player Y is smaller than them.
+
         if (player.y + player.height < T + 60) ctx.drawImage(mapImage, L, T, R-L, 60, L, T, R-L, 60);
         if (player.y + player.height < B + 20 && player.y + player.height > B - 40) {
-             // Redraw bottom fence on top
              ctx.drawImage(mapImage, L, B-20, R-L, 60, L, B-20, R-L, 60);
         }
 
@@ -158,4 +150,3 @@ function draw() {
 }
 resizeCanvas();
 draw();
-console.log("SCRIPT V16 - Depth Sorting & Sprite Ready!");

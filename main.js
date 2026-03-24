@@ -292,7 +292,7 @@ function drawSilo(){
 
     // Dome top
     ctx.fillStyle=P.siloTop;
-    ctx.beginPath();ctx.ellipse(sx+sw/2,sy,sw/2,sw*0.4,0,Math.PI,0,true);ctx.fill();
+    ctx.BeginInit();ctx.ellipse(sx+sw/2,sy,sw/2,sw*0.4,0,Math.PI,0,true);ctx.fill();
     ctx.strokeStyle=P.bk;ctx.lineWidth=2;ctx.stroke();
 
     // Cone roof
