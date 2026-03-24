@@ -11,18 +11,18 @@
 </head>
 <body>
     <div id="game-container">
-        <!-- OVERLAYS UI -->
+        <!-- HUD Superior -->
         <header class="hud">
             <div class="stats-card">
-                <span class="stat-label">COINS</span>
+                <span class="stat-label">MOEDAS</span>
                 <span id="coins" class="stat-value">50</span>
             </div>
             <div class="stats-card">
-                <span class="stat-label">INV</span>
+                <span class="stat-label">INVENTARIO</span>
                 <div class="crop-inventory" id="inventory-list"></div>
             </div>
             <div class="stats-card">
-                <span class="stat-label">HAPPY</span>
+                <span class="stat-label">FELICIDADE</span>
                 <div class="progress-bar-container">
                     <div id="happiness-bar" class="progress-bar"></div>
                     <span id="happiness-text">0%</span>
@@ -30,28 +30,26 @@
             </div>
         </header>
 
-        <!-- MAPA / FAZENDA -->
+        <!-- Seção Fazenda -->
         <section id="farm-section">
-            <div class="farm-grid" id="farm-grid">
-                <!-- 3x3 -->
-            </div>
+            <h2 class="section-title">MINHA FAZENDA</h2>
+            <div class="farm-grid" id="farm-grid"></div>
         </section>
 
-        <!-- SELETOR DE SEMENTES -->
+        <!-- Seção Loja -->
         <footer class="shop-footer">
+            <h2 class="section-title">SEMENTES</h2>
             <div class="seed-selector" id="seed-shop"></div>
         </footer>
 
-        <!-- VILA -->
+        <!-- Seção Vila -->
         <section id="community-section">
-            <h2 class="section-title">VILLA NEEDS</h2>
+            <h2 class="section-title">PEDIDOS DA VILA</h2>
             <div class="requests-container" id="requests-list"></div>
         </section>
     </div>
 
-    <!-- NOTIFICAÇÕES -->
     <div id="notification-area"></div>
-
     <script src="main.js"></script>
 </body>
 </html>
