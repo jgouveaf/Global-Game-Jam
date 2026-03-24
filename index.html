@@ -23,10 +23,15 @@
         <span id="hud-coins-value">0</span>
     </div>
 
-    <!-- Botão Loja (canto inferior direito) -->
-    <button id="btn-open-shop" onclick="document.getElementById('shop-overlay').classList.remove('hidden')">
-        🏪 LOJA
-    </button>
+    <!-- Botões de Ação (Canto Inferior Direito) -->
+    <div id="action-buttons">
+        <button id="btn-open-inventory" onclick="document.getElementById('inventory-overlay').classList.remove('hidden')">
+            🎒 INVENTÁRIO
+        </button>
+        <button id="btn-open-shop" onclick="document.getElementById('shop-overlay').classList.remove('hidden')">
+            🏪 LOJA
+        </button>
+    </div>
 
     <!-- Overlay da Loja -->
     <div id="shop-overlay" class="hidden">
@@ -36,32 +41,58 @@
             <div class="shop-card">
                 <div class="card-icon">🐖</div>
                 <h3>NOVOS<br>ANIMAIS</h3>
-                <p>Adicione porcos,<br>galinhas e ovelhas</p>
-                <div class="stars">★★☆☆☆☆</div>
-                <div class="card-level">Nível 2 / 6</div>
+                <p>Porcos e Galinhas</p>
+                <div class="stars">☆☆☆☆☆☆</div>
+                <div class="card-price">💰 500</div>
                 <button class="buy-btn">COMPRAR</button>
             </div>
 
             <div class="shop-card">
                 <div class="card-icon">🌱</div>
                 <h3>NOVAS<br>PLANTAS</h3>
-                <p>Desbloqueie novas<br>culturas para plantar</p>
-                <div class="stars">★★★★☆☆</div>
-                <div class="card-level">Nível 4 / 6</div>
+                <p>Girassol e Milho</p>
+                <div class="stars">☆☆☆☆☆☆</div>
+                <div class="card-price">💰 300</div>
                 <button class="buy-btn">COMPRAR</button>
             </div>
 
             <div class="shop-card card-highlight">
                 <div class="card-icon">⚡</div>
-                <h3>VELOCIDADE<br>DE PLANTAÇÃO</h3>
-                <p>Plante mais rápido<br>e colha mais cedo</p>
+                <h3>VELOCIDADE<br>PLANTIO</h3>
+                <p>Mais agilidade</p>
                 <div class="stars">☆☆☆☆☆☆</div>
-                <div class="card-level">Nível 0 / 6</div>
+                <div class="card-price">💰 800</div>
                 <button class="buy-btn">COMPRAR</button>
             </div>
 
         </div>
-        <button id="btn-shop-voltar" onclick="document.getElementById('shop-overlay').classList.add('hidden'); ">← VOLTAR</button>
+        <button id="btn-shop-voltar" onclick="document.getElementById('shop-overlay').classList.add('hidden')">← VOLTAR</button>
+    </div>
+
+    <!-- Overlay do Inventário -->
+    <div id="inventory-overlay" class="hidden">
+        <h2>🎒 MEU INVENTÁRIO</h2>
+        <div class="inventory-container">
+            
+            <div class="inv-section">
+                <h3>🌱 Sementes</h3>
+                <div class="inv-grid">
+                    <div class="inv-item">🌻 Girassol x10</div>
+                    <div class="inv-item">🌽 Milho x5</div>
+                    <div class="inv-item">🌾 Trigo x20</div>
+                </div>
+            </div>
+
+            <div class="inv-section">
+                <h3>🐄 Animais</h3>
+                <div class="inv-grid">
+                    <div class="inv-item">🐣 Galinhas (2)</div>
+                    <div class="inv-item">🐖 Porco (1)</div>
+                </div>
+            </div>
+
+        </div>
+        <button id="btn-inv-voltar" onclick="document.getElementById('inventory-overlay').classList.add('hidden')">← VOLTAR</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>

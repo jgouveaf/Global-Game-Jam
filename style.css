@@ -110,30 +110,32 @@ canvas#gameCanvas {
     font-size: 16px;
 }
 
-/* ===== BOTÃO LOJA (Canto Inferior Direito) ===== */
-#btn-open-shop {
+/* ===== BOTÕES DE AÇÃO (Canto Inferior Direito) ===== */
+#action-buttons {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    bottom: 20px;
+    right: 20px;
     z-index: 250;
-    background: #8b4513; /* Marrom rústico */
+    display: flex;
+    gap: 12px;
+}
+
+#btn-open-inventory, #btn-open-shop {
+    background: #8b4513; 
     border: 4px solid #ffd700;
     color: #fff;
-    padding: 15px 30px;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 18px;
-    cursor: pointer;
-    box-shadow: 6px 6px 0 rgba(0,0,0,0.5);
+    padding: 12px 20px;
+    font-size: 14px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
     transition: all 0.1s;
 }
 
-#btn-open-shop:hover {
-    background: #a0522d;
+#btn-open-inventory:hover, #btn-open-shop:hover {
     transform: scale(1.05);
-    box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+    background: #a0522d;
 }
 
-#btn-open-shop:active {
+#btn-open-inventory:active, #btn-open-shop:active {
     transform: translate(2px, 2px);
     box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
 }
@@ -210,12 +212,61 @@ h2 { font-size: 32px; letter-spacing: 4px; color: #ffd700; text-shadow: 0 0 10px
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }
 
-#btn-shop-voltar {
+#btn-shop-voltar, #btn-inv-voltar {
     background: #444;
     border-color: #888;
-    font-size: 12px;
+    font-size: 10px;
     padding: 12px 24px;
+    margin-top: 20px;
 }
-#btn-shop-voltar:hover { background: #666; }
+
+.card-price {
+    font-size: 12px;
+    color: #ffd700;
+    font-weight: bold;
+}
+
+/* ===== INVENTÁRIO ===== */
+#inventory-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 450;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+.inventory-container {
+    display: flex;
+    gap: 40px;
+    background: #331a00;
+    border: 6px solid #b8860b;
+    padding: 30px;
+    max-width: 80%;
+}
+
+.inv-section h3 {
+    font-size: 14px;
+    color: #ffd700;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #555;
+    padding-bottom: 10px;
+}
+
+.inv-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.inv-item {
+    font-size: 11px;
+    background: #4a2b10;
+    padding: 12px;
+    border: 2px solid #666;
+}
 
 
