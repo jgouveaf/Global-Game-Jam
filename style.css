@@ -1,4 +1,4 @@
-/* AgriCorp – Estilo Global Game Jam */
+/* AgriCorp – Estilo Final */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 * {
@@ -12,7 +12,7 @@ body, html {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #325e22;
+    background: #000; /* Removido o verde - agora é PRETO */
     font-family: 'Press Start 2P', cursive;
     cursor: crosshair;
 }
@@ -25,26 +25,6 @@ canvas#gameCanvas {
     z-index: 0;
 }
 
-/* TIMER DE PLANTIO */
-#planting-timer {
-    position: fixed;
-    top: 100px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255, 0, 0, 0.7);
-    color: #fff;
-    padding: 10px 20px;
-    border: 3px solid #fff;
-    z-index: 1000;
-    font-size: 12px;
-    animation: flash 1s infinite;
-}
-
-@keyframes flash {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
 /* HUD Superior */
 #hud-top {
     position: fixed;
@@ -55,36 +35,15 @@ canvas#gameCanvas {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.82);
     padding: 10px 20px;
-    border-radius: 4px;
     border: 3px solid #fff;
     width: 70%;
 }
 
-#hud-label { color: #fff; font-size: 10px; }
-#hp-bar-bg { flex: 1; height: 18px; background: #333; border: 2px solid #555; position: relative; }
-#hp-bar { height: 100%; background: #0f0; transition: width 0.3s; border-right: 2px solid #fff; }
-#hud-value { color: #fff; font-size: 10px; width: 40px; text-align: right; }
+#hp-bar-bg { flex: 1; height: 18px; background: #333; border: 2px solid #555; }
+#hp-bar { height: 100%; background: #0f0; }
 
-/* HUD Moedas */
-#hud-coins {
-    position: fixed;
-    top: 70px;
-    left: 20px;
-    z-index: 100;
-    background: rgba(0,0,0,0.8);
-    padding: 8px 15px;
-    border-radius: 4px;
-    border: 3px solid #ffd700;
-    display: flex;
-    gap: 8px;
-    font-size: 10px;
-}
-#hud-coins-label { color: #ffd700; }
-#hud-coins-value { color: #fff; }
-
-/* HOTBAR (NOVO INVENTÁRIO DE 10 SLOTS) */
 #hotbar-container {
     position: fixed;
     bottom: 20px;
@@ -96,43 +55,40 @@ canvas#gameCanvas {
     background: rgba(0, 0, 0, 0.7);
     padding: 10px;
     border: 3px solid #fff;
-    border-radius: 4px;
 }
 
 .hotbar-slot {
     width: 48px;
     height: 48px;
     background: #4a4a6e;
-    border: 3px solid #222;
+    border: 3px solid #000;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
     cursor: pointer;
-    transition: transform 0.1s;
-}
-
-.hotbar-slot:hover {
-    background: #5a5a8e;
-    transform: translateY(-5px);
 }
 
 .hotbar-slot.active {
     border-color: #ffd700;
-    background: #6a6aae;
     box-shadow: 0 0 10px #ffd700;
 }
 
-.slot-num {
-    position: absolute;
-    top: 2px;
-    left: 4px;
-    font-size: 8px;
-    color: #ffd700;
-    pointer-events: none;
+#planting-timer {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff4757;
+    color: white;
+    padding: 8px 15px;
+    font-size: 10px;
+    border: 2px solid #fff;
+    z-index: 1000;
 }
 
-/* Botões de Ação */
+.hidden { display: none !important; }
+
 #action-buttons {
     position: fixed;
     bottom: 20px;
@@ -145,60 +101,9 @@ canvas#gameCanvas {
 
 button {
     font-family: 'Press Start 2P', cursive;
-    padding: 10px 15px;
+    padding: 10px;
     font-size: 8px;
-    cursor: pointer;
-    border: 2px solid #fff;
     background: #8b4513;
     color: #fff;
-    transition: 0.2s;
-}
-button:hover { background: #a0522d; transform: scale(1.05); }
-
-/* Overlays */
-.hidden { display: none !important; }
-
-#shop-overlay, #inventory-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    z-index: 300;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-}
-
-h2 { font-size: 14px; margin-bottom: 20px; color: #ffd700; }
-
-.shop-cards { display: flex; gap: 15px; margin-bottom: 20px; }
-.shop-card {
-    background: #3d2b1f;
-    border: 2px solid #fff;
-    padding: 15px;
-    width: 140px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-.card-highlight { border-color: #ffd700; box-shadow: 0 0 10px #ffd700; }
-.card-icon { font-size: 24px; }
-.shop-card h3 { font-size: 8px; }
-.shop-card p { font-size: 6px; color: #ccc; }
-.stars { font-size: 8px; color: #ffd700; }
-.card-price { font-size: 8px; color: #ffd700; }
-
-/* Inventário Overlay */
-.inventory-container {
-    display: flex;
-    gap: 20px;
-    background: #3d2b1f;
-    padding: 20px;
     border: 2px solid #fff;
 }
-.inv-section h3 { font-size: 10px; margin-bottom: 10px; color: #0f0; }
-.inv-grid { display: flex; flex-direction: column; gap: 5px; }
-.inv-item { font-size: 8px; background: rgba(255,255,255,0.1); padding: 5px; }
-.inv-empty { font-size: 8px; color: #ccc; }

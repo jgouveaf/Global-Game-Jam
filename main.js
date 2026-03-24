@@ -5,7 +5,11 @@ let selectedSlot = 0;
 let isWatering = false;
 let wateringTimer = 0;
 const crops = [];
-let W, H; 
+let W, H, WW = 2800, WH = 1400; // Valores padrão antes do load
+
+const mapImage = new Image();
+mapImage.src = 'sprites/Mapa.png';
+let mapLoaded = false;
 
 function resize(){
     canvas.width  = window.innerWidth;
@@ -15,12 +19,6 @@ function resize(){
 }
 resize();
 window.addEventListener('resize', resize);
-
-const mapImage = new Image();
-mapImage.src = 'sprites/Mapa.png';
-let mapLoaded = false;
-let WW = 2800;
-let WH = 1400;
 
 mapImage.onload = () => {
     mapLoaded = true;
@@ -34,11 +32,24 @@ const EDGE = 0.15;
 const CAM_SPEED = 8;
 
 window.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
+    mouseX = e.clientX; mouseY = e.clientY;
 });
 
+// LOGICA DE DETECÇÃO DO TERRENO ESPECÍFICO (MARROM)
+function isInsideBrownField(xw, yw) {
+    if (yw < 600 || yw > 1180 || xw > 2180) return false;
+    
+    // Escadinha do lado esquerdo
+    if (yw < 710) return xw > 1290;
+    if (yw < 805) return xw > 1110;
+    if (yw < 905) return xw > 960;
+    if (yw < 1005) return xw > 830;
+    
+    return xw > 790;
+}
+
 function updateCamera() {
+    // Escala para Modo 'Cover' (Preencher tela inteira sem bordas vazias)
     const scale = Math.max(W / WW, H / WH);
     const virtualWW = WW * scale;
     const virtualWH = WH * scale;
@@ -55,28 +66,6 @@ function updateCamera() {
 
     camera.x = Math.max(0, Math.min(camera.x, virtualWW - W));
     camera.y = Math.max(0, Math.min(camera.y, virtualWH - H));
-}
-
-// LOGICA DE DETECÇÃO DO TERRENO "ESCADA" (Aprox. da Foto)
-function isPointInBrownField(xw, yw) {
-    // Limites verticais e horizontais base do campo central
-    if (yw < 570 || yw > 1150) return false;
-    if (xw > 2150) return false;
-
-    // Lógica da "Escadinha" no lado esquerdo
-    if (yw >= 570 && yw < 685) return xw > 1280;
-    if (yw >= 685 && yw < 780) return xw > 1100;
-    if (yw >= 780 && yw < 880) return xw > 950;
-    if (yw >= 880 && yw < 980) return xw > 820;
-    
-    return xw > 780; // Base do campo
-}
-
-function updateHUD() {
-    if(!document.getElementById('hp-bar')) return;
-    document.getElementById('hp-bar').style.width = '100%';
-    document.getElementById('hud-value').textContent = '100';
-    document.getElementById('hud-coins-value').textContent = '0';
 }
 
 // ========================= CONTROLE DE PLANTIO =========================
@@ -106,15 +95,22 @@ if(btnWater) {
 window.addEventListener('mousedown', (e) => {
     if (isWatering && wateringTimer > 0) {
         const scale = Math.max(W / WW, H / WH);
+        // Calcula a posição real no mundo escalonado do mapa
         const worldX = (e.clientX + camera.x) / scale;
         const worldY = (e.clientY + camera.y) / scale;
 
-        // VERIFICA SE ESTÁ NA ÁREA MARROM ESPECÍFICA
-        if (isPointInBrownField(worldX, worldY)) {
+        if (isInsideBrownField(worldX, worldY)) {
             crops.push({ x: worldX, y: worldY, type: 'wheat' });
         }
     }
 });
+
+function updateHUD() {
+    const elHp = document.getElementById('hp-bar');
+    if (elHp) { elHp.style.width = '100%'; document.getElementById('hud-value').textContent = '100'; }
+    const elCoins = document.getElementById('hud-coins-value');
+    if (elCoins) elCoins.textContent = '0';
+}
 
 function loop(){
     updateCamera();
@@ -122,38 +118,41 @@ function loop(){
     const scale = Math.max(W / WW, H / WH);
 
     if (!mapLoaded) {
-        ctx.fillStyle = '#2d5a1b';
+        ctx.fillStyle = '#325e22'; // Verde grama apenas no carregamento
         ctx.fillRect(0, 0, W, H);
     } else {
         ctx.save();
         ctx.translate(-camera.x, -camera.y);
         ctx.scale(scale, scale);
+        
         ctx.drawImage(mapImage, 0, 0);
 
-        // DESENHAR O CONTORNO DO TERRENO (Debug Visual de Plantio)
+        // DELIMITADOR DO TERRENO (Debug Visual modo Rega)
         if (isWatering) {
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.lineWidth = 4;
+            ctx.strokeStyle = 'white';
+            ctx.setLineDash([10, 5]);
+            ctx.lineWidth = 5;
             ctx.beginPath();
-            ctx.moveTo(1280, 570); // Início topo-esquerda
-            ctx.lineTo(2150, 570); // Topo direito
-            ctx.lineTo(2150, 1150); // Base direita
-            ctx.lineTo(780,  1150); // Base esquerda
-            ctx.lineTo(780,  980);  // Primeiro degrau
-            ctx.lineTo(820,  980);
-            ctx.lineTo(820,  880);  // Segundo degrau
-            ctx.lineTo(950,  880);
-            ctx.lineTo(950,  780);  // Terceiro degrau
-            ctx.lineTo(1100, 780);
-            ctx.lineTo(1100, 685);  // Quarto degrau
-            ctx.lineTo(1280, 685);
+            ctx.moveTo(1290, 600);
+            ctx.lineTo(2180, 600);
+            ctx.lineTo(2180, 1180);
+            ctx.lineTo(790, 1180);
+            ctx.lineTo(790, 1005);
+            ctx.lineTo(830, 1005);
+            ctx.lineTo(830, 905);
+            ctx.lineTo(960, 905);
+            ctx.lineTo(960, 805);
+            ctx.lineTo(1110, 805);
+            ctx.lineTo(1110, 710);
+            ctx.lineTo(1290, 710);
             ctx.closePath();
             ctx.stroke();
+            ctx.setLineDash([]);
         }
         
         crops.forEach(crop => {
-            ctx.font = '28px Arial';
-            ctx.fillText('🌾', crop.x - 14, crop.y + 14);
+            ctx.font = '32px Arial';
+            ctx.fillText('🌾', crop.x - 16, crop.y + 16);
         });
         ctx.restore();
     }
