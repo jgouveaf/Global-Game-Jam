@@ -1,648 +1,670 @@
 // ==========================================
-//  AgriCorp - Canvas Top-Down Farm Game
+//  AgriCorp - Canvas Top-Down Farm
+//  Visual Overhaul: rich pixel-art world
 // ==========================================
 
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const ctx    = canvas.getContext('2d');
 
-// -- Dimensões --
-const TILE = 32;
-let W, H, COLS, ROWS;
-
+let W, H;
 function resize() {
-    canvas.width = window.innerWidth;
+    canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
     W = canvas.width;
     H = canvas.height;
 }
 resize();
-window.addEventListener('resize', () => { resize(); });
+window.addEventListener('resize', resize);
 
 // ==========================================
-// ESTADO DO JOGO
+//  PALETTE – Stardew / Harvest Moon vibes
+// ==========================================
+const P = {
+    // Terrain
+    sky        : '#afe0f0',
+    grassA     : '#78c850',
+    grassB     : '#60b040',
+    grassC     : '#50a030',
+    grassD     : '#408020',
+    pathA      : '#d8c090',
+    pathB      : '#c0a870',
+    pathC      : '#a89058',
+    dirt       : '#a87840',
+    dirtD      : '#886030',
+    soil       : '#6b4a28',
+    soilW      : '#4a2e12',
+    soilLine   : '#3a2008',
+    // Buildings
+    barn       : '#c0392b',
+    barnSide   : '#a02828',
+    barnRoof   : '#2c1c10',
+    barnRoofL  : '#483018',
+    wood       : '#7b4a28',
+    woodD      : '#5a3018',
+    silo       : '#b8c0b0',
+    siloD      : '#909890',
+    siloRoof   : '#70887a',
+    house      : '#e8d898',
+    houseWall  : '#d8c880',
+    houseRoof  : '#882218',
+    stone      : '#8a9888',
+    stoneD     : '#6a7868',
+    stoneL     : '#aab8a8',
+    water      : '#3878c8',
+    waterL     : '#60a0f0',
+    // Decor
+    treeT      : '#30a030',
+    treeTL     : '#48c048',
+    treeTD     : '#208020',
+    treeTrunk  : '#5a3820',
+    hay        : '#d8a820',
+    hayD       : '#b08018',
+    fence      : '#9a7040',
+    fenceD     : '#7a5020',
+    // UI
+    uiBg       : 'rgba(20,12,8,0.85)',
+    uiBrd      : '#f0c040',
+    uiBrdD     : '#b89020',
+    uiGreen    : '#38c060',
+    uiRed      : '#c83828',
+    white      : '#ffffff',
+    black      : '#000000',
+    textYellow : '#f8d040',
+    textWhite  : '#f0f0f0',
+};
+
+// ==========================================
+//  GAME STATE
 // ==========================================
 const CROPS = {
-    wheat:  { name: 'Trigo',   icon: '🌾', growTime: 5000,  price: 5,  reward: 10  },
-    carrot: { name: 'Cenoura', icon: '🥕', growTime: 10000, price: 10, reward: 25  },
-    tomato: { name: 'Tomate',  icon: '🍅', growTime: 20000, price: 20, reward: 55  },
-    corn:   { name: 'Milho',   icon: '🌽', growTime: 40000, price: 50, reward: 150 },
+    wheat : { name:'Trigo',   icon:'🌾', grow:5000,  cost:5,  reward:10  },
+    carrot: { name:'Cenoura', icon:'🥕', grow:10000, cost:10, reward:25  },
+    tomato: { name:'Tomate',  icon:'🍅', grow:20000, cost:20, reward:55  },
+    corn  : { name:'Milho',   icon:'🌽', grow:40000, cost:50, reward:150 },
 };
-const CROP_KEYS = Object.keys(CROPS);
+const KEYS = Object.keys(CROPS);
 
-const state = {
+const G = {
     coins: 50,
-    happiness: 0,
-    inventory: { wheat: 0, carrot: 0, tomato: 0, corn: 0 },
-    selectedSeed: 'wheat',
-    plots: Array(9).fill(null).map((_, i) => ({
-        id: i,
-        state: 'empty', // empty | growing | ready
-        cropType: null,
-        progress: 0,
-        startTime: 0,
+    happy: 0,
+    inv  : { wheat:0, carrot:0, tomato:0, corn:0 },
+    seed : 'wheat',
+    plots: Array(9).fill(null).map((_,i) => ({
+        id:i, state:'empty', crop:null, prog:0, t0:0
     })),
-    requests: [],
-    notification: null,
-    notifTimer: 0,
+    reqs : [],
+    notif: null,
+    ntimer: 0,
 };
 
-function generateRequest() {
-    if (state.requests.length >= 4) return;
-    const key = CROP_KEYS[Math.floor(Math.random() * CROP_KEYS.length)];
-    const amount = Math.floor(Math.random() * 3) + 2;
-    state.requests.push({
-        id: Math.random(),
-        cropType: key,
-        amount,
-        rewardCoins: Math.floor(CROPS[key].reward * amount * 1.5),
-        rewardHappiness: amount * 2,
-    });
+function addReq() {
+    if (G.reqs.length >= 4) return;
+    const k = KEYS[Math.floor(Math.random()*KEYS.length)];
+    const n = Math.floor(Math.random()*3)+2;
+    G.reqs.push({ id:Math.random(), crop:k, n, coins:Math.floor(CROPS[k].reward*n*1.5), happy:n*2 });
 }
+addReq();
+setInterval(addReq, 8000);
 
-function showNotif(msg, color = '#27ae60') {
-    state.notification = { msg, color };
-    state.notifTimer = 120; // frames
-}
-
-generateRequest();
-setInterval(() => generateRequest(), 8000);
+function notif(m, c='#27ae60') { G.notif={m,c}; G.ntimer=150; }
 
 // ==========================================
-// LAYOUT — Posições no Canvas
+//  LAYOUT helpers
 // ==========================================
-
-// Canteiros (3x3 grid), ancorados numa região de terra
-function getPlotRect(i) {
-    const col = i % 3;
-    const row = Math.floor(i / 3);
-    const gridX = W * 0.32;
-    const gridY = H * 0.28;
-    const pw = H * 0.14; // tamanho de cada canteiro baseado na altura da tela
-    const gap = 12;
-    return {
-        x: gridX + col * (pw + gap),
-        y: gridY + row * (pw + gap),
-        w: pw,
-        h: pw,
-    };
+function plotRect(i) {
+    const col=i%3, row=Math.floor(i/3);
+    const pw=Math.min(H*0.15, W*0.09);
+    const gap=10;
+    const gw= pw*3 + gap*2;
+    const gh= pw*3 + gap*2;
+    const gx= W*0.35 ;
+    const gy= H*0.25;
+    return { x: gx+col*(pw+gap), y: gy+row*(pw+gap), w:pw, h:pw };
 }
-
-// Seed buttons (bottom-center)
-function getSeedBtnRect(i) {
-    const bw = 130, bh = 50, gap = 12;
-    const totalW = CROP_KEYS.length * (bw + gap) - gap;
-    const startX = (W - totalW) / 2;
-    return {
-        x: startX + i * (bw + gap),
-        y: H - 80,
-        w: bw,
-        h: bh,
-    };
+function seedBtn(i) {
+    const bw=140, bh=64, gap=14;
+    const total = KEYS.length*(bw+gap)-gap;
+    return { x:(W-total)/2+i*(bw+gap), y:H-80, w:bw, h:bh };
 }
-
-// Request cards (right side)
-function getRequestRect(i) {
-    const rx = W - 220;
-    const ry = H * 0.2 + i * 110;
-    return { x: rx, y: ry, w: 200, h: 100 };
+function reqCard(i) {
+    const rx=W-230, ry=H*0.17+i*118;
+    return { x:rx, y:ry, w:210, h:108 };
 }
 
 // ==========================================
-// CORES DE TILES (paleta pixel-art)
+//  DRAW HELPERS
 // ==========================================
-const PALETTE = {
-    sky:     '#78c8f0',
-    grass:   '#78c050',
-    grassD:  '#50a030',
-    dirt:    '#c89850',
-    dirtD:   '#a07038',
-    path:    '#d8b878',
-    plotDry: '#8b5e3c',
-    plotWet: '#5a3520',
-    fence:   '#8b5e20',
-    barn:    '#c0392b',
-    barnRoof:'#2c1810',
-    wood:    '#6b3d2c',
-    stone:   '#8a9a8a',
-    stoneD:  '#6a7a6a',
-    silo:    '#a0a8a0',
-    water:   '#4080c0',
-    hay:     '#d09828',
-    ui_bg:   'rgba(0,0,0,0.75)',
-    ui_brd:  '#f4b41b',
-    white:   '#ffffff',
-    black:   '#000000',
+const px = (text,x,y,color,size) => {
+    ctx.font=`${size}px 'Press Start 2P',monospace`;
+    ctx.fillStyle=color;
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    ctx.fillText(text,x,y);
+};
+const emoji = (e,cx,cy,sz) => {
+    ctx.font=`${sz}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(e,cx,cy);
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+};
+const rect = (x,y,w,h,fill,stroke,lw=2)=>{
+    ctx.fillStyle=fill; ctx.fillRect(x,y,w,h);
+    if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.strokeRect(x,y,w,h); }
+};
+const tri=(pts,fill,stroke,lw=2)=>{
+    ctx.beginPath(); ctx.moveTo(...pts[0]);
+    pts.slice(1).forEach(p=>ctx.lineTo(...p)); ctx.closePath();
+    ctx.fillStyle=fill; ctx.fill();
+    if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke(); }
+};
+const circle=(cx,cy,r,fill,stroke,lw=2)=>{
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fillStyle=fill; ctx.fill();
+    if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke(); }
 };
 
-// ==========================================
-// RENDERIZAÇÃO DO MAPA
-// ==========================================
-function drawMap() {
-    const cx = ctx;
+// Pixel border – raised bevel effect
+function pixelBorder(x,y,w,h, light='rgba(255,255,255,0.25)', dark='rgba(0,0,0,0.35)', bw=4){
+    ctx.fillStyle=light;
+    ctx.fillRect(x,y,w,bw); ctx.fillRect(x,y,bw,h);
+    ctx.fillStyle=dark;
+    ctx.fillRect(x,y+h-bw,w,bw); ctx.fillRect(x+w-bw,y,bw,h);
+}
 
-    // --- Fundo: Grama ---
-    cx.fillStyle = PALETTE.grass;
-    cx.fillRect(0, 0, W, H);
-
-    // Detalhes de grama (pontinhos)
-    cx.fillStyle = PALETTE.grassD;
-    for (let i = 0; i < W; i += 48) {
-        for (let j = 0; j < H; j += 48) {
-            cx.fillRect(i + 8, j + 12, 4, 3);
-            cx.fillRect(i + 28, j + 30, 3, 4);
+// ==========================================
+//  TERRAIN
+// ==========================================
+function drawTerrain(){
+    // Checkerboard grass
+    for(let gx=0;gx<W;gx+=32){
+        for(let gy=0;gy<H;gy+=32){
+            ctx.fillStyle=(Math.floor(gx/32)+Math.floor(gy/32))%2===0?P.grassA:P.grassB;
+            ctx.fillRect(gx,gy,32,32);
+        }
+    }
+    // Grass tufts
+    ctx.fillStyle=P.grassC;
+    for(let gx=16;gx<W;gx+=48){
+        for(let gy=20;gy<H;gy+=48){
+            ctx.fillRect(gx,gy,3,6); ctx.fillRect(gx+5,gy+2,3,4);
+            ctx.fillStyle=P.grassD; ctx.fillRect(gx+2,gy+1,2,4); ctx.fillStyle=P.grassC;
         }
     }
 
-    // --- Caminho horizontal (centro) ---
-    cx.fillStyle = PALETTE.path;
-    cx.fillRect(0, H * 0.55, W, H * 0.12);
-    // Detalhe do caminho
-    cx.fillStyle = PALETTE.dirtD;
-    for (let i = 0; i < W; i += 64) {
-        cx.fillRect(i, H * 0.55 + 4, 2, H * 0.12 - 8);
+    // Horizontal path
+    for(let x=0;x<W;x+=2){
+        ctx.fillStyle=(x/2)%2===0?P.pathA:P.pathB;
+        ctx.fillRect(x,H*0.60,2,H*0.14);
+    }
+    // Path edges
+    ctx.fillStyle=P.pathC; ctx.fillRect(0,H*0.60,W,4);
+    ctx.fillStyle=P.pathC; ctx.fillRect(0,H*0.74-4,W,4);
+    // Path stones
+    ctx.fillStyle=P.stoneD;
+    for(let x=30;x<W;x+=60){
+        ctx.fillRect(x, H*0.60+10, 14, 8);
+        ctx.fillRect(x+30, H*0.60+24, 10, 6);
     }
 
-    // --- Caminho vertical (divide mapa) ---
-    cx.fillStyle = PALETTE.path;
-    cx.fillRect(W * 0.3, 0, W * 0.05, H);
-    cx.fillStyle = PALETTE.dirtD;
-    for (let j = 0; j < H; j += 64) {
-        cx.fillRect(W * 0.3 + 4, j, W * 0.05 - 8, 2);
+    // Vertical path
+    for(let y=0;y<H;y+=2){
+        ctx.fillStyle=(y/2)%2===0?P.pathA:P.pathB;
+        ctx.fillRect(W*0.30,y,W*0.05,2);
     }
+    ctx.fillStyle=P.pathC;
+    ctx.fillRect(W*0.30,0,4,H); ctx.fillRect(W*0.35-4,0,4,H);
 
-    // --- Área de solo agrícola ---
-    cx.fillStyle = PALETTE.dirtD;
-    cx.fillRect(W * 0.3, H * 0.22, W * 0.45, H * 0.35);
-    cx.fillStyle = PALETTE.plotDry;
-    cx.fillRect(W * 0.31, H * 0.23, W * 0.43, H * 0.33);
-    // Listras de arado
-    ctx.fillStyle = PALETTE.dirtD;
-    for (let i = 0; i < W * 0.43; i += 12) {
-        cx.fillRect(W * 0.31 + i, H * 0.23, 2, H * 0.33);
+    // Farm soil area
+    ctx.fillStyle=P.dirtD;
+    ctx.fillRect(W*0.35-8, H*0.22-8, W*0.42+16, H*0.40+16);
+    ctx.fillStyle=P.dirt;
+    ctx.fillRect(W*0.35, H*0.22, W*0.42, H*0.40);
+    // Soil rows
+    ctx.fillStyle=P.dirtD;
+    for(let i=0;i<W*0.42;i+=14){
+        ctx.fillRect(W*0.35+i, H*0.22, 2, H*0.40);
     }
+    for(let j=0;j<H*0.40;j+=14){
+        ctx.fillRect(W*0.35, H*0.22+j, W*0.42, 2);
+    }
+}
 
-    drawBuildings();
+// ==========================================
+//  BUILDINGS
+// ==========================================
+function drawBarn(){
+    const bx=W*0.06, by=H*0.10;
+    const bw=150, bh=110;
+    // Shadow
+    ctx.fillStyle='rgba(0,0,0,0.15)';
+    ctx.fillRect(bx+12,by+12,bw,bh);
+    // Front wall
+    rect(bx, by, bw, bh, P.barn, P.barnD, 3);
+    // Side shadow
+    rect(bx+bw, by+10, 18, bh-8, P.barnSide, null);
+    ctx.strokeStyle=P.black; ctx.lineWidth=2;
+    ctx.strokeRect(bx,by,bw,bh);
+    // White horizontal planks
+    ctx.fillStyle='rgba(255,255,255,0.08)';
+    for(let i=0;i<bh;i+=16) ctx.fillRect(bx+2,by+i,bw-4,8);
+    // Roof
+    tri([[bx-12,by],[bx+bw/2,by-60],[bx+bw+12,by]], P.barnRoof, P.black, 3);
+    // Roof highlight
+    ctx.fillStyle=P.barnRoofL;
+    ctx.fillRect(bx+bw/2-4,by-60,8,60);
+    // Door (double)
+    rect(bx+38, by+60, 28, bh-60, P.woodD, P.black, 2);
+    rect(bx+68, by+60, 28, bh-60, P.woodD, P.black, 2);
+    rect(bx+40, by+62, 24, bh-64, P.wood, null);
+    rect(bx+70, by+62, 24, bh-64, P.wood, null);
+    // Door handle
+    circle(bx+65, by+bh-25, 4, '#d0a840', P.black, 1);
+    // Window
+    rect(bx+8, by+30, 30, 24, P.woodD, P.black, 2);
+    rect(bx+10, by+32, 26, 20, '#b8ddf8', null);
+    // Window cross
+    ctx.fillStyle=P.woodD;
+    ctx.fillRect(bx+22, by+32, 2, 20); ctx.fillRect(bx+10, by+42, 26, 2);
+}
+
+function drawSilo(){
+    const sx=W*0.06+175, sy=H*0.10+5;
+    const sr=24, sh=90;
+    // Shadow
+    ctx.fillStyle='rgba(0,0,0,0.12)';
+    ctx.fillRect(sx-sr+8, sy+8, sr*2, sh);
+    // Body
+    rect(sx-sr, sy, sr*2, sh, P.silo, P.black, 2);
+    // Vertical lines
+    ctx.fillStyle=P.siloD;
+    for(let x=sx-sr+8;x<sx+sr;x+=10) ctx.fillRect(x, sy, 2, sh);
+    // Dome top
+    ctx.fillStyle=P.siloRoof;
+    ctx.beginPath(); ctx.ellipse(sx, sy, sr, sr*0.6, 0, Math.PI, 0, true); ctx.fill();
+    ctx.strokeStyle=P.black; ctx.lineWidth=2; ctx.stroke();
+    // Cone roof
+    tri([[sx-sr-5,sy],[sx,sy-30],[sx+sr+5,sy]], P.siloD, P.black, 2);
+}
+
+function drawWindmill(){
+    const mx=W*0.14, my=H*0.10;
+    const t=Date.now()/1000;
+    // Tower
+    ctx.fillStyle=P.stone;
+    ctx.beginPath();
+    ctx.moveTo(mx-22, my+100); ctx.lineTo(mx-14, my+20);
+    ctx.lineTo(mx+14, my+20); ctx.lineTo(mx+22, my+100);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle=P.black; ctx.lineWidth=2; ctx.stroke();
+    // Stone lines
+    ctx.fillStyle=P.stoneD;
+    for(let y=my+30;y<my+100;y+=12) ctx.fillRect(mx-20+(y-my)/6, y, 38-(y-my)/4, 2);
+    // Door
+    rect(mx-8, my+75, 16, 25, P.woodD, P.black, 2);
+    // Blades
+    ctx.save(); ctx.translate(mx, my+30);
+    for(let i=0;i<4;i++){
+        ctx.save(); ctx.rotate(t*0.7+i*Math.PI/2);
+        // Blade
+        ctx.fillStyle='#e8d898'; ctx.strokeStyle=P.black; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(-4,2); ctx.lineTo(4,2); ctx.lineTo(3,38); ctx.lineTo(-3,38); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+    }
+    circle(0,0,8,P.wood,P.black,2); ctx.restore();
+}
+
+function drawWaterTower(){
+    const tx=W*0.14, ty=H*0.65;
+    const tw=56;
+    // Legs
+    ctx.fillStyle=P.woodD; ctx.lineWidth=2;
+    ctx.fillRect(tx+4, ty+46, 6, 35);
+    ctx.fillRect(tx+tw-10, ty+46, 6, 35);
+    // Cross brace
+    ctx.strokeStyle=P.wood; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(tx+7,ty+52); ctx.lineTo(tx+tw-7,ty+76); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(tx+tw-7,ty+52); ctx.lineTo(tx+7,ty+76); ctx.stroke();
+    // Tank
+    rect(tx, ty, tw, 46, P.woodD, P.black, 2);
+    rect(tx+2, ty+2, tw-4, 30, P.water, null);
+    ctx.fillStyle=P.waterL;
+    ctx.fillRect(tx+2, ty+2, tw-4, 6);
+    // Roof
+    tri([[tx-4,ty],[tx+tw/2,ty-16],[tx+tw+4,ty]], P.wood, P.black, 2);
+    // Bands
+    ctx.fillStyle=P.wood;
+    ctx.fillRect(tx, ty+14, tw, 4); ctx.fillRect(tx, ty+32, tw, 4);
+}
+
+function drawFarmhouse(){
+    const hx=W*0.84, hy=H*0.09;
+    const hw=100, hh=80;
+    // Shadow
+    ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(hx+8,hy+28,hw,hh);
+    // Walls
+    rect(hx, hy+20, hw, hh, P.house, P.black, 2);
+    // Side shading
+    rect(hx+hw, hy+28, 14, hh-6, P.houseWall, null);
+    // Roof
+    tri([[hx-8,hy+20],[hx+hw/2,hy-15],[hx+hw+8,hy+20]], P.houseRoof, P.black, 2);
+    ctx.fillStyle='rgba(255,255,255,0.1)';
+    ctx.fillRect(hx+hw/2-3,hy-15,6,35);
+    // Chimney
+    rect(hx+hw-28, hy-20, 14, 35, P.stone, P.black, 2);
+    ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(hx+hw-28,hy-22,14,6);
+    // Door
+    rect(hx+38, hy+60, 24, hh-40, P.wood, P.black, 2);
+    circle(hx+50, hy+90, 3, '#d0a840', P.black, 1);
+    // Windows
+    rect(hx+6, hy+36, 24, 20, P.woodD, P.black, 2);
+    rect(hx+8, hy+38, 20, 16, '#b8ddf8', null);
+    ctx.fillStyle=P.woodD; ctx.fillRect(hx+17,hy+38,2,16); ctx.fillRect(hx+8,hy+46,20,2);
+    rect(hx+70, hy+36, 24, 20, P.woodD, P.black, 2);
+    rect(hx+72, hy+38, 20, 16, '#b8ddf8', null);
+    ctx.fillStyle=P.woodD; ctx.fillRect(hx+81,hy+38,2,16); ctx.fillRect(hx+72,hy+46,20,2);
+}
+
+function drawTractor(){
+    const tx=W*0.17, ty=H*0.615;
+    // Big rear wheel
+    circle(tx+14, ty+44, 22, '#1a1a1a', P.black, 2);
+    circle(tx+14, ty+44, 12, '#3a3a3a', null);
+    ctx.fillStyle='#555'; [0,60,120,180,240,300].forEach(a=>{
+        const r=a*Math.PI/180;
+        ctx.fillRect(tx+14+Math.cos(r)*7-2, ty+44+Math.sin(r)*7-2,4,4);
+    });
+    // Body
+    rect(tx, ty+10, 72, 36, '#2878c0', P.black, 2);
+    // Hood
+    rect(tx+44, ty-4, 32, 26, '#1858a0', P.black, 2);
+    // Exhaust
+    rect(tx+66, ty-16, 8, 18, '#888', P.black, 1);
+    ctx.fillStyle='#555'; ctx.fillRect(tx+64, ty-17, 12, 4);
+    // Cab window
+    rect(tx+46, ty-2, 28, 20, '#9ad0f8', P.black,2);
+    // Anti-glare
+    ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.fillRect(tx+48, ty, 10, 10);
+    // Front small wheel
+    circle(tx+62, ty+46, 14, '#1a1a1a', P.black, 2);
+    circle(tx+62, ty+46, 7, '#3a3a3a', null);
+    // Head light
+    circle(tx+76, ty+20, 5, '#f8f060', P.black, 1);
+}
+
+function drawFences(){
+    // Top of soil area
+    const fx=W*0.35-6, fy=H*0.22-6;
+    const fw=W*0.42+12;
+    ctx.fillStyle=P.fence;
+    for(let x=0;x<fw;x+=20){
+        ctx.fillRect(fx+x, fy, 5, 24);      // post
+        ctx.fillStyle=P.fenceD; ctx.fillRect(fx+x,fy+3,20,4);  // rail
+        ctx.fillStyle=P.fence;  ctx.fillRect(fx+x,fy+13,20,4); // rail 2
+    }
+    // Left side
+    const fh=H*0.40+12;
+    for(let y=24;y<fh;y+=20){
+        ctx.fillRect(fx, fy+y, 5, 24);
+        ctx.fillStyle=P.fenceD; ctx.fillRect(fx,fy+y+3,20,4);
+        ctx.fillStyle=P.fence;  ctx.fillRect(fx,fy+y+13,20,4);
+    }
+}
+
+function drawTree(x,y){
+    // Trunk
+    rect(x-5, y+15, 12, 28, P.treeTrunk, P.black, 1);
+    // Canopy layers
+    circle(x, y+10, 28, P.treeTD,  P.black, 1);
+    circle(x+2, y+6, 24, P.treeT,   null);
+    circle(x-6, y+4, 18, P.treeTL,  null);
+    circle(x+10,y+12,14, P.treeTL,  null);
+}
+
+function drawHay(x,y){
+    rect(x,y,36,26,P.hay,P.black,2);
+    ctx.fillStyle=P.hayD;
+    for(let i=5;i<26;i+=7) ctx.fillRect(x,y+i,36,3);
+    // Shadow
+    ctx.fillStyle='rgba(0,0,0,0.1)'; ctx.fillRect(x+4,y+26,36,5);
+}
+
+function drawMap(){
+    drawTerrain();
     drawFences();
-    drawDecorations();
-}
-
-function drawBuildings() {
-    const cx = ctx;
-
-    // === CELEIRO VERMELHO (esquerda) ===
-    const bx = W * 0.06, by = H * 0.14;
-    const bw = 130, bh = 100;
-    // Sombra
-    cx.fillStyle = 'rgba(0,0,0,0.2)';
-    cx.fillRect(bx + 8, by + 8, bw, bh);
-    // Corpo
-    cx.fillStyle = PALETTE.barn;
-    cx.fillRect(bx, by, bw, bh);
-    // Teto (trapézio)
-    cx.fillStyle = PALETTE.barnRoof;
-    cx.beginPath();
-    cx.moveTo(bx - 10, by);
-    cx.lineTo(bx + bw / 2, by - 50);
-    cx.lineTo(bx + bw + 10, by);
-    cx.closePath();
-    cx.fill();
-    // Porta
-    cx.fillStyle = PALETTE.wood;
-    cx.fillRect(bx + 40, by + 55, 50, 45);
-    cx.fillStyle = '#f0c060';
-    cx.fillRect(bx + 57, by + 77, 6, 6);
-    // Janela
-    cx.fillStyle = PALETTE.wood;
-    cx.fillRect(bx + 8, by + 30, 28, 24);
-    cx.fillStyle = '#c8e0f8';
-    cx.fillRect(bx + 12, by + 34, 20, 16);
-    cx.fillStyle = PALETTE.barnRoof;
-    cx.fillRect(bx + 20, by + 34, 2, 16);
-    cx.fillRect(bx + 12, by + 42, 20, 2);
-    // Borda
-    cx.strokeStyle = '#000';
-    cx.lineWidth = 3;
-    cx.strokeRect(bx, by, bw, bh);
-
-    // === SILO (ao lado do celeiro) ===
-    const sx = bx + bw + 15, sy = by + 10;
-    const sr = 22, sh = 80;
-    // Corpo cilíndrico (retângulo + topo redondo)
-    cx.fillStyle = PALETTE.silo;
-    cx.fillRect(sx - sr, sy, sr * 2, sh);
-    cx.fillStyle = PALETTE.stone;
-    cx.beginPath();
-    cx.ellipse(sx, sy, sr, sr * 0.5, 0, Math.PI, 0, true);
-    cx.fill();
-    // Cobertura
-    cx.fillStyle = '#c0c8c0';
-    cx.beginPath();
-    cx.moveTo(sx - sr - 4, sy);
-    cx.lineTo(sx, sy - 22);
-    cx.lineTo(sx + sr + 4, sy);
-    cx.closePath();
-    cx.fill();
-    cx.fillStyle = '#a0a8a0';
-    cx.fillRect(sx - sr, sy, 4, sh);
-    cx.strokeStyle = '#000';
-    cx.lineWidth = 2;
-    cx.strokeRect(sx - sr, sy, sr * 2, sh);
-
-    // === CAIXA D'ÁGUA (canto) ===
-    const tx = W * 0.12, ty = H * 0.60;
-    cx.fillStyle = '#a05020';
-    cx.fillRect(tx, ty, 50, 40);
-    cx.fillStyle = PALETTE.water;
-    cx.fillRect(tx + 3, ty + 3, 44, 20);
-    cx.fillStyle = '#6b4020';
-    // Pernas
-    cx.fillRect(tx + 5, ty + 40, 5, 30);
-    cx.fillRect(tx + 40, ty + 40, 5, 30);
-    cx.strokeStyle = '#000';
-    cx.lineWidth = 2;
-    cx.strokeRect(tx, ty, 50, 40);
-
-    // === MOINHO (top left) ===
-    const mx = W * 0.13, my = H * 0.08;
-    // Torre
-    cx.fillStyle = PALETTE.stone;
-    cx.fillRect(mx - 18, my + 20, 36, 70);
-    cx.fillStyle = PALETTE.stoneD;
-    for (let y = my + 25; y < my + 90; y += 12) {
-        cx.fillRect(mx - 18, y, 36, 2);
-    }
-    // Porta
-    cx.fillStyle = PALETTE.wood;
-    cx.fillRect(mx - 8, my + 65, 16, 25);
-    // Pás do moinho
-    drawWindmill(cx, mx, my + 30);
-    cx.strokeStyle = '#000';
-    cx.lineWidth = 2;
-    cx.strokeRect(mx - 18, my + 20, 36, 70);
-
-    // === CASA DO AGRICULTOR (canto superior direito) ===
-    const hx = W * 0.82, hy = H * 0.10;
-    cx.fillStyle = '#e8d090';
-    cx.fillRect(hx, hy + 20, 90, 70);
-    cx.fillStyle = '#802010';
-    cx.beginPath();
-    cx.moveTo(hx - 8, hy + 20);
-    cx.lineTo(hx + 45, hy - 10);
-    cx.lineTo(hx + 98, hy + 20);
-    cx.closePath();
-    cx.fill();
-    cx.fillStyle = PALETTE.wood;
-    cx.fillRect(hx + 32, hy + 55, 26, 35);
-    cx.fillStyle = '#c8e0f8';
-    cx.fillRect(hx + 8, hy + 35, 22, 18);
-    cx.fillRect(hx + 60, hy + 35, 22, 18);
-    cx.strokeStyle = '#000';
-    cx.lineWidth = 2;
-    cx.strokeRect(hx, hy + 20, 90, 70);
-
-    // === TRATOR (no caminho) ===
-    drawTractor(cx, W * 0.16, H * 0.59);
-}
-
-function drawWindmill(cx, x, y) {
-    const t = Date.now() / 1000;
-    cx.save();
-    cx.translate(x, y);
-    for (let i = 0; i < 4; i++) {
-        cx.save();
-        cx.rotate(t * 0.8 + (i * Math.PI / 2));
-        cx.fillStyle = '#d4b87a';
-        cx.fillRect(-5, 0, 10, 35);
-        cx.restore();
-    }
-    // Centro
-    cx.fillStyle = '#a08060';
-    cx.beginPath();
-    cx.arc(0, 0, 8, 0, Math.PI * 2);
-    cx.fill();
-    cx.restore();
-}
-
-function drawTractor(cx, x, y) {
-    // Corpo
-    cx.fillStyle = '#2080c0';
-    cx.fillRect(x, y, 70, 35);
-    cx.fillStyle = '#1060a0';
-    cx.fillRect(x + 40, y - 12, 30, 20);
-    // Janela
-    cx.fillStyle = '#c8eeff';
-    cx.fillRect(x + 44, y - 10, 22, 14);
-    // Rodas
-    cx.fillStyle = '#1a1a1a';
-    cx.beginPath();
-    cx.arc(x + 18, y + 36, 16, 0, Math.PI * 2);
-    cx.fill();
-    cx.fillStyle = '#555';
-    cx.beginPath();
-    cx.arc(x + 18, y + 36, 8, 0, Math.PI * 2);
-    cx.fill();
-    cx.fillStyle = '#1a1a1a';
-    cx.beginPath();
-    cx.arc(x + 58, y + 36, 13, 0, Math.PI * 2);
-    cx.fill();
-    cx.fillStyle = '#555';
-    cx.beginPath();
-    cx.arc(x + 58, y + 36, 6, 0, Math.PI * 2);
-    cx.fill();
-    cx.strokeStyle = '#000';
-    cx.lineWidth = 2;
-    cx.strokeRect(x, y, 70, 35);
-}
-
-function drawFences() {
-    const cx = ctx;
-    cx.fillStyle = PALETTE.fence;
-    // Cerca superior da área agrícola
-    const fx = W * 0.31, fy = H * 0.22, fw = W * 0.43;
-    for (let i = 0; i < fw; i += 20) {
-        cx.fillRect(fx + i, fy, 4, 20);
-        cx.fillRect(fx + i, fy + 3, 20, 4);
-        cx.fillRect(fx + i, fy + 10, 20, 4);
-    }
-    // Cerca esquerda
-    const fh = H * 0.33;
-    for (let j = 0; j < fh; j += 20) {
-        cx.fillRect(fx, fy + 20 + j, 20, 4);
-        cx.fillRect(fx, fy + 20 + j, 4, 20);
-    }
-}
-
-function drawDecorations() {
-    const cx = ctx;
-    // Árvores
-    drawTree(ctx, W * 0.04, H * 0.40);
-    drawTree(ctx, W * 0.91, H * 0.42);
-    drawTree(ctx, W * 0.95, H * 0.40);
-    // Fardos de feno
-    drawHay(ctx, W * 0.19, H * 0.22);
-    drawHay(ctx, W * 0.22, H * 0.26);
-}
-
-function drawTree(cx, x, y) {
-    cx.fillStyle = '#3a2010';
-    cx.fillRect(x - 5, y, 10, 28);
-    cx.fillStyle = '#308030';
-    cx.beginPath();
-    cx.arc(x, y, 22, 0, Math.PI * 2);
-    cx.fill();
-    cx.fillStyle = '#40a040';
-    cx.beginPath();
-    cx.arc(x - 6, y - 6, 14, 0, Math.PI * 2);
-    cx.fill();
-}
-
-function drawHay(cx, x, y) {
-    cx.fillStyle = PALETTE.hay;
-    cx.fillRect(x, y, 28, 22);
-    cx.fillStyle = '#b07820';
-    for (let i = 4; i < 22; i += 6) cx.fillRect(x, y + i, 28, 2);
-    cx.strokeStyle = '#806010'; cx.lineWidth = 2;
-    cx.strokeRect(x, y, 28, 22);
+    // Trees
+    drawTree(W*0.05, H*0.38+20);
+    drawTree(W*0.24, H*0.36);
+    drawTree(W*0.92, H*0.40);
+    drawTree(W*0.96, H*0.36);
+    drawTree(W*0.89, H*0.14);
+    // Hay bales
+    drawHay(W*0.20, H*0.22);
+    drawHay(W*0.24, H*0.27);
+    // Buildings
+    drawBarn();
+    drawSilo();
+    drawWindmill();
+    drawWaterTower();
+    drawFarmhouse();
+    drawTractor();
 }
 
 // ==========================================
-// RENDERIZAÇÃO DOS CANTEIROS (Plots)
+//  PLOTS
 // ==========================================
-function drawPlots() {
-    state.plots.forEach((plot, i) => {
-        const r = getPlotRect(i);
-        // Solo
-        ctx.fillStyle = plot.state === 'empty' ? PALETTE.plotDry : '#4a2e12';
-        ctx.fillRect(r.x, r.y, r.w, r.h);
-        // Linhas de terra
-        ctx.fillStyle = plot.state === 'empty' ? PALETTE.dirtD : '#3a2010';
-        for (let k = 0; k < r.w; k += 10) ctx.fillRect(r.x + k, r.y, 2, r.h);
-        // Borda
-        const isHover = hoveredPlot === i;
-        ctx.strokeStyle = isHover ? '#fff' : '#3a1a05';
-        ctx.lineWidth = isHover ? 3 : 2;
-        ctx.strokeRect(r.x, r.y, r.w, r.h);
-
-        if (plot.state === 'growing') {
-            // Barra de progresso
-            ctx.fillStyle = '#000';
-            ctx.fillRect(r.x + 4, r.y + r.h - 12, r.w - 8, 8);
-            ctx.fillStyle = PALETTE.grassD;
-            ctx.fillRect(r.x + 4, r.y + r.h - 12, (r.w - 8) * (plot.progress / 100), 8);
-            // Muda
-            drawEmoji('🌱', r.x + r.w / 2, r.y + r.h / 2, 28);
-        } else if (plot.state === 'ready') {
-            const bounce = Math.sin(Date.now() / 200) * 4;
-            drawEmoji(CROPS[plot.cropType].icon, r.x + r.w / 2, r.y + r.h / 2 + bounce, 38);
+let hovered=-1;
+function drawPlots(){
+    G.plots.forEach((p,i)=>{
+        const r=plotRect(i);
+        // Wet/dry soil
+        const isHov=hovered===i;
+        ctx.fillStyle=p.state==='empty'?P.soil:P.soilW;
+        ctx.fillRect(r.x,r.y,r.w,r.h);
+        // Soil texture lines
+        ctx.fillStyle=P.soilLine;
+        for(let k=0;k<r.w;k+=10) ctx.fillRect(r.x+k,r.y,2,r.h);
+        for(let k=0;k<r.h;k+=10) ctx.fillRect(r.x,r.y+k,r.w,2);
+        // Border
+        ctx.strokeStyle=isHov?'#fff':P.fenceD;
+        ctx.lineWidth=isHov?3:2;
+        ctx.strokeRect(r.x,r.y,r.w,r.h);
+        if(isHov){
+            ctx.strokeStyle='rgba(255,255,200,0.4)';
+            ctx.lineWidth=1;
+            ctx.strokeRect(r.x+3,r.y+3,r.w-6,r.h-6);
+        }
+        // Crop
+        if(p.state==='growing'){
+            // Progress bar background
+            ctx.fillStyle='rgba(0,0,0,0.5)';
+            ctx.fillRect(r.x+4,r.y+r.h-14,r.w-8,10);
+            ctx.fillStyle='#38c060';
+            ctx.fillRect(r.x+4,r.y+r.h-14,(r.w-8)*(p.prog/100),10);
+            ctx.strokeStyle='rgba(255,255,255,0.4)';
+            ctx.lineWidth=1; ctx.strokeRect(r.x+4,r.y+r.h-14,r.w-8,10);
+            emoji('🌱',r.x+r.w/2,r.y+r.h/2,r.w*0.45);
+        } else if(p.state==='ready'){
+            const b=Math.sin(Date.now()/180)*5;
+            emoji(CROPS[p.crop].icon, r.x+r.w/2, r.y+r.h/2+b, r.w*0.55);
+            // Shine effect
+            ctx.fillStyle='rgba(255,255,100,0.15)';
+            ctx.beginPath(); ctx.arc(r.x+r.w/2,r.y+r.h/2,r.w*0.40,0,Math.PI*2); ctx.fill();
         }
     });
 }
 
 // ==========================================
-// HUD (Renderizar UI no Canvas)
+//  HUD
 // ==========================================
-function drawHUD() {
-    // -- Barra superior --
-    ctx.fillStyle = 'rgba(0,0,0,0.80)';
-    ctx.fillRect(0, 0, W, 56);
-    ctx.strokeStyle = PALETTE.ui_brd;
-    ctx.lineWidth = 3;
-    ctx.strokeRect(0, 0, W, 56);
+function drawHUD(){
+    const hh=60;
+    // Top bar bg
+    ctx.fillStyle='rgba(10,6,2,0.90)';
+    ctx.fillRect(0,0,W,hh);
+    ctx.fillStyle=P.uiBrd; ctx.fillRect(0,hh-4,W,4); // gold line
+    pixelBorder(0,0,W,hh,'rgba(255,255,255,0.12)','rgba(0,0,0,0.4)',4);
 
-    drawPixelText(`MOEDAS: ${state.coins}`, 20, 32, '#f4b41b', 12);
-    drawPixelText(`HAPPY: ${state.happiness}%`, W / 2 - 80, 32, '#f4b41b', 12);
+    px(`MOEDAS: ${G.coins}`, 24, 36, P.textYellow, 12);
 
-    // Barra de felicidade
-    ctx.fillStyle = '#222';
-    ctx.fillRect(W / 2 + 60, 18, 200, 20);
-    ctx.fillStyle = '#27ae60';
-    ctx.fillRect(W / 2 + 60, 18, 200 * (state.happiness / 100), 20);
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
-    ctx.strokeRect(W / 2 + 60, 18, 200, 20);
+    // Happiness bar
+    const bx=W/2-120, by=16, bw=240, bh=28;
+    px('HAPPY', bx-80, by+20, P.textYellow, 9);
+    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(bx,by,bw,bh);
+    // Gradient bar
+    const grad=ctx.createLinearGradient(bx,0,bx+bw,0);
+    grad.addColorStop(0,'#38c060'); grad.addColorStop(0.6,'#80d040'); grad.addColorStop(1,'#f0e000');
+    ctx.fillStyle=grad;
+    ctx.fillRect(bx,by,bw*(G.happy/100),bh);
+    ctx.strokeStyle=P.uiBrd; ctx.lineWidth=2; ctx.strokeRect(bx,by,bw,bh);
+    px(`${G.happy}%`, bx+bw/2-14, by+20, P.textWhite, 8);
 
-    // Inventário
-    let iX = W - 400;
-    drawPixelText('INV:', iX - 40, 32, '#fff', 8);
-    Object.entries(state.inventory).forEach(([key, val]) => {
-        if (val > 0) {
-            drawEmoji(CROPS[key].icon, iX + 10, 28, 20);
-            drawPixelText(`${val}`, iX + 22, 35, '#fff', 8);
-            iX += 45;
+    // Inventory
+    let ix=W-440;
+    px('INV', ix-50, 36, P.textYellow, 8);
+    Object.entries(G.inv).forEach(([k,v])=>{
+        if(v>0){
+            ctx.fillStyle='rgba(255,255,255,0.12)';
+            ctx.fillRect(ix-2,8,44,44);
+            emoji(CROPS[k].icon,ix+18,30,22);
+            px(`${v}`,ix+4,54,P.textWhite,7);
+            ix+=50;
         }
     });
 
-    // -- Seed Buttons (inferior) --
-    CROP_KEYS.forEach((key, i) => {
-        const r = getSeedBtnRect(i);
-        const active = state.selectedSeed === key;
-        ctx.fillStyle = active ? PALETTE.ui_brd : 'rgba(0,0,0,0.8)';
-        ctx.fillRect(r.x, r.y, r.w, r.h);
-        ctx.strokeStyle = active ? '#fff' : PALETTE.ui_brd;
-        ctx.lineWidth = 3;
-        ctx.strokeRect(r.x, r.y, r.w, r.h);
-        drawEmoji(CROPS[key].icon, r.x + 22, r.y + 25, 22);
-        drawPixelText(CROPS[key].name, r.x + 36, r.y + 20, active ? '#000' : '#fff', 7);
-        drawPixelText(`$${CROPS[key].price}`, r.x + 36, r.y + 38, active ? '#333' : '#f4b41b', 7);
+    // --- SEED BUTTONS ---
+    KEYS.forEach((k,i)=>{
+        const r=seedBtn(i);
+        const active=G.seed===k;
+        const t=Date.now()/1000;
+        if(active){
+            const g2=ctx.createLinearGradient(r.x,r.y,r.x,r.y+r.h);
+            g2.addColorStop(0,'#f8e040'); g2.addColorStop(1,'#c09010');
+            ctx.fillStyle=g2;
+        } else {
+            ctx.fillStyle='rgba(10,6,2,0.85)';
+        }
+        ctx.fillRect(r.x,r.y,r.w,r.h);
+        ctx.strokeStyle=active?P.white:P.uiBrd; ctx.lineWidth=active?3:2;
+        ctx.strokeRect(r.x,r.y,r.w,r.h);
+        pixelBorder(r.x,r.y,r.w,r.h,'rgba(255,255,255,0.2)','rgba(0,0,0,0.3)',3);
+        emoji(CROPS[k].icon, r.x+26, r.y+28, 26);
+        px(CROPS[k].name, r.x+42, r.y+22, active?P.black:P.textWhite, 6);
+        px(`$${CROPS[k].cost}`, r.x+42, r.y+42, active?'#555':P.textYellow, 7);
     });
 
-    // -- Request Cards (direita) --
-    const rPanelX = W - 225;
-    ctx.fillStyle = 'rgba(0,0,0,0.85)';
-    ctx.fillRect(rPanelX - 5, 65, 225, H - 130);
-    ctx.strokeStyle = PALETTE.ui_brd;
-    ctx.lineWidth = 3;
-    ctx.strokeRect(rPanelX - 5, 65, 225, H - 130);
-    drawPixelText('VILA', rPanelX + 65, 92, PALETTE.ui_brd, 10);
+    // --- VILA PANEL ---
+    const px2=W-240, py2=62, pw2=235, ph2=H-62-90;
+    ctx.fillStyle='rgba(8,4,2,0.90)';
+    ctx.fillRect(px2,py2,pw2,ph2);
+    ctx.strokeStyle=P.uiBrd; ctx.lineWidth=3; ctx.strokeRect(px2,py2,pw2,ph2);
+    pixelBorder(px2,py2,pw2,ph2,'rgba(255,210,30,0.15)','rgba(0,0,0,0.4)',4);
 
-    state.requests.forEach((req, i) => {
-        const r = getRequestRect(i);
-        if (r.y + r.h > H - 90) return;
-        const hasEnough = state.inventory[req.cropType] >= req.amount;
+    // Title
+    ctx.fillStyle='rgba(255,200,30,0.15)'; ctx.fillRect(px2,py2,pw2,28);
+    px('VILA', px2+70, py2+20, P.textYellow, 11);
 
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(r.x, r.y, r.w, r.h);
-        ctx.strokeStyle = hasEnough ? '#27ae60' : '#888';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(r.x, r.y, r.w, r.h);
-
-        drawEmoji(CROPS[req.cropType].icon, r.x + 20, r.y + 28, 24);
-        drawPixelText(`${req.amount}x ${CROPS[req.cropType].name}`, r.x + 40, r.y + 28, '#000', 7);
-        drawPixelText(`+$${req.rewardCoins}`, r.x + 40, r.y + 45, '#1a7', 7);
-
-        // Botão distribuir
-        ctx.fillStyle = hasEnough ? '#27ae60' : '#aaa';
-        ctx.fillRect(r.x + 10, r.y + 65, r.w - 20, 25);
-        drawPixelText(hasEnough ? 'DISTRIBUIR' : 'FALTANDO', r.x + 50, r.y + 81, '#fff', 6);
+    G.reqs.forEach((req,i)=>{
+        const r=reqCard(i);
+        if(r.y+r.h>H-100) return;
+        const has=G.inv[req.crop]>=req.n;
+        // Card bg
+        ctx.fillStyle=has?'rgba(30,80,40,0.9)':'rgba(40,20,10,0.9)';
+        ctx.fillRect(r.x,r.y,r.w,r.h);
+        ctx.strokeStyle=has?P.uiGreen:'#886030';
+        ctx.lineWidth=2; ctx.strokeRect(r.x,r.y,r.w,r.h);
+        pixelBorder(r.x,r.y,r.w,r.h,'rgba(255,255,255,0.1)','rgba(0,0,0,0.3)',3);
+        // Content
+        emoji(CROPS[req.crop].icon, r.x+20, r.y+28, 26);
+        px(`${req.n}x ${CROPS[req.crop].name}`, r.x+36, r.y+22, P.textWhite, 6);
+        ctx.fillStyle='#80e0a0'; ctx.font='8px Press Start 2P,monospace';
+        ctx.fillText(`+$${req.coins}`, r.x+36, r.y+42);
+        // Distribute button
+        const by2=r.y+r.h-32, bh2=24;
+        const bg=ctx.createLinearGradient(r.x+6,by2,r.x+6,by2+bh2);
+        if(has){ bg.addColorStop(0,'#48d070'); bg.addColorStop(1,'#28904a'); }
+        else    { bg.addColorStop(0,'#605040'); bg.addColorStop(1,'#483828'); }
+        ctx.fillStyle=bg; ctx.fillRect(r.x+6,by2,r.w-12,bh2);
+        ctx.strokeStyle=has?'#80f0a0':'#807060'; ctx.lineWidth=1;
+        ctx.strokeRect(r.x+6,by2,r.w-12,bh2);
+        pixelBorder(r.x+6,by2,r.w-12,bh2,'rgba(255,255,255,0.2)','rgba(0,0,0,0.2)',2);
+        px(has?'DISTRIBUIR':'FALTANDO', r.x+16, by2+16, P.textWhite, 6);
     });
 
-    // Notificação
-    if (state.notification && state.notifTimer > 0) {
-        const alpha = Math.min(1, state.notifTimer / 30);
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = state.notification.color;
-        ctx.fillRect(W / 2 - 160, H / 2 - 30, 320, 60);
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
-        ctx.strokeRect(W / 2 - 160, H / 2 - 30, 320, 60);
-        drawPixelText(state.notification.msg, W / 2 - 140, H / 2 + 8, '#fff', 10);
-        ctx.globalAlpha = 1;
-        state.notifTimer--;
+    // --- NOTIFICATION ---
+    if(G.notif && G.ntimer>0){
+        const alpha=Math.min(1,G.ntimer/30);
+        ctx.globalAlpha=alpha;
+        const nw=320,nh=56,nx=W/2-nw/2,ny=H*0.42;
+        ctx.fillStyle=G.notif.c; ctx.fillRect(nx,ny,nw,nh);
+        ctx.strokeStyle='#fff'; ctx.lineWidth=4; ctx.strokeRect(nx,ny,nw,nh);
+        pixelBorder(nx,ny,nw,nh,'rgba(255,255,255,0.35)','rgba(0,0,0,0.3)',4);
+        px(G.notif.m, nx+18, ny+34, '#fff', 9);
+        ctx.globalAlpha=1;
+        G.ntimer--;
     }
 }
 
 // ==========================================
-// HELPERS DE DESENHO
+//  INPUT
 // ==========================================
-function drawPixelText(text, x, y, color, size) {
-    ctx.font = `${size}px 'Press Start 2P', monospace`;
-    ctx.fillStyle = color;
-    ctx.fillText(text, x, y);
-}
-
-function drawEmoji(emoji, cx, cy, size) {
-    ctx.font = `${size}px serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(emoji, cx, cy);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-}
-
-// ==========================================
-// INTERAÇÃO (Mouse)
-// ==========================================
-let hoveredPlot = -1;
-
-canvas.addEventListener('mousemove', (e) => {
-    const mx = e.clientX, my = e.clientY;
-    hoveredPlot = -1;
-    state.plots.forEach((_, i) => {
-        const r = getPlotRect(i);
-        if (mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) hoveredPlot = i;
+canvas.addEventListener('mousemove',e=>{
+    const mx=e.clientX, my=e.clientY;
+    hovered=-1;
+    G.plots.forEach((_,i)=>{
+        const r=plotRect(i);
+        if(mx>=r.x&&mx<=r.x+r.w&&my>=r.y&&my<=r.y+r.h) hovered=i;
     });
-    canvas.style.cursor = hoveredPlot >= 0 ? 'pointer' : 'default';
+    canvas.style.cursor=hovered>=0?'pointer':'default';
 });
 
-canvas.addEventListener('click', (e) => {
-    const mx = e.clientX, my = e.clientY;
-
-    // Click nos canteiros
-    state.plots.forEach((plot, i) => {
-        const r = getPlotRect(i);
-        if (mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) {
-            if (plot.state === 'empty') {
-                const crop = CROPS[state.selectedSeed];
-                if (state.coins >= crop.price) {
-                    state.coins -= crop.price;
-                    plot.state = 'growing';
-                    plot.cropType = state.selectedSeed;
-                    plot.startTime = Date.now();
-                    showNotif(`Plantado: ${crop.name}`);
-                } else {
-                    showNotif('Sem moedas!', '#c0392b');
-                }
-            } else if (plot.state === 'ready') {
-                state.inventory[plot.cropType]++;
-                showNotif(`Colhido!`);
-                plot.state = 'empty';
-                plot.cropType = null;
-            }
+canvas.addEventListener('click',e=>{
+    const mx=e.clientX, my=e.clientY;
+    // Plots
+    G.plots.forEach((p,i)=>{
+        const r=plotRect(i);
+        if(mx<r.x||mx>r.x+r.w||my<r.y||my>r.y+r.h) return;
+        if(p.state==='empty'){
+            const c=CROPS[G.seed];
+            if(G.coins>=c.cost){
+                G.coins-=c.cost; p.state='growing'; p.crop=G.seed; p.t0=Date.now();
+                notif(`Plantado: ${c.name}`);
+            } else notif('Sem moedas!', P.uiRed);
+        } else if(p.state==='ready'){
+            G.inv[p.crop]++; notif(`Colhido! ${CROPS[p.crop].icon}`);
+            p.state='empty'; p.crop=null;
         }
     });
-
-    // Click nas seed buttons
-    CROP_KEYS.forEach((key, i) => {
-        const r = getSeedBtnRect(i);
-        if (mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) {
-            state.selectedSeed = key;
-        }
-    });
-
-    // Click nos botões de distribuir
-    state.requests.forEach((req, i) => {
-        const r = getRequestRect(i);
-        const btnY = r.y + 65;
-        if (mx >= r.x + 10 && mx <= r.x + r.w - 10 && my >= btnY && my <= btnY + 25) {
-            if (state.inventory[req.cropType] >= req.amount) {
-                state.inventory[req.cropType] -= req.amount;
-                state.coins += req.rewardCoins;
-                state.happiness = Math.min(100, state.happiness + req.rewardHappiness);
-                state.requests = state.requests.filter(r => r.id !== req.id);
-                showNotif('Vila agradecida! +Felicidade');
+    // Seed buttons
+    KEYS.forEach((k,i)=>{ const r=seedBtn(i); if(mx>=r.x&&mx<=r.x+r.w&&my>=r.y&&my<=r.y+r.h) G.seed=k; });
+    // Distribute buttons
+    G.reqs.forEach(req=>{
+        const r=reqCard(G.reqs.indexOf(req));
+        const by2=r.y+r.h-32;
+        if(mx>=r.x+6&&mx<=r.x+r.w-6&&my>=by2&&my<=by2+24){
+            if(G.inv[req.crop]>=req.n){
+                G.inv[req.crop]-=req.n; G.coins+=req.coins;
+                G.happy=Math.min(100,G.happy+req.happy);
+                G.reqs=G.reqs.filter(r=>r.id!==req.id);
+                notif('Vila agradecida! ❤️');
             }
         }
     });
 });
 
 // ==========================================
-// LOOP PRINCIPAL
+//  MAIN LOOP
 // ==========================================
-let lastTime = 0;
-function gameLoop(ts) {
-    const dt = ts - lastTime;
-    lastTime = ts;
-
-    // Atualiza crescimento
-    state.plots.forEach(plot => {
-        if (plot.state === 'growing') {
-            const crop = CROPS[plot.cropType];
-            plot.progress = Math.min(100, ((Date.now() - plot.startTime) / crop.growTime) * 100);
-            if (plot.progress >= 100) plot.state = 'ready';
+function loop(){
+    G.plots.forEach(p=>{
+        if(p.state==='growing'){
+            p.prog=Math.min(100,(Date.now()-p.t0)/CROPS[p.crop].grow*100);
+            if(p.prog>=100) p.state='ready';
         }
     });
-
-    // Limpa tela
-    ctx.clearRect(0, 0, W, H);
-
-    // Renderiza mapa
+    ctx.clearRect(0,0,W,H);
     drawMap();
-
-    // Renderiza canteiros
     drawPlots();
-
-    // Renderiza HUD
     drawHUD();
-
-    requestAnimationFrame(gameLoop);
+    requestAnimationFrame(loop);
 }
-
-requestAnimationFrame(gameLoop);
+requestAnimationFrame(loop);
