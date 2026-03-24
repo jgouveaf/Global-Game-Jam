@@ -231,10 +231,10 @@ class FarmGame {
             if (count > 0) {
                 const item = document.createElement('div');
                 item.className = 'inventory-item';
-                item.style.padding = '4px 12px';
-                item.style.background = '#F3F4F6';
-                item.style.borderRadius = '8px';
-                item.style.fontSize = '0.9rem';
+                item.style.padding = '8px';
+                item.style.border = '2px solid var(--pixel-white)';
+                item.style.background = 'var(--pixel-black)';
+                item.style.fontSize = '8px';
                 item.innerHTML = `<b>${this.crops[id].icon} ${count}</b>`;
                 this.inventoryList.appendChild(item);
             }
@@ -249,20 +249,11 @@ class FarmGame {
 
     showNotification(message, type = 'success') {
         const note = document.createElement('div');
-        note.style.position = 'fixed';
-        note.style.top = '20px';
-        note.style.right = '20px';
-        note.style.padding = '12px 24px';
-        note.style.background = type === 'error' ? '#EF4444' : '#22C55E';
-        note.style.color = 'white';
-        note.style.borderRadius = '12px';
-        note.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)';
-        note.style.zIndex = '1000';
-        note.style.animation = 'slideIn 0.3s ease-out';
+        note.className = `notification notification-${type}`;
         note.innerText = message;
         
         document.body.appendChild(note);
-        setTimeout(() => note.remove(), 3000);
+        setTimeout(() => note.remove(), 2500);
     }
 
     victory() {

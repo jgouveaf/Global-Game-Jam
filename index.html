@@ -7,18 +7,18 @@
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
-        <!-- HUD Superior -->
+        <!-- HUD -->
         <header class="hud">
             <div class="stats-card">
-                <span class="stat-label">Moedas:</span>
+                <span class="stat-label">MOEDAS</span>
                 <span id="coins" class="stat-value">50</span>
             </div>
             <div class="stats-card">
-                <span class="stat-label">Felicidade da Comunidade:</span>
+                <span class="stat-label">FELICIDADE</span>
                 <div class="progress-bar-container">
                     <div id="happiness-bar" class="progress-bar"></div>
                     <span id="happiness-text">0%</span>
@@ -26,40 +26,36 @@
             </div>
             <div class="inventory-card">
                 <div class="crop-inventory" id="inventory-list">
-                    <!-- Dinâmico -->
+                    <!-- Itens -->
                 </div>
             </div>
         </header>
 
         <main class="game-view">
-            <!-- Área da Fazenda -->
+            <!-- Fazenda -->
             <section id="farm-section" class="scene-section">
-                <h2 class="section-title">Minha Fazenda</h2>
+                <h2 class="section-title">SUA FAZENDA</h2>
                 <div class="farm-grid" id="farm-grid">
-                    <!-- 9 Canteiros iniciais -->
+                    <!-- Grade 3x3 -->
                 </div>
             </section>
 
-            <!-- Área da Comunidade -->
+            <!-- Comunidade -->
             <section id="community-section" class="scene-section">
-                <h2 class="section-title">Necessidades da Vila</h2>
+                <h2 class="section-title">VILA</h2>
                 <div class="requests-container" id="requests-list">
-                    <!-- Pedidos dinâmicos -->
+                    <!-- Pedidos -->
                 </div>
             </section>
         </main>
 
-        <!-- Menu de Sementes -->
+        <!-- Sementes -->
         <footer class="shop-footer">
-            <div class="seed-selector" id="seed-shop">
-                <!-- Sementes para comprar/plantar -->
-            </div>
+            <div class="seed-selector" id="seed-shop"></div>
         </footer>
     </div>
 
-    <!-- Modais/Notificações -->
     <div id="notification-area"></div>
-
     <script src="main.js"></script>
 </body>
 </html>
