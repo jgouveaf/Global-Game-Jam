@@ -88,6 +88,12 @@ if(btnWater) {
         wateringTimer = 10;
         timerUI.classList.remove('hidden');
         timerSec.textContent = wateringTimer;
+
+        // FOCAR A CÂMERA NO TERRENO (Para não sumir!)
+        const scale = Math.max(W / WW, H / WH);
+        camera.x = (1850 * scale) - (W / 2);
+        camera.y = (780 * scale) - (H / 2);
+
         const countdown = setInterval(() => {
             wateringTimer--;
             timerSec.textContent = wateringTimer;
