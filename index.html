@@ -203,7 +203,8 @@
         window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
 
         // ESTADOS
-        let isWatering = false, wateringTimer = 0, moedas = 500, sementesTrigo = 20, comunidade = 80;
+        let isWatering = false, wateringTimer = 0, moedas = 500, sementesTrigo = 60, comunidade = 80;
+
         let isGameOver = false;
         let harvestedTrigo = 0;
         const crops = [], blueField = { x: 1580, y: 580, w: 900, h: 540 };
@@ -306,8 +307,10 @@
             const hpBar = document.getElementById('hp-bar');
             if (hpBar) hpBar.style.width = comunidade + '%';
             document.getElementById('hud-value').textContent = Math.round(comunidade);
+            document.getElementById('hud-harvest-value').textContent = harvestedTrigo;
             document.getElementById('hud-coins-value').textContent = Math.round(moedas);
             document.getElementById('hud-seeds-value').textContent = sementesTrigo;
+
 
             // Atualiza Loja
             document.querySelectorAll('.shop-card').forEach(card => {
@@ -442,20 +445,33 @@
             });
 
             bind('btn-water', () => {
-                if (isWatering) return;
-                isWatering = true; wateringTimer = 10;
-                const timerEl = document.getElementById('planting-timer');
-                if (timerEl) timerEl.classList.remove('hidden');
-                const itv = setInterval(() => {
-                    wateringTimer--;
-                    const countEl = document.getElementById('timer-sec');
-                    if (countEl) countEl.textContent = wateringTimer;
-                    if (wateringTimer <= 0) {
-                        clearInterval(itv); isWatering = false;
-                        if (timerEl) timerEl.classList.add('hidden');
+                const totalPossible = sementesTrigo;
+                if (totalPossible <= 0) { alert("Sem sementes!"); return; }
+                
+                let plantedCount = 0;
+                const spacingX = 130, spacingY = 130;
+                for (let yy = blueField.y + 60; yy < blueField.y + blueField.h - 60; yy += spacingY) {
+                    for (let xx = blueField.x + 60; xx < blueField.x + blueField.w - 60; xx += spacingX) {
+                        if (sementesTrigo > 0) {
+                            if (!crops.some(c => Math.hypot(c.x - xx, c.y - yy) < 60)) {
+                                crops.push(new Crop(xx, yy));
+                                sementesTrigo--;
+                                plantedCount++;
+                            }
+                        }
                     }
-                }, 1000);
+                }
+                
+                updateHUD(); updateInventory();
+                const timerEl = document.getElementById('planting-timer');
+                if (timerEl) {
+                    timerEl.innerHTML = `PLANTADO ${plantedCount} SEMENTES!`;
+                    timerEl.classList.remove('hidden');
+                    setTimeout(() => timerEl.classList.add('hidden'), 3500);
+                }
+                console.log(`Auto-plantio: ${plantedCount} sementes distribuídas.`);
             });
+
 
 
             // Timer para a barra de comunidade descer
@@ -473,32 +489,20 @@
 
         canvas.onmousedown = (e) => {
             const rect = canvas.getBoundingClientRect();
-            const wx = (e.clientX - rect.left) + camera.x;
-            const wy = (e.clientY - rect.top) + camera.y;
+            const wx = (e.clientX - rect.left) + camera.x, wy = (e.clientY - rect.top) + camera.y;
 
             // Colher Trigo pronto
-            const cropIdx = crops.findIndex(c => Math.hypot(c.x - wx, c.y - wy) < 40 && c.stage === 4);
+            const cropIdx = crops.findIndex(c => Math.hypot(c.x - wx, c.y - wy) < 60 && c.stage === 4);
             if (cropIdx !== -1) {
                 crops.splice(cropIdx, 1);
                 harvestedTrigo++;
                 moedas += 50; 
                 updateHUD();
+                console.log("Colheita: +50 moedas");
                 return;
             }
-
-            if (isWatering && wateringTimer > 0) {
-                if (wx > blueField.x && wx < blueField.x + blueField.w && wy > blueField.y && wy < blueField.y + blueField.h) {
-                    if (sementesTrigo > 0) {
-                        if (!crops.some(c => Math.hypot(c.x - wx, c.y - wy) < 45)) {
-                            crops.push(new Crop(wx, wy));
-                            sementesTrigo--;
-                            updateInventory();
-                            updateHUD();
-                        }
-                    }
-                }
-            }
         };
+
 
 
         let lastTime = performance.now();
