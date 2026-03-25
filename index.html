@@ -1,543 +1,82 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgriCorp – Global Game Jam</title>
+    <title>AgriCorp v10.0 – Global Game Jam</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
-
 <body style="margin: 0; padding: 0; background: #325e22; overflow: hidden;">
 
+    <div style="position:fixed; top:5px; right:5px; color:rgba(255,255,255,0.3); font-family:sans-serif; font-size:10px; z-index:9999">AgriCorp v10.0</div>
+
     <!-- HUD de Status -->
-    <div id="stats-container"
-        style="position: fixed; top: 70px; left: 20px; z-index: 5000; font-family: 'Press Start 2P'; font-size: 10px; color: #fff; text-shadow: 2px 2px #000; pointer-events: none;">
-        <div style="color: #ffd700; margin-bottom: 5px;">💰 MOEDAS: <span id="hud-coins-value">100</span></div>
-        <div style="color: #0f0; margin-bottom: 5px;">🌱 SEMENTES: <span id="hud-seeds-value">10</span></div>
+    <div id="stats-container" style="position: fixed; top: 70px; left: 20px; z-index: 5000; font-family: 'Press Start 2P'; font-size: 10px; color: #fff; text-shadow: 2px 2px #000; pointer-events: none;">
+        <div style="color: #ffd700; margin-bottom: 5px;">💰 MOEDAS: <span id="hud-coins-value">500</span></div>
+        <div style="color: #0f0; margin-bottom: 5px;">🌱 SEMENTES: <span id="hud-seeds-value">60</span></div>
         <div style="color: #e67e22;">🌾 COLHEITA: <span id="hud-harvest-value">0</span></div>
     </div>
 
-    <!-- AVISO DE DINHEIRO -->
-    <div id="money-warning" class="hidden"
-        style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff0000; font-family: 'Press Start 2P'; font-size: 16px; z-index: 15000; text-shadow: 2px 2px #000; text-align: center;">
-        SEM DINHEIRO! <br> VENDA SUA COLHEITA
-    </div>
-
     <!-- HUD de Comunidade -->
-    <div id="hud-top"
-        style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; align-items: center; gap: 10px; width: 80%;">
+    <div id="hud-top" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; align-items: center; gap: 10px; width: 80%;">
         <span style="color: #fff; font-size: 8px; font-family: 'Press Start 2P';">COMUNIDADE</span>
         <div style="flex: 1; height: 16px; background: rgba(0,0,0,0.5); border: 2px solid #fff; position: relative;">
-            <div id="hp-bar" style="height: 100%; background: #f00; width: 100%;"></div>
+            <div id="hp-bar" style="height: 100%; background: #f00; width: 80%;"></div>
         </div>
-        <span id="hud-value" style="color: #fff; font-size: 8px; font-family: 'Press Start 2P';">100</span>
+        <span id="hud-value" style="color: #fff; font-size: 8px; font-family: 'Press Start 2P';">80</span>
     </div>
 
-    <!-- TIMER DE PLANTIO -->
-    <div id="planting-timer" class="hidden"
-        style="position: fixed; top: 100px; left: 50%; transform: translateX(-50%); color: #fff; text-shadow: 2px 2px #000; font-size: 12px; z-index: 6000; font-family: 'Press Start 2P'; text-align: center;">
-        MODO REGA ATIVO! <br> <span id="timer-sec">10</span>s
+    <!-- TIMER/AVISOS -->
+    <div id="planting-timer" class="hidden" style="position: fixed; top: 100px; left: 50%; transform: translateX(-50%); color: #fff; text-shadow: 2px 2px #000; font-size: 12px; z-index: 6000; font-family: 'Press Start 2P'; text-align: center;"></div>
+
+    <div id="action-buttons" style="position: fixed; bottom: 20px; right: 20px; z-index: 7000; display: flex; flex-direction: column; gap: 10px;">
+        <button id="btn-water" style="padding: 12px; background: #8b4513; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;">💧 PLANTAR TUDO</button>
+        <button id="btn-open-shop" style="padding: 12px; background: #8b4513; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;">🏪 LOJA</button>
+        <button id="btn-open-inventory" style="padding: 12px; background: #8b4513; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;">🎒 INV</button>
     </div>
 
-    <!-- BOTÕES DE AÇÃO -->
-    <div id="action-buttons"
-        style="position: fixed; bottom: 20px; right: 20px; z-index: 7000; display: flex; flex-direction: column; gap: 10px;">
-        <button id="btn-water"
-            style="padding: 12px; background: #8b4513; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;">💧
-            REGAR</button>
-        <button id="btn-open-shop"
-            style="padding: 12px; background: #8b4513; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;">🏪
-            LOJA</button>
-        <button id="btn-open-inventory"
-            style="padding: 12px; background: #8b4513; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;">🎒
-            INV</button>
-    </div>
-
-    <!-- Overlay da Loja -->
+    <!-- Shop Overlay -->
     <div id="shop-overlay" class="hidden">
-        <h2
-            style="font-size: 32px; letter-spacing: 4px; color: #ffd700; text-shadow: 0 0 10px #ffbb00; font-family: 'Press Start 2P'; margin-bottom: 20px;">
-            🏪 LOJA DA FAZENDA</h2>
+        <h2 style="font-size: 32px; letter-spacing: 4px; color: #ffd700; text-shadow: 0 0 10px #ffbb00; font-family: 'Press Start 2P'; margin-bottom: 20px;">🏪 LOJA</h2>
         <div class="shop-cards">
-
-            <!-- Novas Sementes do Usuário -->
             <div class="shop-card">
                 <div class="card-icon">🌱</div>
                 <h3>TRIGO</h3>
-                <p>Sementes de Trigo</p>
                 <div class="card-price">💰 10</div>
                 <button id="btn-buy-seed" class="buy-btn">COMPRAR</button>
             </div>
-
-            <div class="shop-card">
-                <div class="card-icon"><img src="sprites/Pato.png"></div>
-                <h3>PATO</h3>
-                <p>Produz Ovos (Pouco)</p>
-                <div class="card-price">💰 100</div>
-                <button class="buy-btn" onclick="buyAnimal('pato', 100)">COMPRAR</button>
-            </div>
-
-            <div class="shop-card">
-                <div class="card-icon"><img src="sprites/Galinha.png"></div>
-                <h3>GALINHA</h3>
-                <p>Produz Ovos (Muito)</p>
-                <div class="card-price">💰 200</div>
-                <button class="buy-btn" onclick="buyAnimal('galinha', 200)">COMPRAR</button>
-            </div>
-
-            <div class="shop-card">
-                <div class="card-icon"><img src="sprites/Coelho.png"></div>
-                <h3>COELHO</h3>
-                <p>Produz Carne (Normal)</p>
-                <div class="card-price">💰 150</div>
-                <button class="buy-btn" onclick="buyAnimal('coelho', 150)">COMPRAR</button>
-            </div>
-
-            <div class="shop-card">
-                <div class="card-icon"><img src="sprites/Ovelha.png"></div>
-                <h3>OVELHA</h3>
-                <p>Produz Carne (Muito)</p>
-                <div class="card-price">💰 300</div>
-                <button class="buy-btn" onclick="buyAnimal('ovelha', 300)">COMPRAR</button>
-            </div>
-
-            <div class="shop-card">
-                <div class="card-icon"><img src="sprites/Porco.png"></div>
-                <h3>PORCO</h3>
-                <p>Produz Ouro (Normal)</p>
-                <div class="card-price">💰 500</div>
-                <button class="buy-btn" onclick="buyAnimal('porco', 500)">COMPRAR</button>
-            </div>
-
-
-            <div class="shop-card">
-                <div class="card-icon"><img src="sprites/Cavalo.png"></div>
-                <h3>CAVALO</h3>
-                <p>Produz Ouro (Muito)</p>
-                <div class="card-price">💰 800</div>
-                <button class="buy-btn" onclick="buyAnimal('cavalo', 800)">COMPRAR</button>
-            </div>
-
+            <!-- Outros animais chamam buyAnimal('tipo', preco) no main.js -->
+            <div class="shop-card"><h3>PATO</h3><button class="buy-btn" onclick="buyAnimal('pato', 100)">💰 100</button></div>
+            <div class="shop-card"><h3>GALINHA</h3><button class="buy-btn" onclick="buyAnimal('galinha', 200)">💰 200</button></div>
+            <div class="shop-card"><h3>COELHO</h3><button class="buy-btn" onclick="buyAnimal('coelho', 150)">💰 150</button></div>
+            <div class="shop-card"><h3>OVELHA</h3><button class="buy-btn" onclick="buyAnimal('ovelha', 300)">💰 300</button></div>
+            <div class="shop-card"><h3>PORCO</h3><button class="buy-btn" onclick="buyAnimal('porco', 500)">💰 500</button></div>
+            <div class="shop-card"><h3>CAVALO</h3><button class="buy-btn" onclick="buyAnimal('cavalo', 800)">💰 800</button></div>
         </div>
-        <button id="btn-shop-voltar" onclick="document.getElementById('shop-overlay').classList.add('hidden')">←
-            VOLTAR</button>
+        <button id="btn-shop-voltar" style="margin-top:20px;">← VOLTAR</button>
     </div>
 
-    <!-- Overlay do Inventário -->
+    <!-- Inventory Overlay -->
     <div id="inventory-overlay" class="hidden">
-        <h2
-            style="font-size: 32px; letter-spacing: 4px; color: #ffd700; text-shadow: 0 0 10px #ffbb00; font-family: 'Press Start 2P'; margin-bottom: 20px;">
-            🎒 MEU INVENTÁRIO</h2>
+        <h2 style="font-family:'Press Start 2P'; color:#ffd700;">🎒 INVENTÁRIO</h2>
         <div class="inventory-container">
-
-            <div class="inv-section">
-                <h3>🌱 Sementes</h3>
-                <div id="inv-seeds-list" class="inv-grid">
-                    <div class="inv-item">🌾 Trigo x10</div>
-                </div>
-            </div>
-
-            <div class="inv-section">
-                <h3>🐄 Animais no Mapa</h3>
-                <div id="inv-animals-list" class="inv-grid">
-                    <div class="inv-item">Nenhum animal comprado</div>
-                </div>
-            </div>
-
-            <div class="inv-section">
-                <h3>📦 Produtos (Vender p/ Comunidade)</h3>
-                <div id="inv-products-list" class="inv-grid">
-                    <!-- Gerado dinamicamente -->
-                    <div class="inv-item">Ovos: 0 <button onclick="sellItem('ovo')">VENDER</button></div>
-                    <div class="inv-item">Carnes: 0 <button onclick="sellItem('carne')">VENDER</button></div>
-                </div>
-            </div>
+            <div class="inv-section"><h3>🌱 Sementes</h3><div id="inv-seeds-list"></div></div>
+            <div class="inv-section"><h3>🐄 Animais</h3><div id="inv-animals-list"></div></div>
+            <div class="inv-section"><h3>📦 Produtos</h3><div id="inv-products-list"></div></div>
         </div>
-
-        <div id="sell-status" style="margin-top: 20px; color: #0f0; font-size: 10px; height: 15px;"></div>
-
-        <button id="btn-inv-voltar">← VOLTAR</button>
+        <div id="sell-status" style="margin-top: 10px; color: #0f0; font-family:'Press Start 2P'; font-size:8px;"></div>
+        <button id="btn-inv-voltar" style="margin-top:20px;">← VOLTAR</button>
     </div>
 
-    <!-- Overlay de Game Over -->
-    <div id="game-over-overlay" class="hidden"
-        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 20000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-align: center;">
-        <h1 style="color: #f00; font-size: 40px; margin-bottom: 20px;">GAME OVER</h1>
-        <p style="margin-bottom: 40px;">VOCÊ ABANDONOU A COMUNIDADE!</p>
-        <button onclick="location.reload()"
-            style="background: #f00; border-color: #fff; padding: 20px;">RECOMEÇAR</button>
+    <!-- Game Over -->
+    <div id="game-over-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 20000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff;">
+        <h1 style="color: #f00; font-family: 'Press Start 2P';">GAME OVER</h1>
+        <button onclick="location.reload()" style="padding: 20px; font-family:'Press Start 2P';">RECOMEÇAR</button>
     </div>
-
 
     <canvas id="gameCanvas"></canvas>
-    <script>
-        // ========================= AgriCorp Game (Final Inlined Version v3) =========================
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+    <script src="main.js?v=1742930055"></script>
 
-        const mapImage = new Image();
-        mapImage.src = 'sprites/Mapa.png';
-        let mapLoaded = false;
-        let WW = 2800, WH = 1400;
-
-        mapImage.onload = () => {
-            mapLoaded = true;
-            WW = mapImage.width;
-            WH = mapImage.height;
-        };
-
-        let W, H;
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            W = canvas.width; H = canvas.height;
-        }
-        resize();
-        window.addEventListener('resize', resize);
-
-        const camera = { x: 1300, y: 450 };
-        let mouseX = 0, mouseY = 0;
-        const EDGE = 0.15, CAM_SPEED = 10;
-        window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
-
-        // ESTADOS
-        let isWatering = false, wateringTimer = 0, moedas = 500, sementesTrigo = 60, comunidade = 80;
-
-        let isGameOver = false;
-        let harvestedTrigo = 0;
-        const crops = [], blueField = { x: 1580, y: 580, w: 900, h: 540 };
-
-        const trigoSprite = new Image();
-        trigoSprite.src = 'sprites/Trigo.png';
-
-        class Crop {
-            constructor(x, y) {
-                this.x = x; this.y = y;
-                this.stage = 0; // 0 a 4
-                this.timer = 0;
-            }
-            update(dt) {
-                if (this.stage < 4) {
-                    this.timer += dt;
-                    if (this.timer > 6000) { this.stage++; this.timer = 0; }
-                }
-            }
-            draw() {
-                if (trigoSprite.complete && trigoSprite.naturalWidth > 0) {
-                    const fw = trigoSprite.width, fh = trigoSprite.height / 5;
-                    ctx.drawImage(trigoSprite, 0, this.stage * fh, fw, fh, this.x - camera.x - fw / 2, this.y - camera.y - fh, fw, fh);
-                } else {
-                    ctx.font = '20px Arial';
-                    ctx.fillText('🌱', this.x - camera.x - 10, this.y - camera.y);
-                }
-            }
-        }
-
-
-        // INVENTÁRIO DE PRODUTOS
-        const inventoryProducts = {
-            ovos: 0,
-            carne: 0
-        };
-
-        // ANIMAIS
-        const animalsOnMap = [], animalsUnlocked = ['pato'];
-        const unlockOrder = ['pato', 'coelho', 'ovelha', 'galinha', 'porco', 'cavalo'];
-        const animalSprites = {
-            pato: new Image(), galinha: new Image(), coelho: new Image(),
-            ovelha: new Image(), porco: new Image(), cavalo: new Image()
-        };
-        animalSprites.pato.src = 'sprites/Pato.png';
-        animalSprites.galinha.src = 'sprites/Galinha.png';
-        animalSprites.coelho.src = 'sprites/Coelho.png';
-        animalSprites.ovelha.src = 'sprites/Ovelha.png';
-        animalSprites.porco.src = 'sprites/Porco.png';
-        animalSprites.cavalo.src = 'sprites/Cavalo.png';
-
-        class Animal {
-            constructor(type, x, y) {
-                this.type = type; this.x = x; this.y = y;
-                this.frame = 0; this.nextFrameTime = 0; this.productionTimer = 0;
-                this.productionInterval = 5000 + Math.random() * 5000;
-                this.vx = 0; this.vy = 0; this.moveTimer = 0;
-            }
-            update(dt) {
-                this.nextFrameTime += dt;
-                if (this.nextFrameTime > 300) { this.frame = (this.frame + 1) % 2; this.nextFrameTime = 0; }
-
-                this.productionTimer += dt;
-                if (this.productionTimer >= this.productionInterval) { this.produce(); this.productionTimer = 0; }
-
-                this.moveTimer -= dt;
-                if (this.moveTimer <= 0) {
-                    if (Math.random() > 0.4) { this.vx = (Math.random() - 0.5) * 1.5; this.vy = (Math.random() - 0.5) * 1.5; }
-                    else { this.vx = 0; this.vy = 0; }
-                    this.moveTimer = 2000 + Math.random() * 3000;
-                }
-                this.x += this.vx; this.y += this.vy;
-                const margin = 100;
-                this.x = Math.max(margin, Math.min(this.x, WW - margin));
-                this.y = Math.max(margin, Math.min(this.y, WH - margin));
-            }
-            produce() {
-                // Agora animais produzem ITENS
-                if (this.type === 'pato' || this.type === 'galinha') {
-                    inventoryProducts.ovos++;
-                } else if (this.type !== 'cavalo') {
-                    inventoryProducts.carne++;
-                }
-                updateInventory();
-            }
-            draw() {
-                const img = animalSprites[this.type];
-                if (img.complete && img.naturalWidth > 0) {
-                    const fw = img.width, fh = img.height / 2;
-                    ctx.drawImage(img, 0, this.frame * fh, fw, fh, this.x - camera.x - fw / 2, this.y - camera.y - fh / 2, fw, fh);
-                } else {
-                    ctx.font = '24px Arial';
-                    const em = { pato: '🦆', galinha: '🐔', coelho: '🐇', ovelha: '🐑', porco: '🐖', cavalo: '🐎' };
-                    ctx.fillText(em[this.type] || '🐾', this.x - camera.x - 12, this.y - camera.y + 12);
-                }
-            }
-        }
-
-        function updateHUD() {
-            const hpBar = document.getElementById('hp-bar');
-            if (hpBar) hpBar.style.width = comunidade + '%';
-            document.getElementById('hud-value').textContent = Math.round(comunidade);
-            document.getElementById('hud-harvest-value').textContent = harvestedTrigo;
-            document.getElementById('hud-coins-value').textContent = Math.round(moedas);
-            document.getElementById('hud-seeds-value').textContent = sementesTrigo;
-
-
-            // Atualiza Loja
-            document.querySelectorAll('.shop-card').forEach(card => {
-                const title = card.querySelector('h3');
-                if (!title) return;
-                const type = title.textContent.toLowerCase();
-                if (unlockOrder.includes(type)) {
-                    const unlocked = animalsUnlocked.includes(type);
-                    card.style.opacity = unlocked ? "1" : "0.3";
-                    card.style.pointerEvents = unlocked ? "auto" : "none";
-                    card.style.filter = unlocked ? "none" : "grayscale(100%)";
-                }
-            });
-
-            if (comunidade <= 0 && !isGameOver) {
-                isGameOver = true;
-                document.getElementById('game-over-overlay').classList.remove('hidden');
-            }
-        }
-
-        function updateInventory() {
-            // Animais
-            const list = document.getElementById('inv-animals-list');
-            if (list) {
-                const counts = {};
-                animalsOnMap.forEach(a => counts[a.type] = (counts[a.type] || 0) + 1);
-                list.innerHTML = '';
-                const emojiMap = { pato: '🦆', galinha: '🐔', coelho: '🐇', ovelha: '🐑', porco: '🐖', cavalo: '🐎' };
-                if (animalsOnMap.length === 0) list.innerHTML = '<div class="inv-item">Nenhum animal</div>';
-                else {
-                    for (const [type, count] of Object.entries(counts)) {
-                        const div = document.createElement('div'); div.className = 'inv-item';
-                        div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.gap = '10px';
-                        div.innerHTML = `<span style="font-size: 20px;">${emojiMap[type] || ''}</span> <span>${type.toUpperCase()}: ${count}</span>`;
-                        list.appendChild(div);
-                    }
-                }
-            }
-
-            // Produtos
-            const prodList = document.getElementById('inv-products-list');
-            if (prodList) {
-                prodList.innerHTML = `
-            <div class="inv-item" style="display:flex; justify-content: space-between; align-items: center;">
-                <div>🥚 OVOS: ${inventoryProducts.ovos}</div>
-                <button onclick="sellItem('ovos')" style="font-size: 8px; background: #2ecc71;">VENDER (6s)</button>
-            </div>
-            <div class="inv-item" style="display:flex; justify-content: space-between; align-items: center;">
-                <div>🥩 CARNES: ${inventoryProducts.carne}</div>
-                <button onclick="sellItem('carne')" style="font-size: 8px; background: #2ecc71;">VENDER (6s)</button>
-            </div>
-        `;
-            }
-
-            // Sementes
-            const seedList = document.getElementById('inv-seeds-list');
-            if (seedList) {
-                seedList.innerHTML = `<div class="inv-item">🌾 TRIGO x${sementesTrigo}</div>`;
-            }
-        }
-
-
-        let isSelling = false;
-        window.sellItem = (type) => {
-            if (isSelling) return;
-            if (inventoryProducts[type] <= 0) {
-                alert("Sem estoque!");
-                return;
-            }
-
-            isSelling = true;
-            inventoryProducts[type]--;
-            updateInventory();
-
-            const hasHorse = animalsOnMap.some(a => a.type === 'cavalo');
-            const sellTime = hasHorse ? 3000 : 6000;
-
-            const status = document.getElementById('sell-status');
-            status.textContent = `VENDENDO ${type.toUpperCase()}... (${sellTime / 1000}s)`;
-
-            setTimeout(() => {
-                const gain = type === 'ovos' ? 10 : 25;
-                comunidade = Math.min(100, comunidade + gain);
-                moedas += gain * 2; // Bônus de moedas ao vender
-                status.textContent = `VENDIDO! +${gain} COMUNIDADE`;
-                isSelling = false;
-                updateHUD();
-                setTimeout(() => { status.textContent = ''; }, 2000);
-            }, sellTime);
-        };
-
-        window.buyAnimal = function (type, price) {
-            if (!animalsUnlocked.includes(type)) {
-                alert("Este animal ainda está bloqueado! Compre o anterior na ordem primeiro.");
-                return;
-            }
-            if (moedas >= price) {
-                moedas -= price;
-                const spawnX = camera.x + 200 + Math.random() * (W - 400);
-                const spawnY = camera.y + 200 + Math.random() * (H - 400);
-                animalsOnMap.push(new Animal(type, spawnX, spawnY));
-                const idx = unlockOrder.indexOf(type);
-                if (idx !== -1 && idx < unlockOrder.length - 1) {
-                    const next = unlockOrder[idx + 1];
-                    if (!animalsUnlocked.includes(next)) {
-                        animalsUnlocked.push(next);
-                        console.log("Desbloqueado:", next);
-                    }
-                }
-                updateHUD(); updateInventory();
-            } else alert("Sem moedas!");
-        }
-
-        // INICIALIZADOR DE EVENTOS (Defensivo)
-        window.onload = () => {
-            console.log("Iniciando AgriCorp listeners...");
-
-            const bind = (id, fn) => {
-                const el = document.getElementById(id);
-                if (el) el.onclick = fn;
-                else console.warn(`Elemento não encontrado: ${id}`);
-            };
-
-            bind('btn-open-shop', () => document.getElementById('shop-overlay').classList.remove('hidden'));
-            bind('btn-shop-voltar', () => document.getElementById('shop-overlay').classList.add('hidden'));
-            bind('btn-open-inventory', () => document.getElementById('inventory-overlay').classList.remove('hidden'));
-            bind('btn-inv-voltar', () => document.getElementById('inventory-overlay').classList.add('hidden'));
-
-            bind('btn-buy-seed', () => {
-                if (moedas >= 10) { moedas -= 10; sementesTrigo++; updateHUD(); updateInventory(); }
-                else alert("Sem moedas!");
-            });
-
-            bind('btn-water', () => {
-                const totalPossible = sementesTrigo;
-                if (totalPossible <= 0) { alert("Sem sementes!"); return; }
-                
-                let plantedCount = 0;
-                const spacingX = 130, spacingY = 130;
-                for (let yy = blueField.y + 60; yy < blueField.y + blueField.h - 60; yy += spacingY) {
-                    for (let xx = blueField.x + 60; xx < blueField.x + blueField.w - 60; xx += spacingX) {
-                        if (sementesTrigo > 0) {
-                            if (!crops.some(c => Math.hypot(c.x - xx, c.y - yy) < 60)) {
-                                crops.push(new Crop(xx, yy));
-                                sementesTrigo--;
-                                plantedCount++;
-                            }
-                        }
-                    }
-                }
-                
-                updateHUD(); updateInventory();
-                const timerEl = document.getElementById('planting-timer');
-                if (timerEl) {
-                    timerEl.innerHTML = `PLANTADO ${plantedCount} SEMENTES!`;
-                    timerEl.classList.remove('hidden');
-                    setTimeout(() => timerEl.classList.add('hidden'), 3500);
-                }
-                console.log(`Auto-plantio: ${plantedCount} sementes distribuídas.`);
-            });
-
-
-
-            // Timer para a barra de comunidade descer
-            setInterval(() => {
-                if (!isGameOver) {
-                    comunidade -= 0.5;
-                    updateHUD();
-                }
-            }, 1000);
-
-            updateHUD();
-            updateInventory();
-        };
-
-
-        canvas.onmousedown = (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const wx = (e.clientX - rect.left) + camera.x, wy = (e.clientY - rect.top) + camera.y;
-
-            // Colher Trigo pronto
-            const cropIdx = crops.findIndex(c => Math.hypot(c.x - wx, c.y - wy) < 60 && c.stage === 4);
-            if (cropIdx !== -1) {
-                crops.splice(cropIdx, 1);
-                harvestedTrigo++;
-                moedas += 50; 
-                updateHUD();
-                console.log("Colheita: +50 moedas");
-                return;
-            }
-        };
-
-
-
-        let lastTime = performance.now();
-        function loop(now) {
-            const dt = now - lastTime; lastTime = now;
-            if (mouseX < W * EDGE) camera.x -= CAM_SPEED;
-            if (mouseX > W * (1 - EDGE)) camera.x += CAM_SPEED;
-            if (mouseY < H * EDGE) camera.y -= CAM_SPEED;
-            if (mouseY > H * (1 - EDGE)) camera.y += CAM_SPEED;
-            camera.x = Math.max(0, Math.min(camera.x, WW - W));
-            camera.y = Math.max(0, Math.min(camera.y, WH - H));
-
-            ctx.clearRect(0, 0, W, H);
-            if (mapLoaded) {
-                ctx.drawImage(mapImage, -camera.x, -camera.y);
-
-                // Área de plantio sempre visível mas sutil
-                ctx.save();
-                if (isWatering) {
-                    ctx.strokeStyle = '#0ff'; ctx.lineWidth = 4; ctx.setLineDash([]);
-                    ctx.strokeRect(blueField.x - camera.x, blueField.y - camera.y, blueField.w, blueField.h);
-                } else {
-                    ctx.strokeStyle = 'rgba(0, 255, 255, 0.2)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
-                    ctx.strokeRect(blueField.x - camera.x, blueField.y - camera.y, blueField.w, blueField.h);
-                }
-                ctx.restore();
-
-                crops.forEach(c => { c.update(dt); c.draw(); });
-            }
-            animalsOnMap.forEach(a => { a.update(dt); a.draw(); });
-            requestAnimationFrame(loop);
-        }
-        requestAnimationFrame(loop);
-
-    </script>
 </body>
-
 </html>
