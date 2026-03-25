@@ -471,8 +471,10 @@
         };
 
 
-        window.onmousedown = (e) => {
-            const wx = e.clientX + camera.x, wy = e.clientY + camera.y;
+        canvas.onmousedown = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const wx = (e.clientX - rect.left) + camera.x;
+            const wy = (e.clientY - rect.top) + camera.y;
 
             // Colher Trigo pronto
             const cropIdx = crops.findIndex(c => Math.hypot(c.x - wx, c.y - wy) < 40 && c.stage === 4);
@@ -487,7 +489,7 @@
             if (isWatering && wateringTimer > 0) {
                 if (wx > blueField.x && wx < blueField.x + blueField.w && wy > blueField.y && wy < blueField.y + blueField.h) {
                     if (sementesTrigo > 0) {
-                        if (!crops.some(c => Math.hypot(c.x - wx, c.y - wy) < 40)) {
+                        if (!crops.some(c => Math.hypot(c.x - wx, c.y - wy) < 45)) {
                             crops.push(new Crop(wx, wy));
                             sementesTrigo--;
                             updateInventory();
@@ -497,6 +499,7 @@
                 }
             }
         };
+
 
         let lastTime = performance.now();
         function loop(now) {
