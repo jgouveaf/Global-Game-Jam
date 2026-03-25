@@ -1,4 +1,4 @@
-// ========================= AgriCorp Game (Final Clean Version v10.1) =========================
+// ========================= AgriCorp Game (Final Clean Version v10.2) =========================
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
@@ -18,19 +18,14 @@ function resize(){
 resize();
 window.addEventListener('resize', resize);
 
-// Função Tela Cheia
-function toggleFullScreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-    } else if (document.exitFullscreen) {
-        document.exitFullscreen();
-    }
-}
-canvas.addEventListener('dblclick', toggleFullScreen);
+canvas.addEventListener('dblclick', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+});
 
-const camera = { x: 400, y: 200 };
+const camera = { x: 300, y: 150 };
 let mouseX = 0, mouseY = 0;
-const EDGE = 0.1, CAM_SPEED = 15;
+const EDGE = 0.08, CAM_SPEED = 18;
 window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
 
 // ESTADOS
@@ -38,17 +33,17 @@ var moedas = 500, sementesTrigo = 60, sementesCenoura = 30, comunidade = 80, isG
 var harvestedTrigo = 0, harvestedCenoura = 0;
 const crops = [];
 
-// DEFINIÇÃO DAS ÁREAS DOS LOTES (Coordenadas reais no Mapa..png)
+// DEFINIÇÃO DAS ÁREAS DOS LOTES (Coordenadas Reais do Mapa..png)
 const lots = [
-    { id: 1, name: "Terreno 1", price: 0,    minSeeds: 10, multiplier: 1,  area: { x: 50,   y: 230, w: 250, h: 420 } },
-    { id: 2, name: "Terreno 2", price: 200,  minSeeds: 20, multiplier: 2,  area: { x: 330,  y: 130, w: 180, h: 520 } },
-    { id: 3, name: "Terreno 3", price: 500,  minSeeds: 30, multiplier: 4,  area: { x: 50,   y: 770, w: 220, h: 420 } },
-    { id: 4, name: "Terreno 4", price: 850,  minSeeds: 40, multiplier: 6,  area: { x: 290,  y: 780, w: 210, h: 410 } },
-    { id: 5, name: "Terreno 5", price: 1150, minSeeds: 50, multiplier: 8,  area: { x: 1440, y: 530, w: 220, h: 810 } },
-    { id: 6, name: "Terreno 6", price: 1750, minSeeds: 60, multiplier: 12, area: { x: 2090, y: 530, w: 420, h: 810 } }
+    { id: 1, name: "Terreno 1", price: 0,    minSeeds: 10, multiplier: 1,  area: { x: 45,   y: 285, w: 250, h: 512 } }, // Esquerda Superior
+    { id: 2, name: "Terreno 2", price: 200,  minSeeds: 20, multiplier: 2,  area: { x: 326,  y: 155, w: 185, h: 518 } }, // Centro Superior
+    { id: 3, name: "Terreno 3", price: 500,  minSeeds: 30, multiplier: 4,  area: { x: 502,  y: 440, w: 215, h: 285 } }, // Centro estrada
+    { id: 4, name: "Terreno 4", price: 850,  minSeeds: 40, multiplier: 6,  area: { x: 740,  y: 442, w: 142, h: 308 } }, // Direita estrada
+    { id: 5, name: "Terreno 5", price: 1150, minSeeds: 50, multiplier: 8,  area: { x: 298,  y: 775, w: 205, h: 420 } }, // Inferior Esq.
+    { id: 6, name: "Terreno 6", price: 1750, minSeeds: 60, multiplier: 12, area: { x: 1580, y: 580, w: 900, h: 540 } }  // Campo Grande Dir.
 ];
 
-let purchasedLotsStatus = [0]; // Começa com o Terreno 1 desbloqueado
+let purchasedLotsStatus = [0];
 
 // SPRITES
 const trigoSprite = new Image(); trigoSprite.src = 'sprites/Trigo.png';
@@ -72,6 +67,7 @@ class Crop {
         }
     }
     draw() {
+        ctx.save();
         if (this.isSeed) {
             ctx.fillStyle = '#8b4513'; ctx.beginPath(); ctx.arc(this.x - camera.x, this.y - camera.y, 4, 0, Math.PI * 2); ctx.fill();
         } else {
@@ -82,17 +78,21 @@ class Crop {
                 const fh = sprite.height / (isTrigo ? 3 : 1);
                 let sx = 0, sy = 0;
                 if (isTrigo) { sx = (this.stage % 2) * fw; sy = Math.floor(this.stage / 2) * fh; }
+                
                 let scalePulse = (this.stage === 4) ? 1.0 + Math.sin(Date.now() / 300) * 0.05 : 1.0;
-                ctx.save(); ctx.translate(this.x - camera.x, this.y - camera.y); ctx.scale(scalePulse, scalePulse);
-                ctx.drawImage(sprite, sx, sy, fw, fh, -fw, -fh * 2, fw * 2, fh * 2); ctx.restore();
+                ctx.translate(this.x - camera.x, this.y - camera.y);
+                ctx.scale(scalePulse, scalePulse);
+                ctx.drawImage(sprite, sx, sy, fw, fh, -fw, -fh * 2, fw * 2, fh * 2);
             } else {
-                ctx.font = '20px Arial'; ctx.fillText(this.type === 'trigo' ? '🌾' : '🥕', this.x - camera.x - 10, this.y - camera.y);
+                ctx.font = '16px Arial';
+                ctx.fillText(this.type === 'trigo' ? '🌾' : '🥕', this.x - camera.x - 10, this.y - camera.y);
             }
         }
+        ctx.restore();
     }
 }
 
-// ANIMAIS
+// INVENTÁRIO
 var inventoryProducts = { ovos: 0, carne: 0 };
 const animalsOnMap = [], animalsUnlocked = ['pato'];
 const unlockOrder = ['pato', 'coelho', 'ovelha', 'galinha', 'porco', 'cavalo'];
@@ -142,8 +142,7 @@ class Animal {
             ctx.drawImage(img, 0, this.frame * fh, fw, fh, this.x - camera.x - fw/2, this.y - camera.y - fh/2, fw, fh);
         } else {
             ctx.font = '24px Arial';
-            const em = {pato:'🦆', galinha:'🐔', coelho:'🐇', ovelha:'🐑', porco:'🐖', cavalo:'🐎'};
-            ctx.fillText(em[this.type] || '🐾', this.x - camera.x - 12, this.y - camera.y + 12);
+            ctx.fillText({pato:'🦆', galinha:'🐔', coelho:'🐇', ovelha:'🐑', porco:'🐖', cavalo:'🐎'}[this.type] || '🐾', this.x - camera.x - 12, this.y - camera.y + 12);
         }
     }
 }
@@ -155,29 +154,12 @@ function updateHUD() {
     document.getElementById('hud-coins-value').textContent = Math.round(moedas);
     document.getElementById('hud-seeds-value').textContent = sementesTrigo + sementesCenoura;
     document.getElementById('hud-harvest-value').textContent = harvestedTrigo + harvestedCenoura;
-    
-    if (comunidade <= 0 && !isGameOver) {
-        isGameOver = true;
-        document.getElementById('game-over-overlay').classList.remove('hidden');
-    }
+    if (comunidade <= 0 && !isGameOver) { isGameOver = true; document.getElementById('game-over-overlay').classList.remove('hidden'); }
 }
 
 function updateInventory() {
     const seedList = document.getElementById('inv-seeds-list');
     if (seedList) seedList.innerHTML = `<div class="inv-item">🌾 Trigo: ${sementesTrigo} | 🥕 Cenoura: ${sementesCenoura}</div>`;
-    
-    const list = document.getElementById('inv-animals-list');
-    if (list) {
-        const counts = {}; animalsOnMap.forEach(a => counts[a.type] = (counts[a.type] || 0) + 1);
-        list.innerHTML = '';
-        if (animalsOnMap.length === 0) list.innerHTML = '<div class="inv-item">Nenhum comprado</div>';
-        else {
-            for (const [type, count] of Object.entries(counts)) {
-                const div = document.createElement('div'); div.className = 'inv-item';
-                div.innerHTML = `${type.toUpperCase()}: ${count}`; list.appendChild(div);
-            }
-        }
-    }
 }
 
 window.sellItem = (type) => {
@@ -211,37 +193,33 @@ function renderLots() {
     lots.forEach((lot, index) => {
         const isPurchased = purchasedLotsStatus.includes(index);
         const lotDiv = document.createElement('div');
-        lotDiv.style.background = isPurchased ? 'rgba(46, 204, 113, 0.2)' : '#1a1a1a';
+        lotDiv.className = 'shop-card';
+        lotDiv.style.background = isPurchased ? 'rgba(46, 204, 113, 0.2)' : 'rgba(0,0,0,0.5)';
         lotDiv.style.border = isPurchased ? '3px solid #2ecc71' : '3px solid #555';
-        lotDiv.style.padding = '15px'; lotDiv.style.borderRadius = '8px';
-        lotDiv.style.display = 'flex'; lotDiv.style.flexDirection = 'column'; lotDiv.style.gap = '10px';
-        lotDiv.style.fontFamily = "'Press Start 2P'"; lotDiv.style.textAlign = 'center';
+        lotDiv.style.padding = '15px'; lotDiv.style.textAlign = 'center';
         lotDiv.innerHTML = `
-            <div style="width: 100%; height: 60px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 2px solid #444; border-radius: 4px;">
-                <img src="sprites/Lote${lot.id}.png" style="max-width: 100%; max-height: 100%; image-rendering: pixelated;">
-            </div>
-            <h3 style="color: #ffd700; font-size: 10px;">${lot.name}</h3>
-            <p style="font-size: 6px;">Multiplicador: x${lot.multiplier}</p>
-            <p style="font-size: 6px; color: #aaa;">Sementes necessárias: ${lot.minSeeds}</p>
-            <p style="font-size: 6px; color: #0f0;">Preço: ${lot.price}</p>
+            <img src="sprites/Lote${lot.id}.png" style="width: 80px; height: 80px; image-rendering: pixelated; margin-bottom: 5px;">
+            <h3 style="color: #ffd700; font-size: 10px; font-family:'Press Start 2P';">${lot.name}</h3>
+            <p style="font-size: 7px; margin: 5px 0;">Multiplicador: x${lot.multiplier}</p>
+            <p style="font-size: 7px; color: #aaa;">Sementes: ${lot.minSeeds}</p>
             <button id="buy-lot-${index}" style="width: 100%; border: 2px solid #fff; padding: 10px; font-family: 'Press Start 2P'; font-size: 6px; cursor: pointer; background: ${isPurchased ? '#27ae60' : '#8b4513'}; color: #fff;">
-                ${isPurchased ? 'DESBLOQUEADO' : 'COMPRAR'}
+                ${isPurchased ? 'OK' : '💰 ' + lot.price}
             </button>
         `;
         container.appendChild(lotDiv);
         if (!isPurchased) {
-            document.getElementById(`buy-lot-${index}`).addEventListener('click', () => {
+            document.getElementById(`buy-lot-${index}`).onclick = () => {
                 if (moedas >= lot.price) {
                     moedas -= lot.price; purchasedLotsStatus.push(index);
                     updateHUD(); renderLots();
                 } else alert('Moedas insuficientes!');
-            });
+            };
         }
     });
 }
 
 window.onload = () => {
-    console.log("AgriCorp v10.1 Initializing...");
+    console.log("AgriCorp v10.2 Initializing...");
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
     bind('btn-open-shop', () => document.getElementById('shop-overlay').classList.remove('hidden'));
     bind('btn-shop-voltar', () => document.getElementById('shop-overlay').classList.add('hidden'));
@@ -249,19 +227,19 @@ window.onload = () => {
     bind('btn-inv-voltar', () => document.getElementById('inventory-overlay').classList.add('hidden'));
     bind('btn-buy-seed', () => { if (moedas >= 10) { moedas -= 10; sementesTrigo += 5; updateHUD(); updateInventory(); } else alert("Sem moedas!"); });
     bind('btn-open-lots', () => { renderLots(); document.getElementById('lots-overlay').classList.remove('hidden'); });
-    
+    bind('btn-lots-voltar', () => document.getElementById('lots-overlay').classList.add('hidden'));
+
     bind('btn-water', () => {
-        let plantedTotal = 0;
+        let plantedCount = 0;
         purchasedLotsStatus.forEach(idx => {
-            const lot = lots[idx]; const area = lot.area; const spacing = 110;
-            for (let yy = area.y + 40; yy < area.y + area.h - 40; yy += spacing) {
-                for (let xx = area.x + 40; xx < area.x + area.w - 40; xx += spacing) {
-                    const hasSeed = sementesTrigo > 0 || sementesCenoura > 0;
-                    if (hasSeed && !crops.some(c => Math.hypot(c.x - xx, c.y - yy) < 50)) {
+            const a = lots[idx].area; const spacing = 110;
+            for (let yy = a.y + 40; yy < a.y + a.h - 40; yy += spacing) {
+                for (let xx = a.x + 40; xx < a.x + a.w - 40; xx += spacing) {
+                    if ((sementesTrigo > 0 || sementesCenoura > 0) && !crops.some(c => Math.hypot(c.x-xx, c.y-yy) < 50)) {
                         const type = sementesTrigo > 0 ? 'trigo' : 'cenoura';
-                        crops.push(new Crop(xx, yy, lot.multiplier, type));
-                        if (type === 'trigo') sementesTrigo--; else sementesCenoura--;
-                        plantedTotal++;
+                        crops.push(new Crop(xx, yy, lots[idx].multiplier, type));
+                        if(type === 'trigo') sementesTrigo--; else sementesCenoura--;
+                        plantedCount++;
                     }
                 }
             }
@@ -289,13 +267,12 @@ function loop(now){
         for (let i = crops.length - 1; i >= 0; i--) {
             const c = crops[i]; c.update(dt); c.draw();
             if (c.stage === 4) {
-                const yieldAmount = 2;
-                if (c.type === 'trigo') harvestedTrigo += yieldAmount; else harvestedCenoura += yieldAmount;
-                moedas += yieldAmount * c.multiplier; crops.splice(i, 1); updateHUD();
+                const gain = 2 * c.multiplier;
+                if (c.type === 'trigo') harvestedTrigo += 2; else harvestedCenoura += 2;
+                moedas += gain; crops.splice(i, 1); updateHUD();
             }
         }
     }
-    animalsOnMap.forEach(a => { a.update(dt); a.draw(); });
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
