@@ -1,13 +1,21 @@
-// ============================================================
-//   AgriCorp – Mapa com câmera controlada pelo mouse
-// ============================================================
-
+// ========================= AgriCorp Game (Versão Restaurada e Limpa) =========================
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
-let W, H;
 
+const mapImage = new Image();
+mapImage.src = 'sprites/Mapa.png';
+let mapLoaded = false;
+let WW = 2800, WH = 1400; // Tamanho do mapa
+
+mapImage.onload = () => {
+    mapLoaded = true;
+    WW = mapImage.width;
+    WH = mapImage.height;
+};
+
+let W, H;
 function resize(){
-    canvas.width  = window.innerWidth;
+    canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     W = canvas.width;
     H = canvas.height;
@@ -15,40 +23,68 @@ function resize(){
 resize();
 window.addEventListener('resize', resize);
 
-// ========================= MAPA =========================
-const mapImage = new Image();
-mapImage.src = 'sprites/Mapa.png';
-let mapLoaded = false;
-let WW = 2800;
-let WH = 1400;
-mapImage.onload = () => {
-    mapLoaded = true;
-    WW = mapImage.width;
-    WH = mapImage.height;
-};
-
-// ========================= CÂMERA (mouse) =========================
 const camera = { x: 0, y: 0 };
 let mouseX = 0, mouseY = 0;
-
-const EDGE = 0.18;
-const CAM_SPEED = 6;
+const EDGE = 0.15;
+const CAM_SPEED = 10;
 
 window.addEventListener('mousemove', (e) => {
     mouseX = e.clientX;
     mouseY = e.clientY;
 });
 
-function updateCamera() {
-    const leftZone   = W * EDGE;
-    const rightZone  = W * (1 - EDGE);
-    const topZone    = H * EDGE;
-    const bottomZone = H * (1 - EDGE);
+// ESTADOS DE JOGO
+let isWatering = false;
+let wateringTimer = 0;
+const crops = [];
 
-    if (mouseX < leftZone)   camera.x -= CAM_SPEED;
-    if (mouseX > rightZone)  camera.x += CAM_SPEED;
-    if (mouseY < topZone)    camera.y -= CAM_SPEED;
-    if (mouseY > bottomZone) camera.y += CAM_SPEED;
+// ÁREA AZUL (Coordenadas aproximadas no mapa 2800x1400)
+const blueField = { x: 1580, y: 580, w: 900, h: 540 };
+
+// BOTÃO REGAR
+document.getElementById('btn-water').addEventListener('click', () => {
+    if (isWatering) return;
+    isWatering = true;
+    wateringTimer = 10;
+    const timerUI = document.getElementById('planting-timer');
+    timerUI.classList.remove('hidden');
+    
+    const countdown = setInterval(() => {
+        wateringTimer--;
+        document.getElementById('timer-sec').textContent = wateringTimer;
+        if (wateringTimer <= 0) {
+            clearInterval(countdown);
+            isWatering = false;
+            timerUI.classList.add('hidden');
+        }
+    }, 1000);
+});
+
+// CLIQUE PARA PLANTAR
+window.addEventListener('mousedown', (e) => {
+    // Só planta se estiver regando e NÃO clicar em botões
+    if (isWatering && wateringTimer > 0 && e.target.tagName !== 'BUTTON') {
+        const worldX = e.clientX + camera.x;
+        const worldY = e.clientY + camera.y;
+
+        // Verifica se o clique está na área marrom do terreno azul
+        if (worldX > blueField.x && worldX < blueField.x + blueField.w &&
+            worldY > blueField.y && worldY < blueField.y + blueField.h) {
+            
+            // Verifica distância para não sobrepor
+            const tooClose = crops.some(c => Math.hypot(c.x - worldX, c.y - worldY) < 30);
+            if (!tooClose) {
+                crops.push({ x: worldX, y: worldY });
+            }
+        }
+    }
+});
+
+function updateCamera() {
+    if (mouseX < W * EDGE) camera.x -= CAM_SPEED;
+    if (mouseX > W * (1 - EDGE)) camera.x += CAM_SPEED;
+    if (mouseY < H * EDGE) camera.y -= CAM_SPEED;
+    if (mouseY > H * (1 - EDGE)) camera.y += CAM_SPEED;
 
     camera.x = Math.max(0, Math.min(camera.x, WW - W));
     camera.y = Math.max(0, Math.min(camera.y, WH - H));
@@ -111,9 +147,6 @@ class Animal {
     }
 
     produce() {
-        // Lógica de produção do usuário
-        // pato dê menos ovo (5), galinha dê mais (15)
-        // coelho carne (10), ovelha da mais carne (40)
         switch (this.type) {
             case 'pato':    moedas += 5; break;
             case 'galinha': moedas += 15; break;
@@ -128,7 +161,6 @@ class Animal {
         if (img.complete) {
             const fw = img.width;
             const fh = img.height / 2;
-            // Centraliza o sprite na posição x,y
             ctx.drawImage(
                 img,
                 0, this.frame * fh, fw, fh,
@@ -166,19 +198,16 @@ function updateInventory() {
 function buyAnimal(type, price) {
     if (moedas >= price) {
         moedas -= price;
-        // Posicionamento aleatório perto do centro do mapa visível ou fixo
         const spawnX = camera.x + 200 + Math.random() * (W - 400);
         const spawnY = camera.y + 200 + Math.random() * (H - 400);
         
         animalsOnMap.push(new Animal(type, spawnX, spawnY));
         updateHUD();
         updateInventory();
-        console.log(`Comprou ${type}!`);
     } else {
         alert("Moedas insuficientes!");
     }
 }
-
 
 // ========================= LOOP =========================
 let lastTime = performance.now();
@@ -190,14 +219,22 @@ function loop(now){
     updateCamera();
     ctx.clearRect(0, 0, W, H);
 
-    if (!mapLoaded) {
-        ctx.fillStyle = '#2d5a1b';
-        ctx.fillRect(0, 0, W, H);
-        ctx.fillStyle = '#fff';
-        ctx.font = '16px monospace';
-        ctx.fillText('Carregando mapa...', W/2 - 80, H/2);
-    } else {
+    if (mapLoaded) {
+        // DESENHA O MAPA 1:1 COMO ANTES
         ctx.drawImage(mapImage, -camera.x, -camera.y);
+
+        // GUIA DA ÁREA (Só se estiver regando)
+        if (isWatering) {
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(blueField.x - camera.x, blueField.y - camera.y, blueField.w, blueField.h);
+        }
+
+        // DESENHA PLANTAÇÕES
+        crops.forEach(c => {
+            ctx.font = '30px Arial';
+            ctx.fillText('🌾', c.x - camera.x - 15, c.y - camera.y + 15);
+        });
     }
 
     // Desenhar animais
@@ -210,6 +247,5 @@ function loop(now){
     requestAnimationFrame(loop);
 }
 
-// Iniciar o loop com performance.now()
 requestAnimationFrame(loop);
 
