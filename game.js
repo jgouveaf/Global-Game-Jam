@@ -1,24 +1,13 @@
-// ========================= AgriCorp Game (Versão Full Screen corrigida) =========================
-const canvas = document.getElementById('gameCanvas') || document.getElementById('game-canvas');
+// ========================= AgriCorp Game (RESTAURAÇÃO TOTAL) =========================
+const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
-let selectedSlot = 0;
-let isWatering = false;
-let wateringTimer = 0;
-const crops = [];
-let W, H, WW = 2800, WH = 1400; 
 
 const mapImage = new Image();
-mapImage.src = 'tileset.jpg'; // Usando o tileset local se Mapa.png não estiver aqui
-let mapLoaded = false;
+// Esse é o caminho do seu mapa grande e bonito
+mapImage.src = 'sprites/Mapa.png'; 
 
-function resize(){
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-    W = canvas.width;
-    H = canvas.height;
-}
-resize();
-window.addEventListener('resize', resize);
+let mapLoaded = false;
+let WW = 2800, WH = 1400; // Tamanho base do mapa grande
 
 mapImage.onload = () => {
     mapLoaded = true;
@@ -26,91 +15,104 @@ mapImage.onload = () => {
     WH = mapImage.height;
 };
 
+let W, H;
+function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    W = canvas.width;
+    H = canvas.height;
+}
+resize();
+window.addEventListener('resize', resize);
+
 const camera = { x: 0, y: 0 };
 let mouseX = 0, mouseY = 0;
 const EDGE = 0.15;
-const CAM_SPEED = 8;
+const CAM_SPEED = 12;
 
 window.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX; mouseY = e.clientY;
+    mouseX = e.clientX;
+    mouseY = e.clientY;
 });
 
-function isInsideBrownField(xw, yw) {
-    if (yw < 600 || yw > 1180 || xw > 2180) return false;
-    if (yw < 710)  return xw > 1290;
-    if (yw < 805)  return xw > 1110;
-    if (yw < 905)  return xw > 960;
-    if (yw < 1005) return xw > 830;
-    return xw > 790;
-}
+// LOGICA DE JOGO
+let isWatering = false, wateringTimer = 0, crops = [];
 
-function updateCamera() {
-    const scale = Math.max(W / WW, H / WH);
-    const virtualWW = WW * scale;
-    const virtualWH = WH * scale;
-    if (mouseX < W * EDGE)      camera.x -= CAM_SPEED;
-    if (mouseX > W * (1-EDGE)) camera.x += CAM_SPEED;
-    if (mouseY < H * EDGE)      camera.y -= CAM_SPEED;
-    if (mouseY > H * (1-EDGE)) camera.y += CAM_SPEED;
-    camera.x = Math.max(0, Math.min(camera.x, virtualWW - W));
-    camera.y = Math.max(0, Math.min(camera.y, virtualWH - H));
-}
+// ÁREA AZUL (Canto inferior direito da estrada)
+const blueField = { x: 1580, y: 580, w: 900, h: 540 };
 
+// BOTÃO REGAR
+document.getElementById('btn-water').addEventListener('click', (e) => {
+    e.stopPropagation(); // Impede o clique de vazar pro canvas
+    if (isWatering) return;
+    isWatering = true;
+    wateringTimer = 10;
+    const timerUI = document.getElementById('planting-timer');
+    timerUI.classList.remove('hidden');
+    
+    const countdown = setInterval(() => {
+        wateringTimer--;
+        document.getElementById('timer-sec').textContent = wateringTimer;
+        if (wateringTimer <= 0) {
+            clearInterval(countdown);
+            isWatering = false;
+            timerUI.classList.add('hidden');
+        }
+    }, 1000);
+});
+
+// CLIQUE PARA PLANTAR
 window.addEventListener('mousedown', (e) => {
+    // Só planta se estiver no modo rega e não clicou em botoes ou overlays
     if (isWatering && wateringTimer > 0) {
-        const scale = Math.max(W / WW, H / WH);
-        const worldX = (e.clientX + camera.x) / scale;
-        const worldY = (e.clientY + camera.y) / scale;
-        if (isInsideBrownField(worldX, worldY)) {
-            crops.push({ x: worldX, y: worldY, type: 'wheat' });
+        if (e.target.tagName === 'BUTTON' || e.target.closest('#hotbar-container') || e.target.closest('#hud-top')) return;
+        
+        const worldX = e.clientX + camera.x;
+        const worldY = e.clientY + camera.y;
+
+        if (worldX > blueField.x && worldX < blueField.x + blueField.w &&
+            worldY > blueField.y && worldY < blueField.y + blueField.h) {
+            
+            // Distancia mínima para não bugar
+            const tooClose = crops.some(c => Math.hypot(c.x - worldX, c.y - worldY) < 35);
+            if (!tooClose) {
+                crops.push({ x: worldX, y: worldY });
+            }
         }
     }
 });
 
-const btnWater = document.getElementById('btn-water');
-const timerUI = document.getElementById('planting-timer');
-const timerSec = document.getElementById('timer-sec');
-
-if(btnWater) {
-    btnWater.addEventListener('click', () => {
-        if (isWatering) return;
-        isWatering = true;
-        wateringTimer = 10;
-        timerUI.classList.remove('hidden');
-        timerSec.textContent = wateringTimer;
-        const countdown = setInterval(() => {
-            wateringTimer--;
-            timerSec.textContent = wateringTimer;
-            if (wateringTimer <= 0) {
-                clearInterval(countdown);
-                isWatering = false;
-                timerUI.classList.add('hidden');
-            }
-        }, 1000);
-    });
-}
-
 function loop(){
-    updateCamera();
+    // Movimentação da Câmera
+    if (mouseX < W * EDGE) camera.x -= CAM_SPEED;
+    if (mouseX > W * (1 - EDGE)) camera.x += CAM_SPEED;
+    if (mouseY < H * EDGE) camera.y -= CAM_SPEED;
+    if (mouseY > H * (1 - EDGE)) camera.y += CAM_SPEED;
+
+    camera.x = Math.max(0, Math.min(camera.x, WW - W));
+    camera.y = Math.max(0, Math.min(camera.y, WH - H));
+
     ctx.clearRect(0, 0, W, H);
-    const scale = Math.max(W / WW, H / WH);
+
     if (mapLoaded) {
-        ctx.save();
-        ctx.translate(-camera.x, -camera.y);
-        ctx.scale(scale, scale);
-        ctx.drawImage(mapImage, 0, 0);
+        ctx.drawImage(mapImage, -camera.x, -camera.y);
+        
         if (isWatering) {
-            ctx.strokeStyle = 'white';
-            ctx.setLineDash([10, 5]);
+            ctx.strokeStyle = '#00ffff';
             ctx.lineWidth = 5;
-            ctx.strokeRect(1000, 600, 1000, 580); // Um guia visual simples
+            ctx.setLineDash([10, 5]);
+            ctx.strokeRect(blueField.x - camera.x, blueField.y - camera.y, blueField.w, blueField.h);
             ctx.setLineDash([]);
         }
-        crops.forEach(crop => {
-            ctx.font = '32px Arial';
-            ctx.fillText('🌾', crop.x - 16, crop.y + 16);
+
+        crops.forEach(c => {
+            ctx.font = '35px Arial';
+            ctx.fillText('🌾', c.x - camera.x - 17, c.y - camera.y + 17);
         });
-        ctx.restore();
+    } else {
+        // Carregando...
+        ctx.fillStyle = "#2d5a27";
+        ctx.fillRect(0,0,W,H);
     }
     requestAnimationFrame(loop);
 }
