@@ -56,19 +56,203 @@ button {
 
 .hidden { display: none !important; }
 
-/* CARTAS DE UPGRADE */
-.shop-cards { display: flex; gap: 20px; margin-top: 50px; }
-
-.shop-card {
-    background: #3c3c5e; border: 5px solid #fff; padding: 20px;
-    width: 220px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+/* ===== MOEDAS (Sem ícone) ===== */
+#hud-coins {
+    position: fixed;
+    top: 80px;
+    left: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px;
+    background: rgba(0, 0, 0, 0.7);
+    border-bottom: 3px solid #b8860b;
+    border-right: 3px solid #b8860b;
+    border-radius: 0 0 12px 0;
 }
 
-.card-icon { font-size: 40px; margin-bottom: 15px; }
-.shop-card h3 { font-size: 12px; color: #ffd700; }
-.shop-card p { font-size: 8px; line-height: 1.5; color: #ccc; }
-.stars { color: #f1c40f; font-size: 12px; margin: 10px 0; }
-.card-price { color: #ffd700; font-size: 10px; margin: 5px 0; }
+#hud-coins-label {
+    color: #ffd700;
+    font-size: 14px;
+    text-shadow: 2px 2px 0px #805000;
+}
+
+#hud-coins-value {
+    color: #fff;
+    font-size: 16px;
+}
+
+/* ===== BOTÕES DE AÇÃO (Canto Inferior Direito) ===== */
+#action-buttons {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 250;
+    display: flex;
+    gap: 12px;
+}
+
+#btn-open-inventory, #btn-open-shop {
+    background: #8b4513; 
+    border: 4px solid #ffd700;
+    color: #fff;
+    padding: 12px 20px;
+    font-size: 14px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+    transition: all 0.1s;
+}
+
+#btn-open-inventory:hover, #btn-open-shop:hover {
+    transform: scale(1.05);
+    background: #a0522d;
+}
+
+#btn-open-inventory:active, #btn-open-shop:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+}
+
+/* Base Style para Todos os Botões do Jogo */
+button {
+    font-family: 'Press Start 2P', cursive;
+    cursor: pointer;
+    border: 4px solid #fff;
+    outline: none;
+    background: #8b4513;
+    color: #fff;
+}
+
+/* ===== LOJA DA FAZENDA ===== */
+#shop-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 400;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    color: #fff;
+}
+
+h2 { font-size: 32px; letter-spacing: 4px; color: #ffd700; text-shadow: 0 0 10px #ffbb00; }
+
+.shop-cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 90%;
+}
+
+.shop-card {
+    background: #331a00;
+    border: 6px solid #b8860b;
+    padding: 20px;
+    width: 220px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.shop-card h3 { font-size: 14px; color: #ffd700; }
+.shop-card p { font-size: 10px; opacity: 0.8; height: 30px; }
+
+.buy-btn {
+    background: #2d5a1b;
+    border-color: #4a8a2b;
+    font-size: 10px;
+}
+.buy-btn:hover { background: #4a8a2b; }
+
+.card-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: flex-start; /* Alinha no topo */
+    justify-content: center;
+    overflow: hidden;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid #555;
+}
+
+.card-icon img {
+    width: 100%;
+    height: auto; /* Deixa a altura ser natural (ex: 128px) */
+    image-rendering: pixelated;
+    display: block;
+}
+
+
+
+.card-highlight {
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+#btn-shop-voltar, #btn-inv-voltar {
+    background: #444;
+    border-color: #888;
+    font-size: 10px;
+    padding: 12px 24px;
+    margin-top: 20px;
+}
+
+.card-price {
+    font-size: 12px;
+    color: #ffd700;
+    font-weight: bold;
+}
+
+/* ===== INVENTÁRIO ===== */
+#inventory-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 450;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+.inventory-container {
+    display: flex;
+    gap: 40px;
+    background: #331a00;
+    border: 6px solid #b8860b;
+    padding: 30px;
+    max-width: 80%;
+}
+
+.inv-section h3 {
+    font-size: 14px;
+    color: #ffd700;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #555;
+    padding-bottom: 10px;
+}
+
+.inv-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.inv-item {
+    font-size: 11px;
+    background: #4a2b10;
+    padding: 12px;
+    border: 2px solid #666;
+}
+
 
 .buy-btn { width: 100%; background: #27ae60; border-color: #fff; color: white; padding: 8px; }
 .buy-btn:hover { background: #2ecc71; }
