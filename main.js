@@ -33,22 +33,40 @@ trigoSprite.src = 'sprites/Trigo.png';
 class Crop {
     constructor(x, y) {
         this.x = x; this.y = y;
-        this.stage = 0; // 0 a 4
+        this.stage = 0; // 0 a 4 (Frames do sprite)
         this.timer = 0;
+        this.isSeed = true; // Começa como semente
+        this.seedTimer = 0;
     }
     update(dt) {
-        if (this.stage < 4) {
+        if (this.isSeed) {
+            this.seedTimer += dt;
+            if (this.seedTimer > 3000) { this.isSeed = false; } // Vira broto após 3s
+        } else if (this.stage < 4) {
             this.timer += dt;
             if (this.timer > 6000) { this.stage++; this.timer = 0; }
         }
     }
     draw() {
-        if (trigoSprite.complete && trigoSprite.naturalWidth > 0) {
-            const fw = trigoSprite.width, fh = trigoSprite.height / 5;
-            ctx.drawImage(trigoSprite, 0, this.stage * fh, fw, fh, this.x - camera.x - fw / 2, this.y - camera.y - fh, fw, fh);
-        } else { ctx.font = '20px Arial'; ctx.fillText('🌱', this.x - camera.x - 10, this.y - camera.y); }
+        if (this.isSeed) {
+            ctx.fillStyle = '#8b4513';
+            ctx.beginPath();
+            ctx.arc(this.x - camera.x, this.y - camera.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (trigoSprite.complete && trigoSprite.naturalWidth > 0) {
+            // Sprite 2x3
+            const fw = trigoSprite.width / 2;
+            const fh = trigoSprite.height / 3;
+            const sx = (this.stage % 2) * fw;
+            const sy = Math.floor(this.stage / 2) * fh;
+            ctx.drawImage(trigoSprite, sx, sy, fw, fh, this.x - camera.x - fw, this.y - camera.y - fh * 2, fw * 2, fh * 2);
+        } else {
+            ctx.font = '20px Arial';
+            ctx.fillText('🌱', this.x - camera.x - 10, this.y - camera.y);
+        }
     }
 }
+
 
 // INVENTÁRIO DE PRODUTOS
 var inventoryProducts = { ovos: 0, carne: 0 };
