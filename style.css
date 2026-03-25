@@ -172,20 +172,23 @@ h2 { font-size: 32px; letter-spacing: 4px; color: #ffd700; text-shadow: 0 0 10px
 .buy-btn:hover { background: #4a8a2b; }
 
 .card-icon {
+    width: 64px;
     height: 64px;
     display: flex;
-    align-items: center;
+    align-items: flex-start; /* Alinha no topo */
     justify-content: center;
     overflow: hidden;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid #555;
 }
 
 .card-icon img {
-    height: 128px; /* Double to keep scale or similar */
-    width: 64px;
+    width: 100%;
+    height: auto; /* Deixa a altura ser natural (ex: 128px) */
     image-rendering: pixelated;
-    object-position: top;
-    object-fit: cover;
+    display: block;
 }
+
 
 
 .card-highlight {
