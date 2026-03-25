@@ -35,6 +35,25 @@ window.addEventListener('mousemove', (e) => {
     mouseY = e.clientY;
 });
 
+// CONTROLE DE TECLADO PARA HOTBAR
+window.addEventListener('keydown', (e) => {
+    let key = e.key;
+    if (key >= '1' && key <= '9') selectedSlot = parseInt(key) - 1;
+    else if (key === '0') selectedSlot = 9;
+    
+    // Atualiza visual
+    const slots = document.querySelectorAll('.hotbar-slot');
+    slots.forEach((s, i) => {
+        if (i === selectedSlot) {
+            s.style.borderColor = '#ffd700';
+            s.style.boxShadow = '0 0 15px #ffd700';
+        } else {
+            s.style.borderColor = '#000';
+            s.style.boxShadow = 'none';
+        }
+    });
+});
+
 // LOGICA DE JOGO
 let isWatering = false, wateringTimer = 0, crops = [];
 
