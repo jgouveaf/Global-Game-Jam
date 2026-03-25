@@ -7,89 +7,46 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
-<body style="margin: 0; padding: 0; background: #000; overflow: hidden;">
+<body style="margin: 0; padding: 0; background: #325e22; overflow: hidden;">
 
-    <!-- HUD Superior (Barra Vermelha) -->
-    <div id="hud-top" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.8); padding: 10px 20px; border: 3px solid #fff; width: 70%;">
-        <span style="color: #fff; font-size: 10px; font-family: 'Press Start 2P', cursive;">COMUNIDADE</span>
-        <div style="flex: 1; height: 18px; background: #333; border: 2px solid #555; position: relative;">
-            <div id="hp-bar" style="height: 100%; background: #f00 !important; width: 100%;"></div>
+    <!-- HUD Superior (Sem fundo preto agora) -->
+    <div id="hud-top" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; align-items: center; gap: 10px; padding: 10px; width: 80%;">
+        <span style="color: #fff; text-shadow: 2px 2px #000; font-size: 10px; font-family: 'Press Start 2P', cursive;">COMUNIDADE</span>
+        <div style="flex: 1; height: 16px; background: rgba(0,0,0,0.5); border: 3px solid #fff; position: relative;">
+            <div id="hp-bar" style="height: 100%; background: #f00; width: 100%;"></div>
         </div>
-        <div id="hud-value" style="color: #fff; font-size: 10px; font-family: 'Press Start 2P', cursive;">100</div>
+        <span id="hud-value" style="color: #fff; text-shadow: 2px 2px #000; font-size: 10px; font-family: 'Press Start 2P', cursive;">100</span>
     </div>
 
     <!-- MOEDAS -->
-    <div id="hud-coins" style="position: fixed; top: 70px; left: 20px; z-index: 5000; background: rgba(0,0,0,0.8); color: #ffd700; border: 2px solid #ffd700; padding: 5px 15px; font-family: 'Press Start 2P'; font-size: 8px;">
+    <div id="hud-coins" style="position: fixed; top: 70px; left: 20px; z-index: 5000; color: #ffd700; text-shadow: 2px 2px #000; font-family: 'Press Start 2P'; font-size: 8px;">
         💰 MOEDAS: <span id="hud-coins-value">0</span>
     </div>
 
-    <!-- INVENTÁRIO (HOTBAR DE 10 SLOTS) -->
-    <div id="hotbar-container" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; gap: 8px; background: rgba(0,0,0,0.7); padding: 10px; border: 3px solid #fff;">
-        <div class="hotbar-slot active" data-slot="1"><span class="slot-num">1</span></div>
-        <div class="hotbar-slot" data-slot="2"><span class="slot-num">2</span></div>
-        <div class="hotbar-slot" data-slot="3"><span class="slot-num">3</span></div>
-        <div class="hotbar-slot" data-slot="4"><span class="slot-num">4</span></div>
-        <div class="hotbar-slot" data-slot="5"><span class="slot-num">5</span></div>
-        <div class="hotbar-slot" data-slot="6"><span class="slot-num">6</span></div>
-        <div class="hotbar-slot" data-slot="7"><span class="slot-num">7</span></div>
-        <div class="hotbar-slot" data-slot="8"><span class="slot-num">8</span></div>
-        <div class="hotbar-slot" data-slot="9"><span class="slot-num">9</span></div>
-        <div class="hotbar-slot" data-slot="10"><span class="slot-num">0</span></div>
+    <!-- SLOTS DO INVENTÁRIO -->
+    <div id="hotbar-container" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; gap: 8px; padding: 5px;">
+        <div class="hotbar-slot active" style="width: 48px; height: 48px; background: rgba(0,0,0,0.6); border: 2px solid #ffd700;"></div>
+        <div class="hotbar-slot" style="width: 48px; height: 48px; background: rgba(0,0,0,0.6); border: 2px solid #fff;"></div>
+        <div class="hotbar-slot" style="width: 48px; height: 48px; background: rgba(0,0,0,0.6); border: 2px solid #fff;"></div>
+        <div class="hotbar-slot" style="width: 48px; height: 48px; background: rgba(0,0,0,0.6); border: 2px solid #fff;"></div>
+        <div class="hotbar-slot" style="width: 48px; height: 48px; background: rgba(0,0,0,0.6); border: 2px solid #fff;"></div>
     </div>
 
-    <!-- TIMER DE PLANTIO -->
-    <div id="planting-timer" class="hidden">
-        PREPARE-SE: <span id="timer-sec">10</span>s PARA PLANTAR!
+    <!-- MENSAGEM DE PLANTIO -->
+    <div id="planting-timer" class="hidden" style="position: fixed; top: 80px; left: 50%; transform: translateX(-50%); color: #fff; text-shadow: 2px 2px #000; font-size: 12px; z-index: 6000;">
+        VAI! PLANTE TRIGO (<span id="timer-sec">10</span>s)
     </div>
 
     <!-- Botões de Ação -->
     <div id="action-buttons" style="position: fixed; bottom: 20px; right: 20px; z-index: 6000; display: flex; flex-direction: column; gap: 10px;">
-        <button id="btn-water">💧 REGAR</button>
-        <button id="btn-open-inventory" onclick="document.getElementById('inventory-overlay').classList.remove('hidden')">🎒 INVENTÁRIO</button>
-        <button id="btn-open-shop" onclick="document.getElementById('shop-overlay').classList.remove('hidden')">🏪 LOJA</button>
+        <button id="btn-water" style="padding: 15px; cursor: pointer;">💧 REGAR TERRENO</button>
+        <button onclick="document.getElementById('shop-overlay').classList.remove('hidden')">🏪 LOJA DE UPGRADES</button>
     </div>
 
-    <!-- OVERLAY DA LOJA (UPGRADES) -->
-    <div id="shop-overlay" class="hidden">
-        <h2 style="text-align: center; margin-bottom: 30px;">🏪 LOJA DE UPGRADES</h2>
-        <div class="shop-cards" style="display: flex; gap: 20px; justify-content: center;">
-            
-            <div class="shop-card">
-                <div class="card-icon">🌱</div>
-                <h3>SEMENTES</h3>
-                <p>Melhor qualidade</p>
-                <div class="stars">★★☆☆☆☆</div>
-                <div class="card-price">💰 300</div>
-                <button class="buy-btn">UPGRADE</button>
-            </div>
-
-            <div class="shop-card">
-                <div class="card-icon">🐖</div>
-                <h3>ANIMAIS</h3>
-                <p>Novas espécies</p>
-                <div class="stars">★☆☆☆☆☆</div>
-                <div class="card-price">💰 500</div>
-                <button class="buy-btn">UPGRADE</button>
-            </div>
-
-            <div class="shop-card">
-                <div class="card-icon">⚡</div>
-                <h3>VELOCIDADE</h3>
-                <p>Crescimento rápido</p>
-                <div class="stars">★★★☆☆☆</div>
-                <div class="card-price">💰 800</div>
-                <button class="buy-btn">UPGRADE</button>
-            </div>
-
-        </div>
-        <button class="back-btn" onclick="document.getElementById('shop-overlay').classList.add('hidden')">← VOLTAR</button>
-    </div>
-
-    <!-- Overlay do Inventário -->
-    <div id="inventory-overlay" class="hidden">
-        <h2>🎒 MEU INVENTÁRIO</h2>
-        <p>Vazio</p>
-        <button class="back-btn" onclick="document.getElementById('inventory-overlay').classList.add('hidden')">← VOLTAR</button>
+    <!-- Overlays simples -->
+    <div id="shop-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 7000; color: #fff; padding: 50px;">
+        <h2>LOJA ABERTA</h2>
+        <button onclick="document.getElementById('shop-overlay').classList.add('hidden')">FECHAR</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
