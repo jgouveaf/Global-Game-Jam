@@ -9,30 +9,22 @@
 </head>
 <body style="margin: 0; padding: 0; background: #325e22; overflow: hidden;">
 
-    <!-- HUD Superior (Sem fundo preto agora) -->
+    <!-- HUD Superior -->
     <div id="hud-top" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; align-items: center; gap: 10px; padding: 10px; width: 80%;">
         <span style="color: #fff; text-shadow: 2px 2px #000; font-size: 10px; font-family: 'Press Start 2P', cursive;">COMUNIDADE</span>
         <div style="flex: 1; height: 16px; background: rgba(0,0,0,0.5); border: 3px solid #fff; position: relative;">
             <div id="hp-bar" style="height: 100%; background: #f00; width: 100%;"></div>
         </div>
-        <span id="hud-value" style="color: #fff; text-shadow: 2px 2px #000; font-size: 10px; font-family: 'Press Start 2P', cursive;">100</span>
+        <span id="hud-value" style="color: #fff; text-shadow: 2px 2px #000; font-size: 10px;">100</span>
     </div>
 
-    <!-- MOEDAS -->
-    <div id="hud-coins" style="position: fixed; top: 70px; left: 20px; z-index: 5000; color: #ffd700; text-shadow: 2px 2px #000; font-family: 'Press Start 2P'; font-size: 8px;">
-        💰 MOEDAS: <span id="hud-coins-value">0</span>
+    <!-- MOEDAS E SEMENTES -->
+    <div id="stats-container" style="position: fixed; top: 70px; left: 20px; z-index: 5000; display: flex; flex-direction: column; gap: 10px; font-family: 'Press Start 2P'; font-size: 8px; color: #fff; text-shadow: 2px 2px #000;">
+        <div>💰 MOEDAS: <span id="hud-coins-value">100</span></div>
+        <div style="color: #0f0;">🌱 SEMENTES: <span id="hud-seeds-value">0</span></div>
     </div>
 
-    <!-- SLOTS DO INVENTÁRIO -->
-    <div id="hotbar-container" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; gap: 8px; padding: 5px;">
-        <div class="hotbar-slot active" style="width: 48px; height: 48px; background: rgba(0,0,0,0.6); border: 2px solid #ffd700;"></div>
-        <div class="hotbar-slot" style="width: 48px; height: 48px; background: rgba(0,0,0,0.6); border: 2px solid #fff;"></div>
-        <div class="hotbar-slot" style="width: 48px; height: 48px; background: rgba(0,0,0,0.6); border: 2px solid #fff;"></div>
-        <div class="hotbar-slot" style="width: 48px; height: 48px; background: rgba(0,0,0,0.6); border: 2px solid #fff;"></div>
-        <div class="hotbar-slot" style="width: 48px; height: 48px; background: rgba(0,0,0,0.6); border: 2px solid #fff;"></div>
-    </div>
-
-    <!-- MENSAGEM DE PLANTIO -->
+    <!-- TIMER DE PLANTIO -->
     <div id="planting-timer" class="hidden" style="position: fixed; top: 80px; left: 50%; transform: translateX(-50%); color: #fff; text-shadow: 2px 2px #000; font-size: 12px; z-index: 6000;">
         VAI! PLANTE TRIGO (<span id="timer-sec">10</span>s)
     </div>
@@ -40,13 +32,20 @@
     <!-- Botões de Ação -->
     <div id="action-buttons" style="position: fixed; bottom: 20px; right: 20px; z-index: 6000; display: flex; flex-direction: column; gap: 10px;">
         <button id="btn-water" style="padding: 15px; cursor: pointer;">💧 REGAR TERRENO</button>
-        <button onclick="document.getElementById('shop-overlay').classList.remove('hidden')">🏪 LOJA DE UPGRADES</button>
+        <button onclick="document.getElementById('shop-overlay').classList.remove('hidden')" style="padding: 10px; cursor: pointer;">🏪 LOJA DA FAZENDA</button>
     </div>
 
-    <!-- Overlays simples -->
-    <div id="shop-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 7000; color: #fff; padding: 50px;">
-        <h2>LOJA ABERTA</h2>
-        <button onclick="document.getElementById('shop-overlay').classList.add('hidden')">FECHAR</button>
+    <!-- OVERLAY DA LOJA -->
+    <div id="shop-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 7000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Press Start 2P';">
+        <h2 style="margin-bottom: 30px; color: #ffd700;">🏪 LOJA DA FAZENDA</h2>
+        <div style="background: #3c3c5e; border: 5px solid #fff; padding: 30px; display: flex; flex-direction: column; align-items: center; gap: 15px; width: 300px;">
+            <div style="font-size: 40px;">🌱</div>
+            <h3>SEMENTE DE TRIGO</h3>
+            <p style="font-size: 8px; color: #ccc;">Necessária para plantar</p>
+            <div style="color: #ffd700; font-size: 12px;">💰 10 CADA</div>
+            <button id="btn-buy-seed" style="background: #27ae60; color: #fff; padding: 10px; width: 100%; border: 3px solid #fff; cursor: pointer;">COMPRAR (1)</button>
+        </div>
+        <button onclick="document.getElementById('shop-overlay').classList.add('hidden')" style="margin-top: 30px; background: #c0392b; color: #fff; padding: 10px; border: 3px solid #fff; cursor: pointer;">← VOLTAR</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
