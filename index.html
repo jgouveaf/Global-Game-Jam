@@ -366,28 +366,42 @@ window.buyAnimal = function(type, price) {
     } else alert("Sem moedas!");
 }
 
-// INICIALIZADOR DE EVENTOS
+// INICIALIZADOR DE EVENTOS (Defensivo)
 window.onload = () => {
-    document.getElementById('btn-open-shop').onclick = () => document.getElementById('shop-overlay').classList.remove('hidden');
-    document.getElementById('btn-shop-voltar').onclick = () => document.getElementById('shop-overlay').classList.add('hidden');
-    document.getElementById('btn-open-inventory').onclick = () => document.getElementById('inventory-overlay').classList.remove('hidden');
-    document.getElementById('btn-inv-voltar').onclick = () => document.getElementById('inventory-overlay').classList.add('hidden');
+    console.log("Iniciando AgriCorp listeners...");
     
-    document.getElementById('btn-buy-seed').onclick = () => {
+    const bind = (id, fn) => {
+        const el = document.getElementById(id);
+        if (el) el.onclick = fn;
+        else console.warn(`Elemento não encontrado: ${id}`);
+    };
+
+    bind('btn-open-shop', () => document.getElementById('shop-overlay').classList.remove('hidden'));
+    bind('btn-shop-voltar', () => document.getElementById('shop-overlay').classList.add('hidden'));
+    bind('btn-open-inventory', () => document.getElementById('inventory-overlay').classList.remove('hidden'));
+    bind('btn-inv-voltar', () => document.getElementById('inventory-overlay').classList.add('hidden'));
+    
+    bind('btn-buy-seed', () => {
         if (moedas >= 10) { moedas -= 10; sementesTrigo++; updateHUD(); updateInventory(); }
         else alert("Sem moedas!");
-    };
+    });
     
-    document.getElementById('btn-water').onclick = () => {
+    bind('btn-water', () => {
         if (isWatering) return;
         isWatering = true; wateringTimer = 10;
-        document.getElementById('planting-timer').classList.remove('hidden');
+        const timerEl = document.getElementById('planting-timer');
+        if (timerEl) timerEl.classList.remove('hidden');
         const itv = setInterval(() => {
             wateringTimer--;
-            document.getElementById('timer-sec').textContent = wateringTimer;
-            if (wateringTimer <= 0) { clearInterval(itv); isWatering = false; document.getElementById('planting-timer').classList.add('hidden'); }
+            const countEl = document.getElementById('timer-sec');
+            if (countEl) countEl.textContent = wateringTimer;
+            if (wateringTimer <= 0) { 
+                clearInterval(itv); isWatering = false; 
+                if (timerEl) timerEl.classList.add('hidden'); 
+            }
         }, 1000);
-    };
+    });
+
     
     // Timer para a barra de comunidade descer
     setInterval(() => {
