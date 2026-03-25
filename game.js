@@ -1,8 +1,8 @@
-// ========================= AgriCorp Game (CALIBRAGEM FINAL) =========================
+// ========================= AgriCorp Game (Coordenadas Exatas) =========================
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 let isWatering = false, wateringTimer = 0, crops = [], W, H;
-let WW = 2800, WH = 1400; // Será atualizado no load
+let WW = 2800, WH = 1400; 
 
 const mapImage = new Image();
 mapImage.src = 'sprites/Mapa.png';
@@ -28,21 +28,25 @@ const EDGE = 0.15, CAM_SPEED = 15;
 
 window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
 
-// NOVA AREA DE PLANTIO (O campo retangular com arbustos embaixo)
-// Ajustada para ser um pouco mais tolerante
-const farmField = { x: 2140, y: 720, w: 580, h: 480 };
+// AREA DE PLANTIO (COORDENADAS EXATAS DO USUÁRIO)
+// X de 1130 até 1335 | Y de 326 até 542
+const firstArea = {
+    x: 1130, 
+    y: 326, 
+    w: 1335 - 1130, // 205
+    h: 542 - 326    // 216
+};
 
 window.addEventListener('mousedown', (e) => {
     if (e.target.tagName === 'BUTTON' || e.target.closest('#hotbar-container') || e.target.closest('#hud-top')) return;
     
     if (isWatering && wateringTimer > 0) {
-        // Coordenada real no mundo (MAPA)
         const worldX = e.clientX + camera.x;
         const worldY = e.clientY + camera.y;
 
-        // VERIFICAÇÃO DE AREA
-        if (worldX > farmField.x && worldX < farmField.x + farmField.w &&
-            worldY > farmField.y && worldY < farmField.y + farmField.h) {
+        // VERIFICA SE ESTÁ DENTRO DA ÁREA QUE VOCÊ PASSOU
+        if (worldX > firstArea.x && worldX < firstArea.x + firstArea.w &&
+            worldY > firstArea.y && worldY < firstArea.y + firstArea.h) {
             
             const tooClose = crops.some(c => Math.hypot(c.x - worldX, c.y - worldY) < 30);
             if (!tooClose) crops.push({ x: worldX, y: worldY });
@@ -62,9 +66,9 @@ if(btnWater) {
         timerUI.classList.remove('hidden');
         timerSec.textContent = wateringTimer;
 
-        // CÂMERA VAI DIRETO PRO CAMPO NOVO
-        camera.x = farmField.x + (farmField.w / 2) - (W / 2);
-        camera.y = farmField.y + (farmField.h / 2) - (H / 2);
+        // CÂMERA FOCA NESSA ÁREA ESPECÍFICA
+        camera.x = firstArea.x + (firstArea.w / 2) - (W / 2);
+        camera.y = firstArea.y + (firstArea.h / 2) - (H / 2);
 
         const countdown = setInterval(() => {
             wateringTimer--;
@@ -79,7 +83,6 @@ if(btnWater) {
 }
 
 function loop(){
-    // Movimentação de Câmera
     if (mouseX < W * EDGE) camera.x -= CAM_SPEED;
     if (mouseX > W * (1 - EDGE)) camera.x += CAM_SPEED;
     if (mouseY < H * EDGE) camera.y -= CAM_SPEED;
@@ -94,12 +97,12 @@ function loop(){
         ctx.drawImage(mapImage, -camera.x, -camera.y);
         
         if (isWatering) {
-            // Guia Visual
             ctx.strokeStyle = '#00ffff';
-            ctx.lineWidth = 5;
-            ctx.strokeRect(farmField.x - camera.x, farmField.y - camera.y, farmField.w, farmField.h);
+            ctx.lineWidth = 4;
+            ctx.setLineDash([10, 5]);
+            ctx.strokeRect(firstArea.x - camera.x, firstArea.y - camera.y, firstArea.w, firstArea.h);
             
-            // HUD DE DEPURAÇÃO (SÓ PRA VOCÊ VER A COORDENADA ONDE CLICAR)
+            // Texto de depuração continua para ajudar se precisar recalibrar
             ctx.fillStyle = "white";
             ctx.font = "12px Arial";
             ctx.fillText(`X: ${Math.round(camera.x + mouseX)} Y: ${Math.round(camera.y + mouseY)}`, mouseX + 15, mouseY);
