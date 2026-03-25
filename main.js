@@ -3,7 +3,7 @@ const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
 const mapImage = new Image();
-mapImage.src = 'sprites/Mapa.png';
+mapImage.src = 'sprites/Mapa..png';
 let mapLoaded = false;
 let WW = 2800, WH = 1400; 
 
@@ -27,16 +27,30 @@ window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.cli
 var moedas = 500, sementesTrigo = 60, comunidade = 80, isGameOver = false, harvestedTrigo = 0;
 const crops = [], blueField = { x: 1580, y: 580, w: 900, h: 540 };
 
+// SISTEMA DE LOTES
+let currentLotIndex = 0;
+let purchasedLotsStatus = [0]; // Lote 1 já começa comprado
+
+const lots = [
+    { id: 1, price: 0, minSeeds: 20, multiplier: 1, name: "Lote 1" },
+    { id: 2, price: 200, minSeeds: 25, multiplier: 2, name: "Lote 2" },
+    { id: 3, price: 500, minSeeds: 35, multiplier: 4, name: "Lote 3" },
+    { id: 4, price: 850, minSeeds: 40, multiplier: 6, name: "Lote 4" },
+    { id: 5, price: 1150, minSeeds: 50, multiplier: 8, name: "Lote 5" },
+    { id: 6, price: 1750, minSeeds: 70, multiplier: 12, name: "Lote 6" }
+];
+
 const trigoSprite = new Image();
 trigoSprite.src = 'sprites/Trigo.png';
 
 class Crop {
-    constructor(x, y) {
+    constructor(x, y, multiplier) {
         this.x = x; this.y = y;
         this.stage = 0; // 0 a 4 (Frames do sprite)
         this.timer = 0;
         this.isSeed = true; // Começa como semente
         this.seedTimer = 0;
+        this.multiplier = multiplier; // Salva o multiplicador do lote onde foi plantado
     }
     update(dt) {
         if (this.isSeed) {
@@ -230,6 +244,62 @@ window.buyAnimal = (type, price) => {
     } else alert("Sem moedas!");
 };
 
+// Interface da Loja de Lotes
+function renderLots() {
+    const container = document.getElementById('lots-container');
+    if(!container) return;
+    container.innerHTML = '';
+
+    lots.forEach((lot, index) => {
+        const isSelected = currentLotIndex === index;
+        const isPurchased = purchasedLotsStatus.includes(index);
+        
+        const lotDiv = document.createElement('div');
+        lotDiv.style.background = isSelected ? '#333' : '#1a1a1a';
+        lotDiv.style.border = isSelected ? '3px solid #ffd700' : '3px solid #555';
+        lotDiv.style.padding = '15px';
+        lotDiv.style.borderRadius = '8px';
+        lotDiv.style.display = 'flex';
+        lotDiv.style.flexDirection = 'column';
+        lotDiv.style.gap = '10px';
+        lotDiv.style.fontFamily = "'Press Start 2P'";
+        lotDiv.style.textAlign = 'center';
+
+        lotDiv.innerHTML = `
+            <div style="width: 100%; height: 60px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 2px solid #444; border-radius: 4px;">
+                <img src="sprites/Lote${index + 1}.png" style="max-width: 100%; max-height: 100%; image-rendering: pixelated;">
+            </div>
+            <h3 style="color: #ffd700; font-size: 10px;">${lot.name}</h3>
+            <p style="font-size: 6px; line-height: 1.5;">Multiplicador: x${lot.multiplier}</p>
+            <p style="font-size: 6px; color: #aaa;">Sementes necessárias: ${lot.minSeeds}</p>
+            <p style="font-size: 6px; color: #0f0;">Preço: ${lot.price}</p>
+            <button id="buy-lot-${index}" style="width: 100%; border: 2px solid #fff; padding: 5px; font-family: 'Press Start 2P'; font-size: 6px; cursor: pointer; background: ${isPurchased ? (isSelected ? '#ffd700' : '#8b4513') : '#444'}; color: #fff;">
+                ${isPurchased ? (isSelected ? (index === currentLotIndex ? 'ATIVO' : 'SELECIONAR') : 'SELECIONAR') : 'COMPRAR'}
+            </button>
+        `;
+
+        container.appendChild(lotDiv);
+
+        const btn = document.getElementById(`buy-lot-${index}`);
+        btn.addEventListener('click', () => {
+            if (isPurchased) {
+                currentLotIndex = index;
+                renderLots();
+            } else {
+                if (moedas >= lot.price) {
+                    moedas -= lot.price;
+                    purchasedLotsStatus.push(index);
+                    currentLotIndex = index;
+                    updateHUD();
+                    renderLots();
+                } else {
+                    alert('Moedas insuficientes!');
+                }
+            }
+        });
+    });
+}
+
 window.onload = () => {
     console.log("AgriCorp v10 Initializing...");
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
@@ -238,22 +308,45 @@ window.onload = () => {
     bind('btn-open-inventory', () => document.getElementById('inventory-overlay').classList.remove('hidden'));
     bind('btn-inv-voltar', () => document.getElementById('inventory-overlay').classList.add('hidden'));
     bind('btn-buy-seed', () => { if (moedas >= 10) { moedas -= 10; sementesTrigo++; updateHUD(); updateInventory(); } else alert("Sem moedas!"); });
+
+    bind('btn-open-lots', () => {
+        renderLots();
+        document.getElementById('lots-overlay').classList.remove('hidden');
+    });
     
     bind('btn-water', () => {
-        if (sementesTrigo <= 0) { alert("Sem sementes!"); return; }
+        const activeLot = lots[currentLotIndex];
+        if (sementesTrigo < activeLot.minSeeds) {
+            alert(`Você precisa de pelo menos ${activeLot.minSeeds} sementes para plantar no ${activeLot.name}!`);
+            return;
+        }
+
         let plantedCount = 0;
+        let occupiesCount = 0;
         const spacing = 130;
         for (let yy = blueField.y + 60; yy < blueField.y + blueField.h - 60; yy += spacing) {
             for (let xx = blueField.x + 60; xx < blueField.x + blueField.w - 60; xx += spacing) {
-                if (sementesTrigo > 0 && !crops.some(c => Math.hypot(c.x - xx, c.y - yy) < 60)) {
-                    crops.push(new Crop(xx, yy)); sementesTrigo--; plantedCount++;
+                const isOccupied = crops.some(c => Math.hypot(c.x - xx, c.y - yy) < 60);
+                if (isOccupied) {
+                    occupiesCount++;
+                } else if (sementesTrigo > 0) {
+                    crops.push(new Crop(xx, yy, activeLot.multiplier)); 
+                    sementesTrigo--; 
+                    plantedCount++;
                 }
             }
         }
+        
         updateHUD(); updateInventory();
         const timerEl = document.getElementById('planting-timer');
         if (timerEl) {
-            timerEl.innerHTML = `PLANTADO ${plantedCount} SEMENTES!`;
+            if (plantedCount > 0) {
+                timerEl.innerHTML = `PLANTADO ${plantedCount} SEMENTES NO ${activeLot.name}!`;
+            } else if (occupiesCount > 0) {
+                timerEl.innerHTML = `TERRENO OCUPADO! COLHA ANTES DE PLANTAR NOVAMENTE.`;
+            } else {
+                timerEl.innerHTML = `SEM SEMENTES DISPONÍVEIS!`;
+            }
             timerEl.classList.remove('hidden');
             setTimeout(() => timerEl.classList.add('hidden'), 3000);
         }
@@ -261,6 +354,7 @@ window.onload = () => {
 
     setInterval(() => { if (!isGameOver) { comunidade -= 0.5; updateHUD(); } }, 1000);
     updateHUD(); updateInventory();
+    renderLots();
 };
 
 canvas.onmousedown = (e) => {
@@ -268,7 +362,18 @@ canvas.onmousedown = (e) => {
     const wx = (e.clientX - rect.left) + camera.x, wy = (e.clientY - rect.top) + camera.y;
     const cropIdx = crops.findIndex(c => Math.hypot(c.x - wx, c.y - wy) < 60 && c.stage === 4);
     if (cropIdx !== -1) {
-        crops.splice(cropIdx, 1); harvestedTrigo++; moedas += 50; updateHUD(); return;
+        const crop = crops[cropIdx];
+        crops.splice(cropIdx, 1);
+        
+        // 1 Semente = 2 Unidades de Colheita
+        harvestedTrigo += 2;
+        
+        // Lucro = Quantidade_Colhida * Multiplicador do Lote
+        const profit = 2 * crop.multiplier;
+        moedas += profit;
+        
+        updateHUD(); 
+        return;
     }
 };
 

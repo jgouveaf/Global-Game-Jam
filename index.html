@@ -32,8 +32,20 @@
 
     <div id="action-buttons" style="position: fixed; bottom: 20px; right: 20px; z-index: 7000; display: flex; flex-direction: column; gap: 10px;">
         <button id="btn-water" style="padding: 12px; background: #8b4513; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;">💧 PLANTAR TUDO</button>
+        <button id="btn-open-lots" style="padding: 12px; background: #e67e22; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; box-shadow: 0 4px #d35400;">🚜 TERRENOS</button>
         <button id="btn-open-shop" style="padding: 12px; background: #8b4513; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;">🏪 LOJA</button>
         <button id="btn-open-inventory" style="padding: 12px; background: #8b4513; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;">🎒 INV</button>
+    </div>
+
+    <!-- Lots Overlay -->
+    <div id="lots-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; color: #fff; padding: 50px; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h2 style="font-family: 'Press Start 2P'; color: #ffd700;">🚜 LOJA DE LOTES</h2>
+            <button onclick="document.getElementById('lots-overlay').classList.add('hidden')" style="font-family: 'Press Start 2P'; background: #f00;">[X]</button>
+        </div>
+        <div id="lots-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+            <!-- Lotes serão inseridos aqui via JS -->
+        </div>
     </div>
 
     <!-- Shop Overlay -->
