@@ -352,6 +352,10 @@ window.sellItem = (type) => {
 };
 
 window.buyAnimal = function(type, price) {
+    if (!animalsUnlocked.includes(type)) {
+        alert("Este animal ainda está bloqueado! Compre o anterior na ordem primeiro.");
+        return;
+    }
     if (moedas >= price) {
         moedas -= price;
         const spawnX = camera.x + 200 + Math.random() * (W - 400);
@@ -360,7 +364,10 @@ window.buyAnimal = function(type, price) {
         const idx = unlockOrder.indexOf(type);
         if (idx !== -1 && idx < unlockOrder.length - 1) {
             const next = unlockOrder[idx + 1];
-            if (!animalsUnlocked.includes(next)) animalsUnlocked.push(next);
+            if (!animalsUnlocked.includes(next)) {
+                animalsUnlocked.push(next);
+                console.log("Desbloqueado:", next);
+            }
         }
         updateHUD(); updateInventory();
     } else alert("Sem moedas!");
@@ -416,14 +423,23 @@ window.onload = () => {
 };
 
 window.onmousedown = (e) => {
-    if (isWatering && wateringTimer > 0 && e.target.tagName !== 'BUTTON') {
+    if (isWatering && wateringTimer > 0) {
         const wx = e.clientX + camera.x, wy = e.clientY + camera.y;
+        console.log(`Click em: ${Math.round(wx)}, ${Math.round(wy)} | Área:`, blueField);
+        
         if (wx > blueField.x && wx < blueField.x + blueField.w && wy > blueField.y && wy < blueField.y + blueField.h) {
-            if (sementesTrigo > 0 && !crops.some(c => Math.hypot(c.x-wx, c.y-wy) < 30)) {
-                crops.push({x:wx, y:wy});
-                sementesTrigo--;
-                updateInventory();
+            if (sementesTrigo > 0) {
+                if (!crops.some(c => Math.hypot(c.x-wx, c.y-wy) < 35)) {
+                    crops.push({x:wx, y:wy});
+                    sementesTrigo--;
+                    updateInventory();
+                    updateHUD();
+                }
+            } else {
+                console.warn("Sem sementes!");
             }
+        } else {
+            console.warn("Fora da área de plantio!");
         }
     }
 };
