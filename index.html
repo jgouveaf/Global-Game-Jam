@@ -197,7 +197,7 @@
         resize();
         window.addEventListener('resize', resize);
 
-        const camera = { x: 400, y: 200 };
+        const camera = { x: 1300, y: 450 };
         let mouseX = 0, mouseY = 0;
         const EDGE = 0.15, CAM_SPEED = 10;
         window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
@@ -205,7 +205,35 @@
         // ESTADOS
         let isWatering = false, wateringTimer = 0, moedas = 500, sementesTrigo = 20, comunidade = 80;
         let isGameOver = false;
-        const crops = [], blueField = { x: 600, y: 400, w: 800, h: 500 };
+        let harvestedTrigo = 0;
+        const crops = [], blueField = { x: 1580, y: 580, w: 900, h: 540 };
+
+        const trigoSprite = new Image();
+        trigoSprite.src = 'sprites/Trigo.png';
+
+        class Crop {
+            constructor(x, y) {
+                this.x = x; this.y = y;
+                this.stage = 0; // 0 a 4
+                this.timer = 0;
+            }
+            update(dt) {
+                if (this.stage < 4) {
+                    this.timer += dt;
+                    if (this.timer > 6000) { this.stage++; this.timer = 0; }
+                }
+            }
+            draw() {
+                if (trigoSprite.complete && trigoSprite.naturalWidth > 0) {
+                    const fw = trigoSprite.width, fh = trigoSprite.height / 5;
+                    ctx.drawImage(trigoSprite, 0, this.stage * fh, fw, fh, this.x - camera.x - fw / 2, this.y - camera.y - fh, fw, fh);
+                } else {
+                    ctx.font = '20px Arial';
+                    ctx.fillText('🌱', this.x - camera.x - 10, this.y - camera.y);
+                }
+            }
+        }
+
 
         // INVENTÁRIO DE PRODUTOS
         const inventoryProducts = {
@@ -442,27 +470,34 @@
             updateInventory();
         };
 
-   window.onmousedown = (e) => {
-    if (isWatering && wateringTimer > 0) {
-        const wx = e.clientX + camera.x, wy = e.clientY + camera.y;
-        console.log(`Click em: ${Math.round(wx)}, ${Math.round(wy)} | Área:`, blueField);
-        
-        if (wx > blueField.x && wx < blueField.x + blueField.w && wy > blueField.y && wy < blueField.y + blueField.h) {
-            if (sementesTrigo > 0) {
-                if (!crops.some(c => Math.hypot(c.x-wx, c.y-wy) < 35)) {
-                    crops.push({x:wx, y:wy});
-                    sementesTrigo--;
-                    updateInventory();
-                    updateHUD();
-                }
-            } else {
-                console.warn("Sem sementes!");
+
+        window.onmousedown = (e) => {
+            const wx = e.clientX + camera.x, wy = e.clientY + camera.y;
+
+            // Colher Trigo pronto
+            const cropIdx = crops.findIndex(c => Math.hypot(c.x - wx, c.y - wy) < 40 && c.stage === 4);
+            if (cropIdx !== -1) {
+                crops.splice(cropIdx, 1);
+                harvestedTrigo++;
+                moedas += 50; 
+                updateHUD();
+                return;
             }
-        } else {
-            console.warn("Fora da área de plantio!");
-        }
-    }
-};
+
+            if (isWatering && wateringTimer > 0) {
+                if (wx > blueField.x && wx < blueField.x + blueField.w && wy > blueField.y && wy < blueField.y + blueField.h) {
+                    if (sementesTrigo > 0) {
+                        if (!crops.some(c => Math.hypot(c.x - wx, c.y - wy) < 40)) {
+                            crops.push(new Crop(wx, wy));
+                            sementesTrigo--;
+                            updateInventory();
+                            updateHUD();
+                        }
+                    }
+                }
+            }
+        };
+
         let lastTime = performance.now();
         function loop(now) {
             const dt = now - lastTime; lastTime = now;
@@ -488,12 +523,13 @@
                 }
                 ctx.restore();
 
-                crops.forEach(c => { ctx.font = '30px Arial'; ctx.fillText('🌾', c.x - camera.x - 15, c.y - camera.y + 15); });
+                crops.forEach(c => { c.update(dt); c.draw(); });
             }
             animalsOnMap.forEach(a => { a.update(dt); a.draw(); });
             requestAnimationFrame(loop);
         }
         requestAnimationFrame(loop);
+
     </script>
 </body>
 
