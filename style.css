@@ -171,41 +171,49 @@ h2 { font-size: 32px; letter-spacing: 4px; color: #ffd700; text-shadow: 0 0 10px
 
 .shop-cards {
     display: flex;
-    gap: 30px;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 90%;
 }
 
 .shop-card {
     background: #331a00;
     border: 6px solid #b8860b;
-    padding: 24px;
-    width: 250px;
+    padding: 20px;
+    width: 220px;
     text-align: center;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 
-.shop-card h3 { font-size: 16px; color: #ffd700; }
-.shop-card p { font-size: 10px; opacity: 0.8; }
-.stars { font-size: 18px; color: #ffbb00; }
+.shop-card h3 { font-size: 14px; color: #ffd700; }
+.shop-card p { font-size: 10px; opacity: 0.8; height: 30px; }
 
 .buy-btn {
     background: #2d5a1b;
     border-color: #4a8a2b;
-    font-size: 12px;
+    font-size: 10px;
 }
 .buy-btn:hover { background: #4a8a2b; }
 
 .card-icon {
-    font-size: 36px;
-    margin-bottom: 4px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 
-.card-level {
-    font-size: 9px;
-    color: #aaa;
-    margin-top: -8px;
+.card-icon img {
+    height: 128px; /* Double to keep scale or similar */
+    width: 64px;
+    image-rendering: pixelated;
+    object-position: top;
+    object-fit: cover;
 }
+
 
 .card-highlight {
     border-color: #ffd700;

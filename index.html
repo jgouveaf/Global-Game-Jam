@@ -39,31 +39,38 @@
         <div class="shop-cards">
 
             <div class="shop-card">
-                <div class="card-icon">🐖</div>
-                <h3>NOVOS<br>ANIMAIS</h3>
-                <p>Porcos e Galinhas</p>
-                <div class="stars">☆☆☆☆☆☆</div>
-                <div class="card-price">💰 500</div>
-                <button class="buy-btn">COMPRAR</button>
+                <div class="card-icon"><img src="sprites/Pato.png"></div>
+                <h3>PATO</h3>
+                <p>Produz Ovos (Pouco)</p>
+                <div class="card-price">💰 100</div>
+                <button class="buy-btn" onclick="buyAnimal('pato', 100)">COMPRAR</button>
             </div>
 
             <div class="shop-card">
-                <div class="card-icon">🌱</div>
-                <h3>NOVAS<br>PLANTAS</h3>
-                <p>Girassol e Milho</p>
-                <div class="stars">☆☆☆☆☆☆</div>
-                <div class="card-price">💰 300</div>
-                <button class="buy-btn">COMPRAR</button>
+                <div class="card-icon"><img src="sprites/Galinha.png"></div>
+                <h3>GALINHA</h3>
+                <p>Produz Ovos (Muito)</p>
+                <div class="card-price">💰 200</div>
+                <button class="buy-btn" onclick="buyAnimal('galinha', 200)">COMPRAR</button>
             </div>
 
-            <div class="shop-card card-highlight">
-                <div class="card-icon">⚡</div>
-                <h3>VELOCIDADE<br>PLANTIO</h3>
-                <p>Mais agilidade</p>
-                <div class="stars">☆☆☆☆☆☆</div>
-                <div class="card-price">💰 800</div>
-                <button class="buy-btn">COMPRAR</button>
+            <div class="shop-card">
+                <div class="card-icon"><img src="sprites/Coelho.png"></div>
+                <h3>COELHO</h3>
+                <p>Produz Carne (Normal)</p>
+                <div class="card-price">💰 150</div>
+                <button class="buy-btn" onclick="buyAnimal('coelho', 150)">COMPRAR</button>
             </div>
+
+            <div class="shop-card">
+                <div class="card-icon"><img src="sprites/Ovelha.png"></div>
+                <h3>OVELHA</h3>
+                <p>Produz Carne (Muito)</p>
+                <div class="card-price">💰 300</div>
+                <button class="buy-btn" onclick="buyAnimal('ovelha', 300)">COMPRAR</button>
+            </div>
+
+
 
         </div>
         <button id="btn-shop-voltar" onclick="document.getElementById('shop-overlay').classList.add('hidden')">← VOLTAR</button>
@@ -85,11 +92,11 @@
 
             <div class="inv-section">
                 <h3>🐄 Animais</h3>
-                <div class="inv-grid">
-                    <div class="inv-item">🐣 Galinhas (2)</div>
-                    <div class="inv-item">🐖 Porco (1)</div>
+                <div id="inv-animals-list" class="inv-grid">
+                    <div class="inv-item">Nenhum animal comprado</div>
                 </div>
             </div>
+
 
         </div>
         <button id="btn-inv-voltar" onclick="document.getElementById('inventory-overlay').classList.add('hidden')">← VOLTAR</button>
