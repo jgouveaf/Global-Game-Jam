@@ -24,7 +24,7 @@ const EDGE = 0.15, CAM_SPEED = 10;
 window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
 
 // ESTADOS
-var moedas = 500, sementesTrigo = 60, comunidade = 80, isGameOver = false, harvestedTrigo = 0;
+var moedas = 500, sementesTrigo = 60, comunidade = 80, isGameOver = false, harvestedTrigo = 0, paused = false;
 const crops = [], blueField = { x: 1580, y: 580, w: 900, h: 540 };
 
 const trigoSprite = new Image();
@@ -247,6 +247,72 @@ window.buyAnimal = (type, price) => {
     } else alert("Sem moedas!");
 };
 
+// ================================= ROAD SYSTEM =================================
+const roadNodes = [
+    {id:0, x:0,    y:1226, next:[1]},
+    {id:1, x:584,  y:1226, next:[0, 2, 4, 8]},
+    {id:2, x:1516, y:1226, next:[1, 3, 4]},
+    {id:3, x:2240, y:1226, next:[2]},
+    {id:4, x:1516, y:784,  next:[2, 5, 7, 10]},
+    {id:5, x:1516, y:330,  next:[4, 6]},
+    {id:6, x:2152, y:330,  next:[5]},
+    {id:7, x:2152, y:784,  next:[4]},
+    // Waypoints Caminho Curvo (Escalados x2)
+    {id:8, x:716,  y:1084, next:[1, 9]},
+    {id:9, x:922,  y:928,  next:[8, 10]},
+    {id:10, x:1230, y:806,  next:[9, 4]}
+];
+
+const personSprite = new Image();
+personSprite.src = 'player_sprite.png';
+
+class Person {
+    constructor() {
+        const startNode = roadNodes[Math.floor(Math.random() * roadNodes.length)];
+        this.x = startNode.x; this.y = startNode.y;
+        this.targetNode = roadNodes[startNode.next[Math.floor(Math.random() * startNode.next.length)]];
+        this.speed = 1.0 + Math.random() * 1.0;
+        this.facingRight = true;
+    }
+    update() {
+        if (paused) return;
+        const dx = this.targetNode.x - this.x, dy = this.targetNode.y - this.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 5) {
+            const possibleNext = this.targetNode.next;
+            this.targetNode = roadNodes[possibleNext[Math.floor(Math.random() * possibleNext.length)]];
+        } else {
+            const dirX = dx / dist, dirY = dy / dist;
+            this.x += dirX * this.speed;
+            this.y += dirY * this.speed;
+            if (Math.abs(dirX) > 0.1) this.facingRight = (dirX > 0);
+        }
+    }
+    draw() {
+        const img = personSprite;
+        const screenX = this.x - camera.x;
+        const screenY = this.y - camera.y;
+        if (img.complete && img.naturalWidth > 0) {
+            const dw = 64, dh = 64; 
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            if (!this.facingRight) ctx.scale(-1, 1);
+            ctx.drawImage(img, -dw/2, -dh/2, dw, dh);
+            ctx.restore();
+        }
+    }
+}
+const peopleOnMap = [];
+for (let i = 0; i < 5; i++) peopleOnMap.push(new Person());
+
+function togglePause() {
+    if (isGameOver) return;
+    paused = !paused;
+    const overlay = document.getElementById('pause-overlay');
+    if (overlay) overlay.classList.toggle('hidden', !paused);
+}
+window.addEventListener('keydown', (e) => { if (e.key === 'Escape') togglePause(); });
+
 window.onload = () => {
     console.log("AgriCorp v10 Initializing...");
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
@@ -254,6 +320,7 @@ window.onload = () => {
     bind('btn-shop-voltar', () => document.getElementById('shop-overlay').classList.add('hidden'));
     bind('btn-open-inventory', () => document.getElementById('inventory-overlay').classList.remove('hidden'));
     bind('btn-inv-voltar', () => document.getElementById('inventory-overlay').classList.add('hidden'));
+    bind('btn-resume', () => togglePause());
     bind('btn-buy-seed', () => { if (moedas >= 10) { moedas -= 10; sementesTrigo++; updateHUD(); updateInventory(); } else alert("Sem moedas!"); });
     
     bind('btn-water', () => {
@@ -276,7 +343,7 @@ window.onload = () => {
         }
     });
 
-    setInterval(() => { if (!isGameOver) { comunidade -= 0.5; updateHUD(); } }, 1000);
+    setInterval(() => { if (!isGameOver && !paused) { comunidade -= 0.5; updateHUD(); } }, 1000);
     updateHUD(); updateInventory();
 };
 
@@ -292,12 +359,14 @@ canvas.onmousedown = (e) => {
 let lastTime = performance.now();
 function loop(now){
     const dt = now - lastTime; lastTime = now;
-    if (mouseX < W * EDGE) camera.x -= CAM_SPEED;
-    if (mouseX > W * (1 - EDGE)) camera.x += CAM_SPEED;
-    if (mouseY < H * EDGE) camera.y -= CAM_SPEED;
-    if (mouseY > H * (1 - EDGE)) camera.y += CAM_SPEED;
-    camera.x = Math.max(0, Math.min(camera.x, WW - W));
-    camera.y = Math.max(0, Math.min(camera.y, WH - H));
+    if (!paused) {
+        if (mouseX < W * EDGE) camera.x -= CAM_SPEED;
+        if (mouseX > W * (1 - EDGE)) camera.x += CAM_SPEED;
+        if (mouseY < H * EDGE) camera.y -= CAM_SPEED;
+        if (mouseY > H * (1 - EDGE)) camera.y += CAM_SPEED;
+        camera.x = Math.max(0, Math.min(camera.x, WW - W));
+        camera.y = Math.max(0, Math.min(camera.y, WH - H));
+    }
     
     ctx.clearRect(0, 0, W, H);
     if (mapLoaded) {
@@ -306,9 +375,10 @@ function loop(now){
         ctx.strokeStyle = 'rgba(0, 255, 255, 0.2)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
         ctx.strokeRect(blueField.x - camera.x, blueField.y - camera.y, blueField.w, blueField.h);
         ctx.restore();
-        crops.forEach(c => { c.update(dt); c.draw(); });
+        crops.forEach(c => { if(!paused) c.update(dt); c.draw(); });
     }
-    animalsOnMap.forEach(a => { a.update(dt); a.draw(); });
+    peopleOnMap.forEach(p => { p.update(); p.draw(); });
+    animalsOnMap.forEach(a => { if(!paused) a.update(dt); a.draw(); });
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);

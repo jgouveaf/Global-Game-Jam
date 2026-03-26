@@ -70,9 +70,16 @@
     </div>
 
     <!-- Game Over -->
-    <div id="game-over-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 20000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff;">
-        <h1 style="color: #f00; font-family: 'Press Start 2P';">GAME OVER</h1>
-        <button onclick="location.reload()" style="padding: 20px; font-family:'Press Start 2P';">RECOMEÇAR</button>
+    <div id="game-over-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #200000; z-index: 40000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: 'Press Start 2P';">
+        <h1 style="color: #f00; font-size: 32px !important; margin-bottom: 10px;">GAME OVER</h1>
+        <button onclick="location.reload()" class="back-pixel-btn">RETRY</button>
+    </div>
+
+    <!-- PAUSE MENU -->
+    <div id="pause-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 50000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: 'Press Start 2P';">
+        <h2 style="color: #ffd700; font-size: 24px !important; margin-bottom: 30px;">PAUSED</h2>
+        <button id="btn-resume" class="menu-btn" style="background: #27ae60; border-bottom-color: #1e8449;">RESUME</button>
+        <button onclick="location.reload()" class="menu-btn" style="background: #c0392b; border-bottom-color: #7b241c;">QUIT</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
