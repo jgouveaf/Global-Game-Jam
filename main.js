@@ -91,6 +91,7 @@ class Animal {
         this.frame = 0; this.nextFrameTime = 0; this.productionTimer = 0;
         this.productionInterval = 5000 + Math.random() * 5000;
         this.vx = 0; this.vy = 0; this.moveTimer = 0;
+        this.facingRight = true;
     }
     update(dt) {
         this.nextFrameTime += dt;
@@ -99,10 +100,17 @@ class Animal {
         if (this.productionTimer >= this.productionInterval) { this.produce(); this.productionTimer = 0; }
         this.moveTimer -= dt;
         if (this.moveTimer <= 0) {
-            if (Math.random() > 0.4) { this.vx = (Math.random() - 0.5) * 1.5; this.vy = (Math.random() - 0.5) * 1.5; }
+            if (Math.random() > 0.4) { 
+                this.vx = (Math.random() - 0.5) * 1.5; 
+                this.vy = (Math.random() - 0.5) * 1.5; 
+            }
             else { this.vx = 0; this.vy = 0; }
             this.moveTimer = 2000 + Math.random() * 3000;
         }
+        
+        if (this.vx > 0.1) this.facingRight = true;
+        else if (this.vx < -0.1) this.facingRight = false;
+
         this.x += this.vx; this.y += this.vy;
         const margin = 100;
         this.x = Math.max(margin, Math.min(this.x, WW - margin));
@@ -115,13 +123,22 @@ class Animal {
     }
     draw() {
         const img = animalSprites[this.type];
+        const screenX = this.x - camera.x;
+        const screenY = this.y - camera.y;
+
         if (img.complete && img.naturalWidth > 0) {
             const fw = img.width, fh = img.height / 2;
-            ctx.drawImage(img, 0, this.frame * fh, fw, fh, this.x - camera.x - fw/2, this.y - camera.y - fh/2, fw, fh);
+            
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            if (!this.facingRight) ctx.scale(-1, 1);
+            
+            ctx.drawImage(img, 0, this.frame * fh, fw, fh, -fw/2, -fh/2, fw, fh);
+            ctx.restore();
         } else {
             ctx.font = '24px Arial';
             const em = {pato:'🦆', galinha:'🐔', coelho:'🐇', ovelha:'🐑', porco:'🐖', cavalo:'🐎'};
-            ctx.fillText(em[this.type] || '🐾', this.x - camera.x - 12, this.y - camera.y + 12);
+            ctx.fillText(em[this.type] || '🐾', screenX - 12, screenY + 12);
         }
     }
 }
