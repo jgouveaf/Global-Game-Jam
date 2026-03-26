@@ -7,7 +7,7 @@ const ctx    = canvas.getContext('2d');
 
 const mapImage = new Image();
 mapImage.src = 'sprites/Mapa..png';
-let mapLoaded = false, WW = 0, WH = 0, gameState = 'menu';
+let mapLoaded = false, WW = 0, WH = 0, gameState = 'intro'; // MUDADO PARA INTRO
 
 mapImage.onload = () => { mapLoaded = true; WW = mapImage.width/2; WH = mapImage.height/4; };
 
@@ -91,7 +91,7 @@ class Animal {
 }
 
 function updateHUD() {
-    if(gameState === 'menu') return;
+    if(gameState === 'menu' || gameState === 'intro') return; // MUDADO
     const hp = document.getElementById('hp-bar'); if(hp) hp.style.width = community + '%';
     const hV = document.getElementById('hud-value'); if(hV) hV.textContent = Math.round(community);
     const hC = document.getElementById('hud-coins-value'); if(hC) hC.textContent = Math.round(totalCoinsJam);
@@ -107,7 +107,7 @@ function updateInventory() {
 }
 
 setInterval(() => {
-    if (isGameOver || gameState === 'menu') return;
+    if (isGameOver || gameState === 'menu' || gameState === 'intro') return;
     purchasedLotsStatus.forEach(idx => {
         const lt = lots[idx]; if (lt.t === 'wheat') harvestedWheat += (2 * lt.m); else harvestedCarrot += (5 * lt.m);
     });
@@ -118,9 +118,8 @@ setInterval(() => {
     updateInventory(); updateHUD();
 }, 8000);
 
-// REQUISITO: Barra acelera a cada 2 MINUTOS (120 s)
 setInterval(() => {
-    if (isGameOver || gameState === 'menu') return;
+    if (isGameOver || gameState === 'menu' || gameState === 'intro') return;
     timeElapsed++; 
     if (timeElapsed > 0 && timeElapsed % 120 === 0) decayMultiplier += 0.5;
     let hR = Math.min(0.70, animalsOnMap.filter(a=>a.type==='cavalo').length * 0.15);
@@ -179,16 +178,54 @@ window.onload = () => {
 };
 
 let lastTime = performance.now();
+let introStartTime = 0, introOpacity = 0; // AUXILIARES
 function loop(now){
     const dt = now - lastTime; lastTime = now;
-    if (gameState === 'playing') {
+    
+    // INTRO LOGIC
+    if (gameState === 'intro') {
+        if (!introStartTime) introStartTime = now;
+        const elapsed = (now - introStartTime) / 1000; // Segundos
+        
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0,0,W,H);
+        
+        ctx.font = "14px 'Press Start 2P'";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        
+        // FADE EM FASES
+        let text = "", alpha = 0;
+        if (elapsed < 2) {
+            text = "A GodFrame production"; alpha = Math.min(1, elapsed * 1);
+        } else if (elapsed < 4) {
+            text = "AgriCorp."; alpha = Math.min(1, (elapsed - 2) * 1);
+        } else if (elapsed < 6) {
+            text = "In collaboration with FECAP"; alpha = Math.min(1, (elapsed - 4) * 1);
+        } else {
+            // FIM INTRO
+            gameState = 'menu';
+            document.getElementById('menu-overlay').classList.remove('hidden');
+        }
+        
+        if (text) {
+            ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
+            ctx.fillText(text, W/2, H/2);
+        }
+    }
+    else if (gameState === 'playing') {
         ctx.fillStyle = "#325e22"; ctx.fillRect(0,0,W,H);
         if (mapLoaded) {
             const fI = Math.min(Math.max(0, purchasedLotsStatus.length), 6), fW = mapImage.width/2, fH = mapImage.height/4, s = Math.max(W/fW, H/fH);
             ctx.drawImage(mapImage, (fI%2)*fW, Math.floor(fI/2)*fH, fW, fH, (W-fW*s)/2, (H-fH*s)/2, fW*s, fH*s);
             animalsOnMap.forEach(a => { a.update(dt); a.draw(s); });
         }
+    } else if (gameState === 'menu') {
+        // Clear canvas during menu
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0,0,W,H);
     }
+    
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
