@@ -1,4 +1,4 @@
-// ========================= AgriCorp Game (FULL SPRITES FIX v23.0) =========================
+// ========================= AgriCorp Game (MASTER SUBMISSION v24.0) =========================
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
@@ -17,14 +17,21 @@ function resize(){
 resize();
 window.addEventListener('resize', resize);
 
-// SOUNDS
-const clickSound = new Audio('sprites/SomClique.mp3'); 
-const bgMusic = new Audio('sprites/Natureza.mp3'); 
-bgMusic.loop = true;
+// --- SOUND SYSTEM ---
+// Tentando carregar os sons da pasta sprites/
+const clickSnd = new Audio('sprites/SomClique.mp3');
+const natureSnd = new Audio('sprites/Natureza.mp3');
+natureSnd.loop = true;
+natureSnd.volume = 0.4;
 
-function playSnd(s) { if(s && s.play) s.play().catch(()=>{}); }
+function play(snd) { 
+    if(snd) { 
+        snd.currentTime = 0; 
+        snd.play().catch(e => console.log("Sound blocked by browser")); 
+    } 
+}
 
-// GAME DATA
+// --- GAME DATA ---
 var totalCoinsJam = 500; 
 var community = 100, isGameOver = false;
 var harvestedWheat = 0, harvestedCarrot = 0, totalEggs = 0, totalMeat = 0, totalMilk = 0;
@@ -32,8 +39,12 @@ var timeElapsed = 0, decayMultiplier = 1.0;
 
 const animalsOnMap = [];
 const animalSprites = { pato: new Image(), galinha: new Image(), coelho: new Image(), ovelha: new Image(), vaca: new Image(), cavalo: new Image() };
-animalSprites.pato.src='sprites/Pato.png'; animalSprites.galinha.src='sprites/Galinha.png'; animalSprites.coelho.src='sprites/Coelho.png';
-animalSprites.ovelha.src='sprites/Ovelha.png'; animalSprites.vaca.src='sprites/Piskel Vaquinha.png'; animalSprites.cavalo.src='sprites/Cavalo.png';
+animalSprites.pato.src='sprites/Pato.png'; 
+animalSprites.galinha.src='sprites/Galinha.png'; 
+animalSprites.coelho.src='sprites/Coelho.png';
+animalSprites.ovelha.src='sprites/Ovelha.png'; 
+animalSprites.vaca.src='sprites/Piskel Vaquinha.png'; 
+animalSprites.cavalo.src='sprites/Cavalo.png';
 
 const animalLots = [
     { type: 'pato',    n: 'Duck',    img: 'sprites/Pato.png',    p: 150,  y: { e: 1, m: 0, l: 0 } },
@@ -45,12 +56,12 @@ const animalLots = [
 ];
 
 const lots = [
-    { id: 1, n: "NW Plot", p: 0,    m: 1,  t: 'wheat'  }, 
-    { id: 2, n: "NC Plot", p: 800,  m: 2,  t: 'carrot' }, 
-    { id: 3, n: "EA Plot", p: 2000, m: 4,  t: 'carrot' }, 
-    { id: 4, n: "EB Plot", p: 4500, m: 6,  t: 'wheat'  }, 
-    { id: 5, n: "SC Plot", p: 8000, m: 8,  t: 'wheat'  }, 
-    { id: 6, n: "SE Plot", p: 15000, m: 12, t: 'carrot' }
+    { id: 1, n: "NW Area", p: 0,    m: 1,  t: 'wheat'  }, 
+    { id: 2, n: "NC Area", p: 800,  m: 2,  t: 'carrot' }, 
+    { id: 3, n: "EA Area", p: 2000, m: 4,  t: 'carrot' }, 
+    { id: 4, n: "EB Area", p: 4500, m: 6,  t: 'wheat'  }, 
+    { id: 5, n: "SC Area", p: 8000, m: 8,  t: 'wheat'  }, 
+    { id: 6, n: "SE Area", p: 15000, m: 12, t: 'carrot' }
 ];
 let purchasedLotsStatus = [0];
 
@@ -64,15 +75,15 @@ class Animal {
         this.moveTimer -= dt;
         if (this.moveTimer <= 0) {
             this.vx = (Math.random() - 0.5) * 0.4; this.vy = (Math.random() - 0.5) * 0.4;
-            this.moveTimer = 3000 + Math.random() * 3000;
+            this.moveTimer = 2000 + Math.random() * 4000;
         }
         this.x += this.vx; this.y += this.vy;
-        this.x = Math.max(180, Math.min(this.x, 1720)); this.y = Math.max(180, Math.min(this.y, 920));
+        this.x = Math.max(200, Math.min(this.x, 1700)); this.y = Math.max(200, Math.min(this.y, 900));
     }
     draw(scale) {
         const img = animalSprites[this.type];
         if (!img.complete || img.naturalWidth === 0) return;
-        // DRAW FULL IMAGE (NO CUTTING)
+        // Desenha a imagem INTEIRA para evitar cortes (Full width/height)
         const dw = img.width * scale, dh = img.height * scale;
         const dx = (W - WW*scale)/2, dy = (H - WH*scale)/2;
         ctx.drawImage(img, 0, 0, img.width, img.height, dx + this.x*scale - dw/2, dy + this.y*scale - dh/2, dw, dh);
@@ -95,6 +106,7 @@ function updateInventory() {
     }
 }
 
+// PRODUÇÃO PASSIVA
 setInterval(() => {
     if (isGameOver || gameState === 'menu') return;
     purchasedLotsStatus.forEach(idx => {
@@ -106,22 +118,22 @@ setInterval(() => {
     updateInventory(); updateHUD();
 }, 8000);
 
-// VERY FAST COMMUNITY DECAY
+// DECLÍNIO ACELERADO DA COMUNIDADE (BARRA DIMINUI RÁPIDO)
 setInterval(() => {
     if (isGameOver || gameState === 'menu') return;
     timeElapsed++; 
-    if (timeElapsed % 12 === 0) decayMultiplier += 0.6; 
+    if (timeElapsed % 10 === 0) decayMultiplier += 0.8; // Aceleração agressiva
     let hR = Math.min(0.70, animalsOnMap.filter(a=>a.type==='cavalo').length * 0.15);
-    community -= (0.85 * decayMultiplier) * (1 - hR);
+    community -= (0.95 * decayMultiplier) * (1 - hR);
     updateHUD();
 }, 1000);
 
 window.sellE = () => {
-    playSnd(clickSound);
+    play(clickSnd);
     const total = harvestedWheat + harvestedCarrot + totalEggs + totalMeat + totalMilk;
     if (total <= 0) return;
-    totalCoinsJam += (harvestedWheat * 3) + (harvestedCarrot * 5) + (totalEggs * 12) + (totalMeat * 35) + (totalMilk * 18);
-    community = Math.min(100, community + (total * 0.3));
+    totalCoinsJam += (harvestedWheat * 3) + (harvestedCarrot * 5) + (totalEggs * 12) + (totalMeat * 35) + (totalMilk * 20);
+    community = Math.min(100, community + (total * 0.35));
     harvestedWheat = 0; harvestedCarrot = 0; totalEggs = 0; totalMeat = 0; totalMilk = 0;
     updateHUD(); updateInventory();
 }
@@ -142,18 +154,23 @@ function renderShops() {
         animC.innerHTML = '';
         animalLots.forEach(a => {
             const div = document.createElement('div'); div.className = 'shop-card';
-            // Show full sprite in shop as well
-            div.innerHTML = `<img src="${a.img}" style="width:32px; height:auto; image-rendering: pixelated; margin-bottom:5px;"><h3>${a.n}</h3><button onclick="bA('${a.type}', ${a.p})" class="buy-btn" style="background:#3498db;">💰 ${a.p}</button>`;
+            // ÍCONES INTEIROS NA LOJA (Sem corte)
+            div.innerHTML = `<img src="${a.img}" style="width:32px; height:auto; display:block; margin: 0 auto 5px; image-rendering: pixelated;"><h3>${a.n}</h3><button onclick="bA('${a.type}', ${a.p})" class="buy-btn" style="background:#3498db;">💰 ${a.p}</button>`;
             animC.appendChild(div);
         });
     }
 }
-window.bA = (t,p) => { playSnd(clickSound); if(totalCoinsJam>=p){ totalCoinsJam-=p; animalsOnMap.push(new Animal(t, 1000+(Math.random()-0.5)*800, 600+(Math.random()-0.5)*400)); updateHUD(); updateInventory(); } };
-window.bL = (i) => { playSnd(clickSound); if(totalCoinsJam>=lots[i].p && !purchasedLotsStatus.includes(i)){ totalCoinsJam-=lots[i].p; purchasedLotsStatus.push(i); updateHUD(); renderShops(); } };
+window.bA = (t,p) => { play(clickSnd); if(totalCoinsJam>=p){ totalCoinsJam-=p; animalsOnMap.push(new Animal(t, 1000+(Math.random()-0.5)*800, 600+(Math.random()-0.5)*400)); updateHUD(); updateInventory(); } };
+window.bL = (i) => { play(clickSnd); if(totalCoinsJam>=lots[i].p && !purchasedLotsStatus.includes(i)){ totalCoinsJam-=lots[i].p; purchasedLotsStatus.push(i); updateHUD(); renderShops(); } };
 
 window.onload = () => {
-    const safe = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = () => { playSnd(clickSound); fn(); }; };
-    safe('btn-play', () => { gameState = 'playing'; document.getElementById('menu-overlay').classList.add('hidden'); document.getElementById('game-ui').classList.remove('hidden'); playSnd(bgMusic); });
+    const safe = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = () => { play(clickSnd); fn(); }; };
+    safe('btn-play', () => { 
+        gameState = 'playing'; 
+        document.getElementById('menu-overlay').classList.add('hidden'); 
+        document.getElementById('game-ui').classList.remove('hidden'); 
+        play(natureSnd);
+    });
     safe('btn-exit', () => { location.reload(); });
     safe('btn-open-inventory', () => { updateInventory(); document.getElementById('inventory-overlay').classList.remove('hidden'); });
     safe('btn-inv-voltar', () => document.getElementById('inventory-overlay').classList.add('hidden'));
