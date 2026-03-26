@@ -7,87 +7,90 @@
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        .pixel-icon { width: 16px; height: 16px; image-rendering: pixelated; vertical-align: middle; margin-right: 5px; }
+        .back-pixel-btn { background: #3498db; border: 4px solid #fff; border-bottom: 8px solid #2980b9; color: #fff; padding: 10px 20px; font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer; text-shadow: 2px 2px #000; }
+        .back-pixel-btn:hover { background: #2980b9; }
+        .sell-btn { margin-top: 20px; background: #27ae60; border: 4px solid #fff; border-bottom: 8px solid #1e8449; color: #fff; padding: 15px 30px; font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer; }
+    </style>
 </head>
 <body style="margin: 0; padding: 0; background: #325e22; overflow: hidden;">
 
     <!-- HUD Status -->
-    <div id="stats-container" style="position: fixed; top: 75px; left: 20px; z-index: 5000; font-family: 'Press Start 2P'; font-size: 10px; color: #fff; text-shadow: 2px 2px #000; pointer-events: none;">
-        <div style="color: #ffd700; margin-bottom: 8px; font-size: 11px;">💰 COINS: <span id="hud-coins-value">500</span></div>
-        <div style="color: #e67e22; font-size: 11px;">🌾 HARVESTS: <span id="hud-harvest-value">0</span></div>
-        <div style="color: #ffffff; font-size: 11px; opacity: 0.8;">📦 PRODUCTS: <span id="hud-products-value">0</span></div>
+    <div id="stats-container" style="position: fixed; top: 80px; left: 20px; z-index: 5000; font-family: 'Press Start 2P'; font-size: 10px; color: #fff; text-shadow: 2px 2px #000; pointer-events: none;">
+        <div style="color: #ffd700; margin-bottom: 10px; font-size: 12px;"><img src="sprites/Moeda.png" class="pixel-icon" style="width:24px; height:24px;"> <span id="hud-coins-value">10000</span></div>
+        <div style="color: #e67e22; font-size: 11px;">🚜 HARVESTED: <span id="hud-harvest-value">0</span></div>
+        <div style="color: #ffffff; font-size: 11px; opacity: 0.9;">📦 STORAGE: <span id="hud-products-value">0</span></div>
     </div>
 
     <!-- HUD Community Health -->
-    <div id="hud-top" style="position: fixed; top: 15px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; align-items: center; gap: 15px; width: 65%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); padding: 12px 25px; border: 3px solid #fff; border-radius: 8px;">
-        <span style="color: #fff; font-size: 8px; font-family: 'Press Start 2P'; letter-spacing: 1px;">COMMUNITY REACH</span>
-        <div style="flex: 1; height: 18px; background: rgba(0,0,0,0.5); border: 2px solid #555; position: relative; border-radius: 4px; overflow: hidden;">
-            <div id="hp-bar" style="height: 100%; background: linear-gradient(90deg, #ff4d4d, #ff944d); width: 80%; transition: width 0.3s ease;"></div>
+    <div id="hud-top" style="position: fixed; top: 15px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; align-items: center; gap: 15px; width: 65%; background: rgba(0,0,0,0.8); padding: 12px 25px; border: 4px solid #fff; border-radius: 4px;">
+        <span style="color: #fff; font-size: 8px; font-family: 'Press Start 2P';">COMMUNITY REACH</span>
+        <div style="flex: 1; height: 18px; background: #000; border: 2px solid #555; position: relative; border-radius: 2px; overflow: hidden;">
+            <div id="hp-bar" style="height: 100%; background: #f1c40f; width: 100%; transition: width 0.3s ease;"></div>
         </div>
-        <span id="hud-value" style="color: #fff; font-size: 8px; font-family: 'Press Start 2P';">80</span>
+        <span id="hud-value" style="color: #fff; font-size: 8px; font-family: 'Press Start 2P';">100</span>
     </div>
 
     <!-- Action Buttons -->
-    <div id="action-buttons" style="position: fixed; bottom: 20px; right: 20px; z-index: 7000; display: flex; flex-direction: column; gap: 12px;">
-        <button id="btn-open-lots" style="background: #e67e22; border-color: #ffd700; box-shadow: 0 4px #d35400;">🚜 LAND SHOP</button>
-        <button id="btn-open-animals" style="background: #3498db; border-color: #fff; box-shadow: 0 4px #2980b9;">🐾 ANIMALS SHOP</button>
-        <button id="btn-open-inventory" style="background: #8b4513;">🎒 STORAGE</button>
-        <button onclick="document.getElementById('tutorial-overlay').classList.remove('hidden')" style="background: #555; border-color: #aaa; font-size: 7px;">❓ HOW TO PLAY</button>
+    <div id="action-buttons" style="position: fixed; bottom: 20px; right: 20px; z-index: 7000; display: flex; flex-direction: column; gap: 15px;">
+        <button id="btn-open-lots" style="background: #e67e22; border-color: #ffd700; border-bottom: 10px solid #d35400;">🚜 LAND SHOP</button>
+        <button id="btn-open-animals" style="background: #3498db; border-color: #fff; border-bottom: 10px solid #2980b9;">🐾 ANIMALS SHOP</button>
+        <button id="btn-open-inventory" style="background: #8b4513; border-bottom: 10px solid #5d3a1a;">🎒 STORAGE</button>
+        <button onclick="document.getElementById('tutorial-overlay').classList.remove('hidden')" style="background: #444; border-color: #888; font-size: 7px;">❓ HELP</button>
     </div>
 
     <!-- Animals Shop Overlay -->
-    <div id="animal-shop-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; color: #fff; padding: 40px; overflow-y: auto; font-family: 'Press Start 2P';">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; width: 100%; max-width: 900px; margin-left: auto; margin-right: auto;">
-            <h2 style="color: #ffd700; font-size: 20px; letter-spacing: 2px;">🐾 ANIMALS SHOP</h2>
-            <button onclick="document.getElementById('animal-shop-overlay').classList.add('hidden')" style="background: #f00; border: 2px solid #fff; font-size: 10px;">[X]</button>
+    <div id="animal-shop-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; color: #fff; padding: 40px; font-family: 'Press Start 2P'; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1000px; margin: 0 auto 30px;">
+            <h2 style="color: #ffd700;">🐾 ANIMALS SHOP</h2>
+            <button onclick="document.getElementById('animal-shop-overlay').classList.add('hidden')" class="back-pixel-btn">BACK</button>
         </div>
-        <div id="animals-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 30px; max-width: 1000px; margin: 0 auto;">
-            <!-- Animals inserted via JS -->
-        </div>
+        <div id="animals-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 30px; max-width: 1000px; margin: 0 auto;"></div>
     </div>
 
     <!-- Inventory Overlay -->
     <div id="inventory-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; color: #fff; padding: 50px; font-family: 'Press Start 2P'; text-align: center;">
-        <h2 style="color: #ffd700; font-size: 18px; margin-bottom: 40px;">🎒 FARM STORAGE</h2>
-        <div class="inventory-container" style="display: flex; gap: 40px; justify-content: center; background: rgba(255,255,255,0.05); padding: 30px; border: 3px solid #ffd700; border-radius: 12px; max-width: 800px; margin: 0 auto;">
+        <h2 style="color: #ffd700; margin-bottom: 40px;">🎒 WAREHOUSE</h2>
+        <div class="inventory-container" style="display: flex; gap: 40px; justify-content: center; background: rgba(255,255,255,0.05); padding: 30px; border: 6px solid #b8860b; max-width: 900px; margin: 0 auto;">
             <div class="inv-section">
-                <h3 style="font-size: 12px; color: #ffd700; border-bottom: 2px solid #555; padding-bottom: 15px;">🌾 Crops</h3>
-                <div id="inv-crops-list" style="font-size: 10px; line-height: 2;"></div>
-            </div>
-            <div class="inv-section">
-                <h3 style="font-size: 12px; color: #3498db; border-bottom: 2px solid #555; padding-bottom: 15px;">🐄 Animals</h3>
-                <div id="inv-animals-list" style="font-size: 10px; line-height: 2;"></div>
+                <h3 style="font-size: 14px; color: #ffd700; border-bottom: 2px solid #555; padding-bottom: 15px;">PRODUCTS</h3>
+                <div id="inv-crops-list" style="font-size: 11px; text-align: left; line-height: 2.5;"></div>
+                <!-- Manual Sell Button -->
+                <button id="btn-sell-manual" class="sell-btn">💰 SELL ALL PRODUCTION</button>
             </div>
         </div>
-        <button id="btn-inv-voltar" style="margin-top:40px; background: #666; padding: 15px 30px; font-size: 10px; cursor: pointer;">← BACK</button>
+        <button id="btn-inv-voltar" class="back-pixel-btn" style="margin-top:40px;">← BACK</button>
     </div>
 
-    <!-- Other Overlays (Lands, Tutorial, etc - reusing previous styles) -->
+    <!-- Lands Overlay -->
     <div id="lots-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; color: #fff; padding: 50px; overflow-y: auto; font-family: 'Press Start 2P';">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h2 style="color: #ffd700; font-size: 16px;">🚜 FARM LANDS</h2>
-            <button onclick="document.getElementById('lots-overlay').classList.add('hidden')" style="background: #f00; border: 2px solid #fff; font-size: 10px;">[X]</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1000px; margin: 0 auto 20px;">
+            <h2 style="color: #ffd700;">🚜 EXPAND FARM</h2>
+            <button onclick="document.getElementById('lots-overlay').classList.add('hidden')" class="back-pixel-btn">BACK</button>
         </div>
-        <div id="lots-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;"></div>
+        <div id="lots-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto;"></div>
     </div>
 
-    <div id="tutorial-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 20000; display: flex; align-items: center; justify-content: center; font-family: 'Press Start 2P', cursive; color: #fff; text-align: center; padding: 20px;">
-        <div style="max-width: 600px; border: 4px solid #ffd700; background: #1a1a1a; padding: 30px;">
-            <h1 style="color: #ffd700; font-size: 18px;">HOW TO SURVIVE</h1>
-            <ul style="text-align: left; font-size: 8px; line-height: 2; margin: 30px 0;">
-                <li>🌾 Lands produce automatically every 8s.</li>
-                <li>🐾 Animals produce Eggs/Meat automatically.</li>
-                <li>🐴 Horses reduce the community health decay.</li>
-                <li>⏳ The longer you last, the faster community health drops!</li>
+    <!-- Tutorial Overlay -->
+    <div id="tutorial-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 20000; display: flex; align-items: center; justify-content: center; font-family: 'Press Start 2P'; color: #fff; padding: 20px;">
+        <div style="max-width: 600px; border: 4px solid #ffd700; background: #1a1a1a; padding: 40px;">
+            <h2 style="color: #ffd700; margin-bottom: 20px;">TESTING TIPS</h2>
+            <ul style="text-align: left; font-size: 9px; line-height: 2.5;">
+                <li>💰 Use your 10,000 Starting Coins to buy everything!</li>
+                <li>📦 New "Sell All" button inside Storage.</li>
+                <li>🐮 Cows now produce Milk (White Icon).</li>
+                <li>🐴 Horses reduce the Community Health decay speed.</li>
             </ul>
-            <button onclick="document.getElementById('tutorial-overlay').classList.add('hidden')" style="padding: 15px 30px; background: #ffd700; color: #000; font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer;">GO!</button>
+            <button onclick="document.getElementById('tutorial-overlay').classList.add('hidden')" class="back-pixel-btn" style="margin-top:30px;">LET'S GO!</button>
         </div>
     </div>
 
     <!-- Game Over -->
-    <div id="game-over-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(20,0,0,0.96); z-index: 20000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: 'Press Start 2P';">
+    <div id="game-over-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #200000; z-index: 20000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: 'Press Start 2P';">
         <h1 style="color: #f00; font-size: 32px; margin-bottom: 20px;">GAME OVER</h1>
         <p style="font-size: 12px; margin-bottom: 50px; color: #aaa;">"Não dá para agradar à todos"</p>
-        <button onclick="location.reload()" style="padding: 20px 40px; background: #fff; color: #000; border: none; font-family:'Press Start 2P'; cursor: pointer;">RESTART</button>
+        <button onclick="location.reload()" class="back-pixel-btn" style="padding:20px 40px;">RETRY</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
