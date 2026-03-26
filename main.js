@@ -122,7 +122,7 @@ setInterval(() => {
 setInterval(() => {
     if (isGameOver || gameState === 'menu') return;
     timeElapsed++; 
-    if (timeElapsed % 10 === 0) decayMultiplier += 0.8; // Aceleração agressiva
+    if (timeElapsed % 20 === 0) decayMultiplier += 0.8; // Aceleração a cada 20s
     let hR = Math.min(0.70, animalsOnMap.filter(a=>a.type==='cavalo').length * 0.15);
     community -= (0.95 * decayMultiplier) * (1 - hR);
     updateHUD();
