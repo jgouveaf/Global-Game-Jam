@@ -1,11 +1,15 @@
 // ========================= AgriCorp Game (ULTIMATE MASTER v26.0) =========================
-// SE VOCÊ VER ESSE LOG NO CONSOLE (F12), ESTÁ NA VERSÃO CERTA!
+// SE VOCÊ VÊ ESSE LOG NO CONSOLE (F12), ESTÁ NA VERSÃO CERTA!
 console.log("AGRICORP V26 - DESCRICOES CARREGADAS OK");
 
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
 const mapImage = new Image();
+<<<<<<< HEAD
+=======
+mapImage.src = 'sprites/Mapa..png';
+>>>>>>> 03224b3e50b6945081a7ba028d35d40be43afc6a
 let mapLoaded = false, WW = 0, WH = 0, gameState = 'menu';
 
 // Tenta vários caminhos para o mapa até um funcionar
@@ -65,20 +69,29 @@ var timeElapsed = 0, decayMultiplier = 1.0;
 
 const animalsOnMap = [];
 const animalSprites = { pato: new Image(), galinha: new Image(), coelho: new Image(), ovelha: new Image(), vaca: new Image(), cavalo: new Image() };
-animalSprites.pato.src='sprites/sprites/Pato.png'; 
-animalSprites.galinha.src='sprites/sprites/Galinha.png'; 
-animalSprites.coelho.src='sprites/sprites/Coelho.png';
-animalSprites.ovelha.src='sprites/sprites/Ovelha.png'; 
-animalSprites.vaca.src='sprites/sprites/Piskel Vaquinha.png'; 
-animalSprites.cavalo.src='sprites/sprites/Cavalo.png';
+animalSprites.pato.src='sprites/Pato.png'; 
+animalSprites.galinha.src='sprites/Galinha.png'; 
+animalSprites.coelho.src='sprites/Coelho.png';
+animalSprites.ovelha.src='sprites/Ovelha.png'; 
+animalSprites.vaca.src='sprites/Piskel Vaquinha.png'; 
+animalSprites.cavalo.src='sprites/Cavalo.png';
 
 const animalLots = [
+<<<<<<< HEAD
     { type: 'pato',    n: 'Duck',    img: 'sprites/sprites/Pato.png',    p: 150,  desc: "🥚 Produce Eggs" },
     { type: 'coelho',  n: 'Rabbit',  img: 'sprites/sprites/Coelho.png',  p: 250,  desc: "🥩 Produce Meat" },
     { type: 'galinha', n: 'Chicken', img: 'sprites/sprites/Galinha.png', p: 400,  desc: "🥚 High Egg Yield++" },
     { type: 'cavalo',  n: 'Horse',   img: 'sprites/sprites/Cavalo.png',  p: 800,  desc: "📎 STOPS BAR DECAY!" },
     { type: 'ovelha',  n: 'Sheep',   img: 'sprites/sprites/Ovelha.png',  p: 1200, desc: "🥩 Med Meat Yield" },
     { type: 'vaca',    n: 'Cow',     img: 'sprites/sprites/Piskel Vaquinha.png', p: 2000, desc: "🥩 Meat & 🥛 Milk++" }
+=======
+    { type: 'pato',    n: 'Duck',    img: 'sprites/Pato.png',    p: 150,  desc: "🥚 Produce Eggs" },
+    { type: 'coelho',  n: 'Rabbit',  img: 'sprites/Coelho.png',  p: 250,  desc: "🥩 Produce Meat" },
+    { type: 'galinha', n: 'Chicken', img: 'sprites/Galinha.png', p: 400,  desc: "🥚 High Egg Yield++" },
+    { type: 'cavalo',  n: 'Horse',   img: 'sprites/Cavalo.png',  p: 800,  desc: "🐎 STOPS BAR DECAY!" },
+    { type: 'ovelha',  n: 'Sheep',   img: 'sprites/Ovelha.png',  p: 1200, desc: "🥩 Med Meat Yield" },
+    { type: 'vaca',    n: 'Cow',     img: 'sprites/Piskel Vaquinha.png', p: 2000, desc: "🥩 Meat & 🥛 Milk++" }
+>>>>>>> 03224b3e50b6945081a7ba028d35d40be43afc6a
 ];
 
 const lots = [
@@ -143,7 +156,6 @@ setInterval(() => {
     updateInventory(); updateHUD();
 }, 8000);
 
-// REQUISITO: Barra acelera a cada 2 MINUTOS (120 s)
 setInterval(() => {
     if (isGameOver || gameState === 'menu') return;
     timeElapsed++; 
@@ -170,7 +182,11 @@ function renderShops() {
         lots.forEach((lt, i) => {
             const isO = purchasedLotsStatus.includes(i), isN = purchasedLotsStatus.length===i, isL = !isO && !isN;
             const div = document.createElement('div'); div.className = 'shop-card'; 
+<<<<<<< HEAD
             div.innerHTML = `<img src="sprites/sprites/Lote${lt.id}.png" style="width:30px; ${isL?'filter:grayscale(1)':''}"><h3>${lt.n}</h3><button onclick="bL(${i})" class="buy-btn" style="background:${isO?'#27ae60':(isL?'#444':'#8b4513')};" ${isL?'disabled':''}>${isO?'OWNED':(isL?'LOCKED':'💰 '+lt.p)}</button>`;
+=======
+            div.innerHTML = `<img src="sprites/Lote${lt.id}.png" style="width:30px; ${isL?'filter:grayscale(1)':''}"><h3>${lt.n}</h3><button onclick="bL(${i})" class="buy-btn" style="background:${isO?'#27ae60':(isL?'#444':'#8b4513')};" ${isL?'disabled':''}>${isO?'OWNED':(isL?'LOCKED':'💰 '+lt.p)}</button>`;
+>>>>>>> 03224b3e50b6945081a7ba028d35d40be43afc6a
             landC.appendChild(div);
         });
     }
