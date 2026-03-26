@@ -1,12 +1,12 @@
-// ========================= AgriCorp Game (ULTIMATE MASTER v26.0) =========================
-// SE VOCÊ VER ESSE LOG NO CONSOLE (F12), ESTÁ NA VERSÃO CERTA!
+﻿// ========================= AgriCorp Game (ULTIMATE MASTER v26.0) =========================
+// SE VOCÃŠ VER ESSE LOG NO CONSOLE (F12), ESTÃ NA VERSÃƒO CERTA!
 console.log("AGRICORP V26 - DESCRICOES CARREGADAS OK");
 
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
 const mapImage = new Image();
-mapImage.src = 'sprites/Mapa..png';
+mapImage.src = 'sprites/Mapa.png';
 let mapLoaded = false, WW = 0, WH = 0, gameState = 'menu';
 
 mapImage.onload = () => { mapLoaded = true; WW = mapImage.width/2; WH = mapImage.height/4; };
@@ -48,12 +48,12 @@ animalSprites.vaca.src='sprites/Piskel Vaquinha.png';
 animalSprites.cavalo.src='sprites/Cavalo.png';
 
 const animalLots = [
-    { type: 'pato',    n: 'Duck',    img: 'sprites/Pato.png',    p: 150,  desc: "🥚 Produce Eggs" },
-    { type: 'coelho',  n: 'Rabbit',  img: 'sprites/Coelho.png',  p: 250,  desc: "🥩 Produce Meat" },
-    { type: 'galinha', n: 'Chicken', img: 'sprites/Galinha.png', p: 400,  desc: "🥚 High Egg Yield++" },
-    { type: 'cavalo',  n: 'Horse',   img: 'sprites/Cavalo.png',  p: 800,  desc: "📎 STOPS BAR DECAY!" },
-    { type: 'ovelha',  n: 'Sheep',   img: 'sprites/Ovelha.png',  p: 1200, desc: "🥩 Med Meat Yield" },
-    { type: 'vaca',    n: 'Cow',     img: 'sprites/Piskel Vaquinha.png', p: 2000, desc: "🥩 Meat & 🥛 Milk++" }
+    { type: 'pato',    n: 'Duck',    img: 'sprites/Pato.png',    p: 150,  desc: "ðŸ¥š Produce Eggs" },
+    { type: 'coelho',  n: 'Rabbit',  img: 'sprites/Coelho.png',  p: 250,  desc: "ðŸ¥© Produce Meat" },
+    { type: 'galinha', n: 'Chicken', img: 'sprites/Galinha.png', p: 400,  desc: "ðŸ¥š High Egg Yield++" },
+    { type: 'cavalo',  n: 'Horse',   img: 'sprites/Cavalo.png',  p: 800,  desc: "ðŸ“Ž STOPS BAR DECAY!" },
+    { type: 'ovelha',  n: 'Sheep',   img: 'sprites/Ovelha.png',  p: 1200, desc: "ðŸ¥© Med Meat Yield" },
+    { type: 'vaca',    n: 'Cow',     img: 'sprites/Piskel Vaquinha.png', p: 2000, desc: "ðŸ¥© Meat & ðŸ¥› Milk++" }
 ];
 
 const lots = [
@@ -102,7 +102,7 @@ function updateHUD() {
 function updateInventory() {
     const list = document.getElementById('inv-crops-list');
     if (list) {
-        list.innerHTML = `<div>🌾 Wheat: ${Math.round(harvestedWheat)}</div><div>🥕 Carrot: ${Math.round(harvestedCarrot)}</div><div>🥚 Eggs: ${totalEggs}</div><div>🥩 Meat: ${totalMeat}</div><div>🥛 Milk: ${totalMilk}</div>`;
+        list.innerHTML = `<div>ðŸŒ¾ Wheat: ${Math.round(harvestedWheat)}</div><div>ðŸ¥• Carrot: ${Math.round(harvestedCarrot)}</div><div>ðŸ¥š Eggs: ${totalEggs}</div><div>ðŸ¥© Meat: ${totalMeat}</div><div>ðŸ¥› Milk: ${totalMilk}</div>`;
     }
 }
 
@@ -145,7 +145,7 @@ function renderShops() {
         lots.forEach((lt, i) => {
             const isO = purchasedLotsStatus.includes(i), isN = purchasedLotsStatus.length===i, isL = !isO && !isN;
             const div = document.createElement('div'); div.className = 'shop-card'; 
-            div.innerHTML = `<img src="sprites/Lote${lt.id}.png" style="width:30px; ${isL?'filter:grayscale(1)':''}"><h3>${lt.n}</h3><button onclick="bL(${i})" class="buy-btn" style="background:${isO?'#27ae60':(isL?'#444':'#8b4513')};" ${isL?'disabled':''}>${isO?'OWNED':(isL?'LOCKED':'💰 '+lt.p)}</button>`;
+            div.innerHTML = `<img src="sprites/Lote${lt.id}.png" style="width:30px; ${isL?'filter:grayscale(1)':''}"><h3>${lt.n}</h3><button onclick="bL(${i})" class="buy-btn" style="background:${isO?'#27ae60':(isL?'#444':'#8b4513')};" ${isL?'disabled':''}>${isO?'OWNED':(isL?'LOCKED':'ðŸ’° '+lt.p)}</button>`;
             landC.appendChild(div);
         });
     }
@@ -157,7 +157,7 @@ function renderShops() {
             div.innerHTML = `<img src="${a.img}" style="width:32px; height:auto; display:block; margin: 0 auto 5px; image-rendering: pixelated;">
                              <h3>${a.n}</h3>
                              <p style="font-size: 6px !important; color: #ffd700; margin-bottom: 8px;">${a.desc}</p>
-                             <button onclick="bA('${a.type}', ${a.p})" class="buy-btn" style="background:#3498db;">💰 ${a.p}</button>`;
+                             <button onclick="bA('${a.type}', ${a.p})" class="buy-btn" style="background:#3498db;">ðŸ’° ${a.p}</button>`;
             animC.appendChild(div);
         });
     }
@@ -197,3 +197,4 @@ function loop(now){
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+
