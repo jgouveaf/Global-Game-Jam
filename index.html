@@ -1,107 +1,126 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgriCorp v10.0 – Global Game Jam</title>
+    <title>AgriCorp – Global Game Jam</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body style="margin: 0; padding: 0; background: #325e22; overflow: hidden;">
 
-    <div style="position:fixed; top:5px; right:5px; color:rgba(255,255,255,0.3); font-family:sans-serif; font-size:10px; z-index:9999">AgriCorp v10.0</div>
+    <div style="position:fixed; top:5px; right:5px; color:rgba(255,255,255,0.3); font-family:sans-serif; font-size:10px; z-index:9999">AgriCorp Final Build</div>
 
-    <!-- HUD de Status -->
-    <div id="stats-container" style="position: fixed; top: 70px; left: 20px; z-index: 5000; font-family: 'Press Start 2P'; font-size: 10px; color: #fff; text-shadow: 2px 2px #000; pointer-events: none;">
-        <div style="color: #ffd700; margin-bottom: 5px;">💰 MOEDAS: <span id="hud-coins-value">500</span></div>
-        <div style="color: #0f0; margin-bottom: 5px;">🌱 SEMENTES: <span id="hud-seeds-value">60</span></div>
-        <div style="color: #e67e22;">🌾 COLHEITA: <span id="hud-harvest-value">0</span></div>
+    <!-- TUTORIAL OVERLAY -->
+    <div id="tutorial-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 20000; display: flex; align-items: center; justify-content: center; font-family: 'Press Start 2P', cursive; color: #fff; text-align: center; padding: 20px;">
+        <div style="max-width: 700px; border: 4px solid #ffd700; background: #1a1a1a; padding: 30px; border-radius: 10px;">
+            <h1 style="color: #ffd700; font-size: 20px; margin-bottom: 20px;">🌾 WELCOME TO AGRICORP!</h1>
+            <p style="font-size: 10px; line-height: 1.6; color: #ccc; margin-bottom: 25px;">The community is hungry! Manage your farm, plant crops, and keep the community bar full!</p>
+            
+            <div style="text-align: left; font-size: 9px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px;">
+                <p>📍 <strong style="color: #ffd700;">PLANTING:</strong> Click the <span style="color: #00ffff;">"PLANT ALL"</span> button to automatically seed all your purchased lots.</p>
+                <p>🌱 <strong style="color: #0f0;">GROWING:</strong> Crops take time to grow. Seeds stay underground for 3s, then grow through 4 stages (5s each).</p>
+                <p>💰 <strong style="color: #ffd700;">ECONOMY:</strong> Fully grown crops are harvested automatically for coins. Use coins to buy more seeds and new land!</p>
+                <p>🚜 <strong style="color: #e67e22;">LANDS:</strong> Buy new lots in the <span style="color: #e67e22;">"LAND SHOP"</span> to expand your farm and unlock higher multipliers.</p>
+                <p>🖱️ <strong style="color: #fff;">CAMERA:</strong> Move your mouse to the edges of the screen to scroll through the farm.</p>
+            </div>
+
+            <button onclick="closeTutorial()" style="padding: 15px 30px; background: #ffd700; color: #000; border: none; font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer;">▶ START FARMING</button>
+        </div>
     </div>
 
-    <!-- HUD de Comunidade -->
-    <div id="hud-top" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; align-items: center; gap: 10px; width: 80%;">
-        <span style="color: #fff; font-size: 8px; font-family: 'Press Start 2P';">COMUNIDADE</span>
-        <div style="flex: 1; height: 16px; background: rgba(0,0,0,0.5); border: 2px solid #fff; position: relative;">
+    <!-- HUD Status -->
+    <div id="stats-container" style="position: fixed; top: 70px; left: 20px; z-index: 5000; font-family: 'Press Start 2P'; font-size: 10px; color: #fff; text-shadow: 2px 2px #000; pointer-events: none;">
+        <div style="color: #ffd700; margin-bottom: 8px;">💰 COINS: <span id="hud-coins-value">500</span></div>
+        <div style="color: #0f0; margin-bottom: 8px;">🌱 SEEDS: <span id="hud-seeds-value">60</span></div>
+        <div style="color: #e67e22;">🌾 HARVESTS: <span id="hud-harvest-value">0</span></div>
+    </div>
+
+    <!-- HUD Community -->
+    <div id="hud-top" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; align-items: center; gap: 10px; width: 70%; background: rgba(0,0,0,0.6); padding: 8px 15px; border: 2px solid #fff;">
+        <span style="color: #fff; font-size: 8px; font-family: 'Press Start 2P';">COMMUNITY</span>
+        <div style="flex: 1; height: 16px; background: rgba(0,0,0,0.5); border: 1px solid #fff; position: relative;">
             <div id="hp-bar" style="height: 100%; background: #f00; width: 80%;"></div>
         </div>
         <span id="hud-value" style="color: #fff; font-size: 8px; font-family: 'Press Start 2P';">80</span>
     </div>
 
-    <!-- TIMER/AVISOS -->
-    <div id="planting-timer" class="hidden" style="position: fixed; top: 100px; left: 50%; transform: translateX(-50%); color: #fff; text-shadow: 2px 2px #000; font-size: 12px; z-index: 6000; font-family: 'Press Start 2P'; text-align: center;"></div>
-
     <div id="action-buttons" style="position: fixed; bottom: 20px; right: 20px; z-index: 7000; display: flex; flex-direction: column; gap: 10px;">
-        <button id="btn-water" style="padding: 12px; background: #8b4513; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;">💧 PLANTAR TUDO</button>
-        <button id="btn-open-lots" style="padding: 12px; background: #e67e22; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; box-shadow: 0 4px #d35400;">🚜 TERRENOS</button>
-        <button id="btn-open-shop" style="padding: 12px; background: #8b4513; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;">🏪 LOJA</button>
-        <button id="btn-open-inventory" style="padding: 12px; background: #8b4513; color: #fff; border: 3px solid #fff; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer;">🎒 INV</button>
+        <button id="btn-water">💧 PLANT ALL</button>
+        <button id="btn-open-lots" style="background: #e67e22; box-shadow: 0 4px #d35400;">🚜 LAND SHOP</button>
+        <button id="btn-open-shop">🏪 SEED SHOP</button>
+        <button id="btn-open-inventory">🎒 INVENTORY</button>
+        <button onclick="openTutorial()" style="background: #555; border-color: #aaa;">❓ TUTORIAL</button>
     </div>
 
     <!-- Lots Overlay -->
     <div id="lots-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; color: #fff; padding: 50px; overflow-y: auto;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h2 style="font-family: 'Press Start 2P'; color: #ffd700;">🚜 LOJA DE LOTES</h2>
-            <button onclick="document.getElementById('lots-overlay').classList.add('hidden')" style="font-family: 'Press Start 2P'; background: #f00;">[X]</button>
+            <h2 style="font-family: 'Press Start 2P'; color: #ffd700; font-size: 18px;">🚜 AVAILABLE LANDS</h2>
+            <button onclick="document.getElementById('lots-overlay').classList.add('hidden')" style="font-family: 'Press Start 2P'; background: #f00; border: 2px solid #fff; font-size: 10px;">[X]</button>
         </div>
-        <div id="lots-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
-            <!-- Lotes serão inseridos aqui via JS -->
+        <div id="lots-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px;">
+            <!-- Lots loaded via JS -->
         </div>
     </div>
 
-    <!-- Shop Overlay -->
+    <!-- Seed Shop Overlay -->
     <div id="shop-overlay" class="hidden">
-        <h2 style="font-size: 32px; letter-spacing: 4px; color: #ffd700; text-shadow: 0 0 10px #ffbb00; font-family: 'Press Start 2P'; margin-bottom: 20px;">🏪 LOJA</h2>
+        <h2 style="font-size: 24px; color: #ffd700; font-family: 'Press Start 2P'; margin-bottom: 30px;">🏪 SEED SHOP</h2>
         <div class="shop-cards">
             <div class="shop-card">
                 <div class="card-icon">🌾</div>
-                <h3>TRIGO (5x)</h3>
+                <h3>WHEAT SEEDS (5x)</h3>
                 <div class="card-price">💰 10</div>
-                <button id="btn-buy-seed" class="buy-btn">COMPRAR</button>
+                <button id="btn-buy-seed" class="buy-btn">BUY</button>
             </div>
             <div class="shop-card">
                 <div class="card-icon">🥕</div>
-                <h3>CENOURA (5x)</h3>
+                <h3>CARROT SEEDS (5x)</h3>
                 <div class="card-price">💰 15</div>
-                <button id="btn-buy-seed-carrot" class="buy-btn" onclick="buySeeds('cenoura', 15)">COMPRAR</button>
+                <button id="btn-buy-seed-carrot" class="buy-btn" onclick="buySeeds('carrot', 15)">BUY</button>
             </div>
-            <!-- Outros animais chamam buyAnimal('tipo', preco) no main.js -->
-            <div class="shop-card"><h3>PATO</h3><button class="buy-btn" onclick="buyAnimal('pato', 100)">💰 100</button></div>
-            <div class="shop-card"><h3>GALINHA</h3><button class="buy-btn" onclick="buyAnimal('galinha', 200)">💰 200</button></div>
-            <div class="shop-card"><h3>COELHO</h3><button class="buy-btn" onclick="buyAnimal('coelho', 150)">💰 150</button></div>
-            <div class="shop-card"><h3>OVELHA</h3><button class="buy-btn" onclick="buyAnimal('ovelha', 300)">💰 300</button></div>
-            <div class="shop-card"><h3>PORCO</h3><button class="buy-btn" onclick="buyAnimal('porco', 500)">💰 500</button></div>
-            <div class="shop-card"><h3>CAVALO</h3><button class="buy-btn" onclick="buyAnimal('cavalo', 800)">💰 800</button></div>
+            <div class="shop-card"><h3>DUCK</h3><button class="buy-btn" onclick="buyAnimal('pato', 100)">💰 100</button></div>
+            <div class="shop-card"><h3>CHICKEN</h3><button class="buy-btn" onclick="buyAnimal('galinha', 200)">💰 200</button></div>
+            <div class="shop-card"><h3>RABBIT</h3><button class="buy-btn" onclick="buyAnimal('coelho', 150)">💰 150</button></div>
+            <div class="shop-card"><h3>SHEEP</h3><button class="buy-btn" onclick="buyAnimal('ovelha', 300)">💰 300</button></div>
+            <div class="shop-card"><h3>PIG</h3><button class="buy-btn" onclick="buyAnimal('porco', 500)">💰 500</button></div>
+            <div class="shop-card"><h3>HORSE</h3><button class="buy-btn" onclick="buyAnimal('cavalo', 800)">💰 800</button></div>
         </div>
-        <button id="btn-shop-voltar" style="margin-top:20px;">← VOLTAR</button>
+        <button id="btn-shop-voltar" style="margin-top:20px;">← BACK</button>
     </div>
 
     <!-- Inventory Overlay -->
     <div id="inventory-overlay" class="hidden">
-        <h2 style="font-family:'Press Start 2P'; color:#ffd700;">🎒 INVENTÁRIO</h2>
+        <h2 style="font-family:'Press Start 2P'; color:#ffd700; font-size: 20px;">🎒 INVENTORY</h2>
         <div class="inventory-container">
-            <div class="inv-section"><h3>🌱 Sementes</h3><div id="inv-seeds-list"></div></div>
-            <div class="inv-section"><h3>🐄 Animais</h3><div id="inv-animals-list"></div></div>
-            <div class="inv-section"><h3>📦 Produtos</h3><div id="inv-products-list"></div></div>
+            <div class="inv-section"><h3>🌱 Seeds</h3><div id="inv-seeds-list"></div></div>
+            <div class="inv-section"><h3>🐄 Animals</h3><div id="inv-animals-list"></div></div>
+            <div class="inv-section"><h3>📦 Products</h3><div id="inv-products-list"></div></div>
         </div>
-        <div id="sell-status" style="margin-top: 10px; color: #0f0; font-family:'Press Start 2P'; font-size:8px;"></div>
-        <button id="btn-inv-voltar" style="margin-top:20px;">← VOLTAR</button>
-    </div>
-
-    <!-- Loja de Lotes Overlay -->
-    <div id="lots-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
-        <h2 style="font-family:'Press Start 2P'; color:#ffd700; margin-bottom: 30px;">🚜 LOJA DE TERRENOS</h2>
-        <div id="lots-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 900px;"></div>
-        <button id="btn-lots-voltar" style="margin-top: 30px; font-family:'Press Start 2P'; padding: 10px 20px; cursor: pointer;">← VOLTAR</button>
+        <div id="sell-status" style="margin-top: 15px; color: #0f0; font-family:'Press Start 2P'; font-size:8px;"></div>
+        <button id="btn-inv-voltar" style="margin-top:20px;">← BACK</button>
     </div>
 
     <!-- Game Over -->
     <div id="game-over-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 20000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff;">
-        <h1 style="color: #f00; font-family: 'Press Start 2P';">GAME OVER</h1>
-        <button onclick="location.reload()" style="padding: 20px; font-family:'Press Start 2P';">RECOMEÇAR</button>
+        <h1 style="color: #f00; font-family: 'Press Start 2P'; font-size: 40px; margin-bottom: 20px;">GAME OVER</h1>
+        <p style="margin-bottom: 30px; font-family: 'Press Start 2P'; font-size: 10px;">The community has starved...</p>
+        <button onclick="location.reload()" style="padding: 20px 40px; font-family:'Press Start 2P'; cursor: pointer;">RETRY</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
-    <script src="main.js?v=1742930055"></script>
+    <script src="main.js"></script>
+
+    <script>
+        function closeTutorial() {
+            document.getElementById('tutorial-overlay').classList.add('hidden');
+        }
+        function openTutorial() {
+            document.getElementById('tutorial-overlay').classList.remove('hidden');
+        }
+    </script>
 
 </body>
 </html>
