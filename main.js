@@ -1,4 +1,4 @@
-// ========================= AgriCorp Game (GOLD SUBMISSION v21.0) =========================
+// ========================= AgriCorp Game (FULL SPRITES FIX v23.0) =========================
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
@@ -24,7 +24,7 @@ bgMusic.loop = true;
 
 function playSnd(s) { if(s && s.play) s.play().catch(()=>{}); }
 
-// GAME STATES - FORCED 500 COINS
+// GAME DATA
 var totalCoinsJam = 500; 
 var community = 100, isGameOver = false;
 var harvestedWheat = 0, harvestedCarrot = 0, totalEggs = 0, totalMeat = 0, totalMilk = 0;
@@ -36,12 +36,12 @@ animalSprites.pato.src='sprites/Pato.png'; animalSprites.galinha.src='sprites/Ga
 animalSprites.ovelha.src='sprites/Ovelha.png'; animalSprites.vaca.src='sprites/Piskel Vaquinha.png'; animalSprites.cavalo.src='sprites/Cavalo.png';
 
 const animalLots = [
-    { type: 'pato',    n: 'Duck',    i: '🦆', p: 150,  y: { e: 1, m: 0, l: 0 } },
-    { type: 'coelho',  n: 'Rabbit',  i: '🐇', p: 250,  y: { e: 0, m: 1, l: 0 } },
-    { type: 'galinha', n: 'Chicken', i: '🐔', p: 400,  y: { e: 5, m: 0, l: 0 } },
-    { type: 'cavalo',  n: 'Horse',   i: '🐎', p: 800,  y: { e: 0, m: 0, l: 0 } },
-    { type: 'ovelha',  n: 'Sheep',   i: '🐑', p: 1200, y: { e: 0, m: 3, l: 0 } },
-    { type: 'vaca',    n: 'Cow',     i: '🐄', p: 2000, y: { e: 0, m: 10, l: 6 } }
+    { type: 'pato',    n: 'Duck',    img: 'sprites/Pato.png',    p: 150,  y: { e: 1, m: 0, l: 0 } },
+    { type: 'coelho',  n: 'Rabbit',  img: 'sprites/Coelho.png',  p: 250,  y: { e: 0, m: 1, l: 0 } },
+    { type: 'galinha', n: 'Chicken', img: 'sprites/Galinha.png', p: 400,  y: { e: 5, m: 0, l: 0 } },
+    { type: 'cavalo',  n: 'Horse',   img: 'sprites/Cavalo.png',  p: 800,  y: { e: 0, m: 0, l: 0 } },
+    { type: 'ovelha',  n: 'Sheep',   img: 'sprites/Ovelha.png',  p: 1200, y: { e: 0, m: 3, l: 0 } },
+    { type: 'vaca',    n: 'Cow',     img: 'sprites/Piskel Vaquinha.png', p: 2000, y: { e: 0, m: 10, l: 6 } }
 ];
 
 const lots = [
@@ -72,11 +72,10 @@ class Animal {
     draw(scale) {
         const img = animalSprites[this.type];
         if (!img.complete || img.naturalWidth === 0) return;
-        const isV = (this.type === 'vaca');
-        const fh = (img.height > img.width && !isV) ? img.height/2 : img.height; 
-        const dw = img.width * scale, dh = fh * scale;
+        // DRAW FULL IMAGE (NO CUTTING)
+        const dw = img.width * scale, dh = img.height * scale;
         const dx = (W - WW*scale)/2, dy = (H - WH*scale)/2;
-        ctx.drawImage(img, 0, 0, img.width, fh, dx + this.x*scale - dw/2, dy + this.y*scale - dh/2, dw, dh);
+        ctx.drawImage(img, 0, 0, img.width, img.height, dx + this.x*scale - dw/2, dy + this.y*scale - dh/2, dw, dh);
     }
 }
 
@@ -99,7 +98,7 @@ function updateInventory() {
 setInterval(() => {
     if (isGameOver || gameState === 'menu') return;
     purchasedLotsStatus.forEach(idx => {
-        const lot = lots[idx]; if (lot.t === 'wheat') harvestedWheat += (2 * lot.m); else harvestedCarrot += (5 * lot.m);
+        const lt = lots[idx]; if (lt.t === 'wheat') harvestedWheat += (2 * lt.m); else harvestedCarrot += (5 * lt.m);
     });
     animalsOnMap.forEach(a => {
         const d = animalLots.find(i => i.type === a.type); if(d) { totalEggs += d.y.e; totalMeat += d.y.m; totalMilk += d.y.l; }
@@ -107,11 +106,13 @@ setInterval(() => {
     updateInventory(); updateHUD();
 }, 8000);
 
+// VERY FAST COMMUNITY DECAY
 setInterval(() => {
     if (isGameOver || gameState === 'menu') return;
-    timeElapsed++; if (timeElapsed % 20 === 0) decayMultiplier += 0.4;
+    timeElapsed++; 
+    if (timeElapsed % 12 === 0) decayMultiplier += 0.6; 
     let hR = Math.min(0.70, animalsOnMap.filter(a=>a.type==='cavalo').length * 0.15);
-    community -= (0.6 * decayMultiplier) * (1 - hR);
+    community -= (0.85 * decayMultiplier) * (1 - hR);
     updateHUD();
 }, 1000);
 
@@ -119,8 +120,8 @@ window.sellE = () => {
     playSnd(clickSound);
     const total = harvestedWheat + harvestedCarrot + totalEggs + totalMeat + totalMilk;
     if (total <= 0) return;
-    totalCoinsJam += (harvestedWheat * 2.5) + (harvestedCarrot * 4.5) + (totalEggs * 10) + (totalMeat * 25) + (totalMilk * 15);
-    community = Math.min(100, community + (total * 0.2));
+    totalCoinsJam += (harvestedWheat * 3) + (harvestedCarrot * 5) + (totalEggs * 12) + (totalMeat * 35) + (totalMilk * 18);
+    community = Math.min(100, community + (total * 0.3));
     harvestedWheat = 0; harvestedCarrot = 0; totalEggs = 0; totalMeat = 0; totalMilk = 0;
     updateHUD(); updateInventory();
 }
@@ -141,7 +142,8 @@ function renderShops() {
         animC.innerHTML = '';
         animalLots.forEach(a => {
             const div = document.createElement('div'); div.className = 'shop-card';
-            div.innerHTML = `<div style="font-size:32px;">${a.i}</div><h3>${a.n}</h3><button onclick="bA('${a.type}', ${a.p})" class="buy-btn" style="background:#3498db;">💰 ${a.p}</button>`;
+            // Show full sprite in shop as well
+            div.innerHTML = `<img src="${a.img}" style="width:32px; height:auto; image-rendering: pixelated; margin-bottom:5px;"><h3>${a.n}</h3><button onclick="bA('${a.type}', ${a.p})" class="buy-btn" style="background:#3498db;">💰 ${a.p}</button>`;
             animC.appendChild(div);
         });
     }
