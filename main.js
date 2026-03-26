@@ -1,4 +1,4 @@
-// ========================= AgriCorp Game (Final Clean Version v10.4) =========================
+// ========================= AgriCorp Game (Final Clean Version v10.5) =========================
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
@@ -33,14 +33,14 @@ var moedas = 500, sementesTrigo = 60, sementesCenoura = 30, comunidade = 80, isG
 var harvestedTrigo = 0, harvestedCenoura = 0;
 const crops = [];
 
-// DEFINIÇÃO DOS LOTES (Baseado no Grid de 100px da imagem 'Locais onde pode plantar.png')
+// DEFINIÇÃO DOS LOTES (Coordenadas Extra-Safe reduzidas para centralização)
 const lots = [
-    { id: 1, name: "Terreno 1", price: 0,    minSeeds: 10, target: 'trigo',   area: { x: 200,  y: 300, w: 800, h: 700 } }, // Grande Esq.
-    { id: 2, name: "Terreno 2", price: 200,  minSeeds: 20, target: 'cenoura', area: { x: 1100, y: 100, w: 700, h: 500 } }, // Topo Centro
-    { id: 3, name: "Terreno 3", price: 500,  minSeeds: 30, target: 'cenoura', area: { x: 1700, y: 400, w: 600, h: 300 } }, // Centro Dir 1
-    { id: 4, name: "Terreno 4", price: 850,  minSeeds: 40, target: 'trigo',   area: { x: 2200, y: 400, w: 500, h: 300 } }, // Centro Dir 2
-    { id: 5, name: "Terreno 5", price: 1150, minSeeds: 50, target: 'trigo',   area: { x: 1000, y: 700, w: 700, h: 400 } }, // Baixo Centro
-    { id: 6, name: "Terreno 6", price: 1750, minSeeds: 60, target: 'cenoura', area: { x: 1600, y: 800, w: 800, h: 500 } }  // Baixo Dir.
+    { id: 1, name: "Terreno 1", price: 0,    minSeeds: 10, target: 'trigo',   multiplier: 1,  area: { x: 300,  y: 400, w: 600, h: 500 } },
+    { id: 2, name: "Terreno 2", price: 200,  minSeeds: 20, target: 'cenoura', multiplier: 2,  area: { x: 1200, y: 200, w: 500, h: 300 } },
+    { id: 3, name: "Terreno 3", price: 500,  minSeeds: 30, target: 'cenoura', multiplier: 4,  area: { x: 1800, y: 500, w: 400, h: 150 } },
+    { id: 4, name: "Terreno 4", price: 850,  minSeeds: 40, target: 'trigo',   multiplier: 6,  area: { x: 2300, y: 500, w: 300, h: 150 } },
+    { id: 5, name: "Terreno 5", price: 1150, minSeeds: 50, target: 'trigo',   multiplier: 8,  area: { x: 1100, y: 800, w: 500, h: 250 } },
+    { id: 6, name: "Terreno 6", price: 1750, minSeeds: 60, target: 'cenoura', multiplier: 12, area: { x: 1700, y: 900, w: 600, h: 300 } }
 ];
 
 let purchasedLotsStatus = [0];
@@ -50,12 +50,12 @@ const trigoSprite = new Image(); trigoSprite.src = 'sprites/Trigo.png';
 const cenouraSprite = new Image(); cenouraSprite.src = 'sprites/Cenoura.png';
 
 class Crop {
-    constructor(x, y, multiplier, type = 'trigo') {
+    constructor(x, y, profitMultiplier, type = 'trigo') {
         this.x = x; this.y = y;
         this.type = type;
         this.stage = 0; this.timer = 0;
         this.isSeed = true; this.seedTimer = 0;
-        this.multiplier = (type === 'trigo' ? 1 : 2) * multiplier; // Bonus base cenoura
+        this.multiplier = profitMultiplier;
     }
     update(dt) {
         if (this.isSeed) {
@@ -82,7 +82,6 @@ class Crop {
                 let scalePulse = (this.stage === 4) ? 1.0 + Math.sin(Date.now() / 300) * 0.05 : 1.0;
                 ctx.translate(this.x - camera.x, this.y - camera.y);
                 ctx.scale(scalePulse, scalePulse);
-                // DESENHO 1:1 - Sem escalonamento gigante
                 ctx.drawImage(sprite, sx, sy, fw, fh, -fw / 2, -fh, fw, fh);
             }
         }
@@ -160,7 +159,7 @@ function renderLots() {
         lotDiv.innerHTML = `
             <img src="sprites/Lote${lot.id}.png" style="width: 50px; height: 50px; image-rendering: pixelated; margin-bottom: 5px;">
             <p style="color: #ffd700; font-size: 8px; font-family:'Press Start 2P';">${lot.name}</p>
-            <p style="font-size: 7px; color:#fff;">Planta: ${lot.target.toUpperCase()}</p>
+            <p style="font-size: 7px; color:#fff;">Planta: ${lot.target.toUpperCase()} (x${lot.multiplier})</p>
             <button id="buy-lot-${index}" style="width: 100%; padding: 5px; font-family: 'Press Start 2P'; font-size: 6px; cursor: pointer; background: ${isPurchased ? '#27ae60' : '#8b4513'}; color: #fff;">
                 ${isPurchased ? 'OK' : '💰 ' + lot.price}
             </button>
@@ -178,7 +177,7 @@ function renderLots() {
 }
 
 window.onload = () => {
-    console.log("AgriCorp v10.4 Initializing... [Grid Constraints Applied]");
+    console.log("AgriCorp v10.5 Initializing... [Black Bars Fix]");
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
     bind('btn-open-shop', () => document.getElementById('shop-overlay').classList.remove('hidden'));
     bind('btn-shop-voltar', () => document.getElementById('shop-overlay').classList.add('hidden'));
@@ -191,13 +190,13 @@ window.onload = () => {
         purchasedLotsStatus.forEach(idx => {
             const lot = lots[idx];
             const a = lot.area;
-            const spacing = 80; 
-            for (let yy = a.y + 40; yy < a.y + a.h - 40; yy += spacing) {
-                for (let xx = a.x + 40; xx < a.x + a.w - 40; xx += spacing) {
+            const spacing = 100; 
+            for (let yy = a.y; yy < a.y + a.h; yy += spacing) {
+                for (let xx = a.x; xx < a.x + a.w; xx += spacing) {
                     const type = lot.target;
                     const canPlant = (type === 'trigo' && sementesTrigo > 0) || (type === 'cenoura' && sementesCenoura > 0);
-                    if (canPlant && !crops.some(c => Math.hypot(c.x-xx, c.y-yy) < 40)) {
-                        crops.push(new Crop(xx, yy, 1, type));
+                    if (canPlant && !crops.some(c => Math.hypot(c.x-xx, c.y-yy) < 50)) {
+                        crops.push(new Crop(xx, yy, lot.multiplier, type));
                         if(type === 'trigo') sementesTrigo--; else sementesCenoura--;
                     }
                 }
@@ -220,15 +219,25 @@ function loop(now){
     camera.x = Math.max(0, Math.min(camera.x, WW - W));
     camera.y = Math.max(0, Math.min(camera.y, WH - H));
     
-    ctx.clearRect(0, 0, W, H);
+    // FORÇAR FUNDO PRETO ANTES DE DESENHAR O MAPA
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, W, H);
+
     if (mapLoaded) {
         ctx.drawImage(mapImage, -camera.x, -camera.y);
         for (let i = crops.length - 1; i >= 0; i--) {
             const c = crops[i]; c.update(dt); c.draw();
             if (c.stage === 4) {
-                const gain = (c.type === 'trigo' ? 5 : 10);
-                if (c.type === 'trigo') harvestedTrigo++; else harvestedCenoura++;
-                moedas += gain; crops.splice(i, 1); updateHUD();
+                const yieldMultiplier = 2; // Regra: cada semente gera 2 unidades
+                const basePrice = (c.type === 'trigo' ? 5 : 10);
+                const totalGain = (basePrice * c.multiplier) * yieldMultiplier;
+                
+                if (c.type === 'trigo') harvestedTrigo += yieldMultiplier; 
+                else harvestedCenoura += yieldMultiplier;
+                
+                moedas += totalGain; 
+                crops.splice(i, 1); 
+                updateHUD();
             }
         }
     }
