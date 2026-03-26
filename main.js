@@ -200,6 +200,7 @@ window.onload = () => {
     safe('btn-open-animals', () => { renderShops(); document.getElementById('animal-shop-overlay').classList.remove('hidden'); });
     safe('btn-open-tutorial', () => { document.getElementById('tutorial-overlay').classList.remove('hidden'); });
     safe('btn-close-tut', () => { document.getElementById('tutorial-overlay').classList.add('hidden'); });
+    safe('btn-open-credits', () => { document.getElementById('credits-overlay').classList.remove('hidden'); });
     safe('btn-sell-manual', window.sellE);
 };
 
