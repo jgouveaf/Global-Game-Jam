@@ -155,7 +155,11 @@ function renderShops() {
         animC.innerHTML = '';
         animalLots.forEach(a => {
             const div = document.createElement('div'); div.className = 'shop-card';
-            div.innerHTML = `<img src="${a.img}" style="width:32px; height:auto; display:block; margin: 0 auto 5px; image-rendering: pixelated;"><h3>${a.n}</h3><button onclick="bA('${a.type}', ${a.p})" class="buy-btn" style="background:#3498db;">💰 ${a.p}</button>`;
+            let desc = (a.type==='pato')?'Eggs':(a.type==='galinha')?'+++ Eggs':(a.type==='coelho')?'Meat':(a.type==='ovelha')?'++ Meat':(a.type==='vaca')?'Meat & Milk':'🛑 STOPS DECAY!';
+            div.innerHTML = `<img src="${a.img}" style="width:32px; height:auto; display:block; margin: 0 auto 5px; image-rendering: pixelated;">
+                             <h3>${a.n}</h3>
+                             <p style="font-size: 6px !important; color: #ffd700; margin-bottom: 8px;">${desc}</p>
+                             <button onclick="bA('${a.type}', ${a.p})" class="buy-btn" style="background:#3498db;">💰 ${a.p}</button>`;
             animC.appendChild(div);
         });
     }
