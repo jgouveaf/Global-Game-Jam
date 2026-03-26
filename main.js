@@ -20,7 +20,7 @@ window.addEventListener('resize', resize);
 const camera = { x: 0, y: 0 };
 
 // GAME STATES
-var coins = 10000, community = 100, isGameOver = false;
+var coins = 500, community = 100, isGameOver = false;
 var harvestedWheat = 0, harvestedCarrot = 0, totalEggs = 0, totalMeat = 0, totalMilk = 0;
 var timeElapsed = 0, decayMultiplier = 1.0;
 
