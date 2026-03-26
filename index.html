@@ -16,14 +16,16 @@
 </head>
 <body style="margin: 0; padding: 0; background: #000; overflow: hidden;">
 
-    <!-- MAIN MENU OVERLAY (Black Background) -->
-    <div id="menu-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 30000; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <h1 style="color: #ffd700; font-family: 'Press Start 2P'; font-size: 20px !important; text-shadow: 4px 4px #000; margin-bottom: 40px;">AGRICORP</h1>
-        <button id="btn-play" class="menu-btn">▶ START MISSION</button>
-        <button id="btn-exit" class="menu-btn" style="background: #c0392b; border-bottom-color: #7b241c;">✖ EXIT</button>
+    <!-- MAIN MENU OVERLAY (Clean style) -->
+    <div id="menu-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 30000; display: flex; flex-direction: column; align-items: center; justify-content: center; background-image: url('sprites/Menu.png'); background-size: cover; background-position: center;">
+        <div style="margin-top: 50px;">
+            <button id="btn-play" class="menu-btn">▶ START MISSION</button>
+            <br>
+            <button id="btn-exit" class="menu-btn" style="background: #c0392b; border-bottom-color: #7b241c;">✖ EXIT</button>
+        </div>
     </div>
 
-    <!-- HUD (Static) -->
+    <!-- HUD -->
     <div id="game-ui" class="hidden">
         <div id="stats-container" style="position: fixed; top: 60px; left: 20px; z-index: 5000; font-family: 'Press Start 2P'; color: #fff; text-shadow: 2px 2px #000; pointer-events: none;">
             <div style="color: #ffd700; margin-bottom: 8px; font-size: 10px !important;"><img src="sprites/Moeda.png" style="width:16px;"> <span id="hud-coins-value">500</span></div>
@@ -31,7 +33,7 @@
         </div>
         <div id="hud-top" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5000; display: flex; align-items: center; gap: 10px; width: 50%; background: rgba(0,0,0,0.8); padding: 10px 20px; border: 2px solid #fff;">
             <span style="color: #fff; font-family: 'Press Start 2P';">NEED</span>
-            <div style="flex: 1; height: 14px; background: #000; border: 1px solid #555; position: relative;">
+            <div style="flex: 1; height: 12px; background: #000; border: 1px solid #555; position: relative;">
                 <div id="hp-bar" style="height: 100%; background: #f1c40f; width: 100%; transition: width 0.3s ease;"></div>
             </div>
             <span id="hud-value" style="color: #fff; font-family: 'Press Start 2P';">100</span>
@@ -44,7 +46,7 @@
         </div>
     </div>
 
-    <!-- Storage -->
+    <!-- Storage Overlay -->
     <div id="inventory-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; color: #fff; padding: 40px; font-family: 'Press Start 2P'; text-align: center;">
         <h2 style="color: #ffd700; margin-bottom: 20px;">🎒 WAREHOUSE</h2>
         <div id="inv-crops-list" style="max-width: 500px; margin: 0 auto; line-height: 2; text-align: left;"></div>
@@ -57,37 +59,12 @@
     <div id="tutorial-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 35000; display: flex; align-items: center; justify-content: center; font-family: 'Press Start 2P'; color: #fff; padding: 20px;">
         <div style="max-width: 450px; border: 2px solid #ffd700; background: #1a1a1a; padding: 30px; text-align: left;">
             <h2 style="color: #ffd700; margin-bottom: 15px;">HOW TO PLAY</h2>
-            <p>1. Buy lands to produce crops.</p>
-            <p>2. Buy animals to produce eggs/meat.</p>
+            <p>1. Expand lands to produce crops.</p>
+            <p>2. Buy animals to produce eggs/meat/milk.</p>
             <p>3. Go to STORAGE and SELL often to get coins and maintain community trust.</p>
             <p style="color: #f00;">4. THE BAR ALWAYS FALLS! Sell more to survive.</p>
-            <button id="btn-close-tut" class="back-pixel-btn" style="margin-top:20px;">OK</button>
+            <button id="btn-close-tut" class="back-pixel-btn" style="margin-top:20px;">LET'S GO!</button>
         </div>
-    </div>
-
-    <!-- Animal Shop Overlay -->
-    <div id="animal-shop-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 10000; color: #fff; padding: 40px; font-family: 'Press Start 2P'; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; max-width:1000px; margin: 0 auto 30px;">
-            <h2 style="color: #ffd700;">🐾 ANIMAL MARKET</h2>
-            <button onclick="document.getElementById('animal-shop-overlay').classList.add('hidden')" class="back-pixel-btn">BACK</button>
-        </div>
-        <div id="animals-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; max-width: 900px; margin: 0 auto;"></div>
-    </div>
-
-    <!-- Lands Shop Overlay -->
-    <div id="lots-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; color: #fff; padding: 50px; overflow-y: auto; font-family: 'Press Start 2P';">
-        <div style="display: flex; justify-content: space-between; align-items: center; max-width:1000px; margin: 0 auto 20px;">
-            <h2 style="color: #ffd700;">🚜 LAND EXPANSION</h2>
-            <button onclick="document.getElementById('lots-overlay').classList.add('hidden')" class="back-pixel-btn">BACK</button>
-        </div>
-        <div id="lots-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 15px; max-width: 900px; margin: 0 auto;"></div>
-    </div>
-
-    <!-- Game Over -->
-    <div id="game-over-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #200000; z-index: 30000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: 'Press Start 2P';">
-        <h1 style="color: #f00; font-size: 24px !important; margin-bottom: 20px;">GAME OVER</h1>
-        <p style="margin-bottom: 40px; color: #aaa;">"You can't please everyone"</p>
-        <button onclick="location.reload()" class="back-pixel-btn">RETRY</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
