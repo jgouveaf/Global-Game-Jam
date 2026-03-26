@@ -1,4 +1,4 @@
-// ========================= AgriCorp Game (POLISHED SUBMISSION v20.0) =========================
+// ========================= AgriCorp Game (GOLD SUBMISSION v21.0) =========================
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
@@ -18,14 +18,15 @@ resize();
 window.addEventListener('resize', resize);
 
 // SOUNDS
-const clickSound = new Audio('sprites/SomClique.mp3'); // Ajuste o nome se necessário
+const clickSound = new Audio('sprites/SomClique.mp3'); 
 const bgMusic = new Audio('sprites/Natureza.mp3'); 
 bgMusic.loop = true;
 
 function playSnd(s) { if(s && s.play) s.play().catch(()=>{}); }
 
-// GAME STATES
-var coins = 500, community = 100, isGameOver = false;
+// GAME STATES - FORCED 500 COINS
+var totalCoinsJam = 500; 
+var community = 100, isGameOver = false;
 var harvestedWheat = 0, harvestedCarrot = 0, totalEggs = 0, totalMeat = 0, totalMilk = 0;
 var timeElapsed = 0, decayMultiplier = 1.0;
 
@@ -72,12 +73,10 @@ class Animal {
         const img = animalSprites[this.type];
         if (!img.complete || img.naturalWidth === 0) return;
         const isV = (this.type === 'vaca');
-        // Handle sprites potentially having frames even if static
-        const frameW = img.width;
-        const frameH = (img.height > img.width) ? img.height/2 : img.height; 
-        const dw = frameW * scale, dh = frameH * scale;
+        const fh = (img.height > img.width && !isV) ? img.height/2 : img.height; 
+        const dw = img.width * scale, dh = fh * scale;
         const dx = (W - WW*scale)/2, dy = (H - WH*scale)/2;
-        ctx.drawImage(img, 0, 0, frameW, frameH, dx + this.x*scale - dw/2, dy + this.y*scale - dh/2, dw, dh);
+        ctx.drawImage(img, 0, 0, img.width, fh, dx + this.x*scale - dw/2, dy + this.y*scale - dh/2, dw, dh);
     }
 }
 
@@ -85,7 +84,7 @@ function updateHUD() {
     if(gameState === 'menu') return;
     const hp = document.getElementById('hp-bar'); if(hp) hp.style.width = community + '%';
     const hV = document.getElementById('hud-value'); if(hV) hV.textContent = Math.round(community);
-    const hC = document.getElementById('hud-coins-value'); if(hC) hC.textContent = Math.round(coins);
+    const hC = document.getElementById('hud-coins-value'); if(hC) hC.textContent = Math.round(totalCoinsJam);
     const hS = document.getElementById('hud-products-value'); if(hS) hS.textContent = Math.round(harvestedWheat + harvestedCarrot + totalEggs + totalMeat + totalMilk);
     if (community <= 0 && !isGameOver) { isGameOver = true; document.getElementById('game-over-overlay').classList.remove('hidden'); }
 }
@@ -120,7 +119,7 @@ window.sellE = () => {
     playSnd(clickSound);
     const total = harvestedWheat + harvestedCarrot + totalEggs + totalMeat + totalMilk;
     if (total <= 0) return;
-    coins += (harvestedWheat * 2.5) + (harvestedCarrot * 4.5) + (totalEggs * 10) + (totalMeat * 30) + (totalMilk * 15);
+    totalCoinsJam += (harvestedWheat * 2.5) + (harvestedCarrot * 4.5) + (totalEggs * 10) + (totalMeat * 25) + (totalMilk * 15);
     community = Math.min(100, community + (total * 0.2));
     harvestedWheat = 0; harvestedCarrot = 0; totalEggs = 0; totalMeat = 0; totalMilk = 0;
     updateHUD(); updateInventory();
@@ -147,17 +146,12 @@ function renderShops() {
         });
     }
 }
-window.bA = (t,p) => { playSnd(clickSound); if(coins>=p){ coins-=p; animalsOnMap.push(new Animal(t, 1000+(Math.random()-0.5)*800, 600+(Math.random()-0.5)*400)); updateHUD(); updateInventory(); } };
-window.bL = (i) => { playSnd(clickSound); if(coins>=lots[i].p && !purchasedLotsStatus.includes(i)){ coins-=lots[i].p; purchasedLotsStatus.push(i); updateHUD(); renderShops(); } };
+window.bA = (t,p) => { playSnd(clickSound); if(totalCoinsJam>=p){ totalCoinsJam-=p; animalsOnMap.push(new Animal(t, 1000+(Math.random()-0.5)*800, 600+(Math.random()-0.5)*400)); updateHUD(); updateInventory(); } };
+window.bL = (i) => { playSnd(clickSound); if(totalCoinsJam>=lots[i].p && !purchasedLotsStatus.includes(i)){ totalCoinsJam-=lots[i].p; purchasedLotsStatus.push(i); updateHUD(); renderShops(); } };
 
 window.onload = () => {
     const safe = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = () => { playSnd(clickSound); fn(); }; };
-    safe('btn-play', () => { 
-        gameState = 'playing'; 
-        document.getElementById('menu-overlay').classList.add('hidden'); 
-        document.getElementById('game-ui').classList.remove('hidden'); 
-        playSnd(bgMusic);
-    });
+    safe('btn-play', () => { gameState = 'playing'; document.getElementById('menu-overlay').classList.add('hidden'); document.getElementById('game-ui').classList.remove('hidden'); playSnd(bgMusic); });
     safe('btn-exit', () => { location.reload(); });
     safe('btn-open-inventory', () => { updateInventory(); document.getElementById('inventory-overlay').classList.remove('hidden'); });
     safe('btn-inv-voltar', () => document.getElementById('inventory-overlay').classList.add('hidden'));
