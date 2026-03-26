@@ -1,4 +1,4 @@
-// ========================= AgriCorp Game (Final Build v17.0) =========================
+// ========================= AgriCorp Game (Fix Build v18.0) =========================
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
@@ -17,22 +17,17 @@ function resize(){
 resize();
 window.addEventListener('resize', resize);
 
+const camera = { x: 0, y: 0 };
+
 // GAME STATES
 var coins = 500, community = 100, isGameOver = false;
-var harvestedWheat = 0, harvestedCarrot = 0, totalEggs = 0, totalMeat = 0, totalMilk = 0, horseCount = 0;
+var harvestedWheat = 0, harvestedCarrot = 0, totalEggs = 0, totalMeat = 0, totalMilk = 0;
 var timeElapsed = 0, decayMultiplier = 1.0;
 
 const animalsOnMap = [];
-const animalSprites = { 
-    pato: new Image(), galinha: new Image(), coelho: new Image(), 
-    ovelha: new Image(), vaca: new Image(), cavalo: new Image() 
-};
-animalSprites.pato.src='sprites/Pato.png';
-animalSprites.galinha.src='sprites/Galinha.png';
-animalSprites.coelho.src='sprites/Coelho.png';
-animalSprites.ovelha.src='sprites/Ovelha.png';
-animalSprites.vaca.src='sprites/Piskel Vaquinha.png';
-animalSprites.cavalo.src='sprites/Cavalo.png';
+const animalSprites = { pato: new Image(), galinha: new Image(), coelho: new Image(), ovelha: new Image(), vaca: new Image(), cavalo: new Image() };
+animalSprites.pato.src='sprites/Pato.png'; animalSprites.galinha.src='sprites/Galinha.png'; animalSprites.coelho.src='sprites/Coelho.png';
+animalSprites.ovelha.src='sprites/Ovelha.png'; animalSprites.vaca.src='sprites/Piskel Vaquinha.png'; animalSprites.cavalo.src='sprites/Cavalo.png';
 
 const animalLots = [
     { type: 'pato',    name: 'Duck',    icon: '🦆', price: 150,  yield: { e: 1, m: 0, l: 0 } },
@@ -56,8 +51,7 @@ let purchasedLotsStatus = [0];
 class Animal {
     constructor(type, x, y) {
         this.type = type; this.x = x; this.y = y; this.frame = 0; this.nextFrameTime = 0;
-        this.vx = (Math.random() - 0.5) * 0.6; // SLOWER MOVEMENT
-        this.vy = (Math.random() - 0.5) * 0.6;
+        this.vx = (Math.random() - 0.5) * 0.6; this.vy = (Math.random() - 0.5) * 0.6;
         this.moveTimer = 3000;
     }
     update(dt) {
@@ -69,13 +63,11 @@ class Animal {
             this.moveTimer = 2000 + Math.random() * 3000;
         }
         this.x += this.vx; this.y += this.vy;
-        // STAY INSIDE GREEN AREAS (Relative World Coords)
-        this.x = Math.max(150, Math.min(this.x, 1750)); 
-        this.y = Math.max(150, Math.min(this.y, 950));
+        this.x = Math.max(150, Math.min(this.x, 1750)); this.y = Math.max(150, Math.min(this.y, 950));
     }
     draw(scale) {
         const img = animalSprites[this.type];
-        if (img.complete && img.naturalSize > 0) return;
+        if (!img.complete || img.naturalWidth === 0) return;
         const isV = (this.type === 'vaca');
         const fh = isV ? img.height : img.height/2;
         const dw = img.width * scale, dh = fh * scale;
@@ -86,58 +78,44 @@ class Animal {
 
 function updateHUD() {
     if(gameState === 'menu') return;
-    document.getElementById('hp-bar').style.width = community + '%';
-    document.getElementById('hud-value').textContent = Math.round(community);
-    document.getElementById('hud-coins-value').textContent = Math.round(coins);
-    const storageTotal = Math.round(harvestedWheat + harvestedCarrot + totalEggs + totalMeat + totalMilk);
-    document.getElementById('hud-products-value').textContent = storageTotal;
+    const hp = document.getElementById('hp-bar'); if(hp) hp.style.width = community + '%';
+    const hV = document.getElementById('hud-value'); if(hV) hV.textContent = Math.round(community);
+    const hC = document.getElementById('hud-coins-value'); if(hC) hC.textContent = Math.round(coins);
+    const hS = document.getElementById('hud-products-value'); if(hS) hS.textContent = Math.round(harvestedWheat + harvestedCarrot + totalEggs + totalMeat + totalMilk);
     if (community <= 0 && !isGameOver) { isGameOver = true; document.getElementById('game-over-overlay').classList.remove('hidden'); }
 }
 
 function updateInventory() {
     const list = document.getElementById('inv-crops-list');
     if (list) {
-        list.innerHTML = `
-            <div>🌾 Wheat: ${Math.round(harvestedWheat)}</div>
-            <div>🥕 Carrot: ${Math.round(harvestedCarrot)}</div>
-            <div>🥚 Eggs: ${totalEggs}</div>
-            <div>🥩 Meat: ${totalMeat}</div>
-            <div>🥛 Milk: ${totalMilk}</div>
-        `;
+        list.innerHTML = `<div>🌾 Wheat: ${Math.round(harvestedWheat)}</div><div>🥕 Carrot: ${Math.round(harvestedCarrot)}</div><div>🥚 Eggs: ${totalEggs}</div><div>🥩 Meat: ${totalMeat}</div><div>🥛 Milk: ${totalMilk}</div>`;
     }
 }
 
-// PASSIVE GROWTH (NO COINS)
 setInterval(() => {
     if (isGameOver || gameState === 'menu') return;
     purchasedLotsStatus.forEach(idx => {
-        const lot = lots[idx];
-        if (lot.t === 'wheat') harvestedWheat += (2 * lot.m); else harvestedCarrot += (5 * lot.m);
+        const lot = lots[idx]; if (lot.t === 'wheat') harvestedWheat += (2 * lot.m); else harvestedCarrot += (5 * lot.m);
     });
     animalsOnMap.forEach(a => {
-        const d = animalLots.find(i => i.type === a.type);
-        if(!d) return;
-        totalEggs += d.yield.e; totalMeat += d.yield.m; totalMilk += d.yield.l;
+        const d = animalLots.find(i => i.type === a.type); if(d) { totalEggs += d.yield.e; totalMeat += d.yield.m; totalMilk += d.yield.l; }
     });
     updateInventory(); updateHUD();
 }, 8000);
 
-// FASTER DECAY
 setInterval(() => {
     if (isGameOver || gameState === 'menu') return;
-    timeElapsed++;
-    if (timeElapsed % 30 === 0) decayMultiplier += 0.25; // Accelerates every 30s
-    let horseReduction = Math.min(0.65, animalsOnMap.filter(a=>a.type==='cavalo').length * 0.12);
-    community -= (0.45 * decayMultiplier) * (1 - horseReduction); // HIGHER BASE DECAY
+    timeElapsed++; if (timeElapsed % 30 === 0) decayMultiplier += 0.25;
+    let hR = Math.min(0.65, animalsOnMap.filter(a=>a.type==='cavalo').length * 0.12);
+    community -= (0.4 * decayMultiplier) * (1 - hR);
     updateHUD();
 }, 1000);
 
 window.sellEverything = () => {
-    const totalItems = harvestedWheat + harvestedCarrot + totalEggs + totalMeat + totalMilk;
-    if (totalItems <= 0) return;
-    let profit = (harvestedWheat * 2) + (harvestedCarrot * 4) + (totalEggs * 8) + (totalMeat * 20) + (totalMilk * 12);
-    coins += profit; 
-    community = Math.min(100, community + (totalItems * 0.1)); // Selling feeds community
+    const total = harvestedWheat + harvestedCarrot + totalEggs + totalMeat + totalMilk;
+    if (total <= 0) return;
+    coins += (harvestedWheat * 2) + (harvestedCarrot * 4) + (totalEggs * 8) + (totalMeat * 20) + (totalMilk * 12);
+    community = Math.min(100, community + (total * 0.1));
     harvestedWheat = 0; harvestedCarrot = 0; totalEggs = 0; totalMeat = 0; totalMilk = 0;
     updateHUD(); updateInventory();
 }
@@ -148,8 +126,7 @@ function renderShops() {
         landC.innerHTML = '';
         lots.forEach((lot, i) => {
             const isO = purchasedLotsStatus.includes(i), isN = purchasedLotsStatus.length===i, isL = !isO && !isN;
-            const div = document.createElement('div'); div.className = 'shop-card';
-            div.style.opacity = isL?'0.5':'1';
+            const div = document.createElement('div'); div.className = 'shop-card'; div.style.opacity = isL?'0.5':'1';
             div.innerHTML = `<img src="sprites/Lote${lot.id}.png" style="width:40px; ${isL?'filter:grayscale(1)':''}"><h3>${lot.n}</h3><button onclick="buyL(${i})" class="buy-btn" style="background:${isO?'#27ae60':(isL?'#444':'#8b4513')};" ${isL?'disabled':''}>${isO?'OWNED':(isL?'LOCKED':'💰 '+lot.p)}</button>`;
             landC.appendChild(div);
         });
@@ -169,18 +146,18 @@ window.buyA = (t,p) => { if(coins>=p){ coins-=p; animalsOnMap.push(new Animal(t,
 window.buyL = (i) => { if(coins>=lots[i].p && !purchasedLotsStatus.includes(i)){ coins-=lots[i].p; purchasedLotsStatus.push(i); updateHUD(); renderShops(); } };
 
 window.onload = () => {
-    document.getElementById('btn-play').onclick = () => {
+    const safeBind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+    safeBind('btn-play', () => {
         gameState = 'playing';
-        document.getElementById('menu-overlay').classList.add('hidden');
-        document.getElementById('game-ui').classList.remove('hidden');
-    };
-    document.getElementById('btn-exit').onclick = () => { location.reload(); };
-    
-    document.getElementById('btn-open-inventory').onclick = () => { updateInventory(); document.getElementById('inventory-overlay').classList.remove('hidden'); };
-    document.getElementById('btn-inv-voltar').onclick = () => document.getElementById('inventory-overlay').classList.add('hidden');
-    document.getElementById('btn-open-lots').onclick = () => { renderShops(); document.getElementById('lots-overlay').classList.remove('hidden'); };
-    document.getElementById('btn-open-animals').onclick = () => { renderShops(); document.getElementById('animal-shop-overlay').classList.remove('hidden'); };
-    document.getElementById('btn-sell-manual').onclick = sellEverything;
+        const m = document.getElementById('menu-overlay'); if(m) m.classList.add('hidden');
+        const g = document.getElementById('game-ui'); if(g) g.classList.remove('hidden');
+    });
+    safeBind('btn-exit', () => { location.reload(); });
+    safeBind('btn-open-inventory', () => { updateInventory(); const i = document.getElementById('inventory-overlay'); if(i) i.classList.remove('hidden'); });
+    safeBind('btn-inv-voltar', () => { const i = document.getElementById('inventory-overlay'); if(i) i.classList.add('hidden'); });
+    safeBind('btn-open-lots', () => { renderShops(); const l = document.getElementById('lots-overlay'); if(l) l.classList.remove('hidden'); });
+    safeBind('btn-open-animals', () => { renderShops(); const a = document.getElementById('animal-shop-overlay'); if(a) a.classList.remove('hidden'); });
+    safeBind('btn-sell-manual', sellEverything);
 };
 
 let lastTime = performance.now();
