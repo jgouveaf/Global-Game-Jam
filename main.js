@@ -1,9 +1,20 @@
+<<<<<<< HEAD
+// ========================= AgriCorp Game (ULTIMATE MASTER v26.0) =========================
+// SE VOCÊ VER ESSE LOG NO CONSOLE (F12), ESTÁ NA VERSÃO CERTA!
+console.log("AGRICORP V26 - DESCRICOES CARREGADAS OK");
+
+=======
 // ========================= AgriCorp Game (POLISHED v25.0) =========================
+>>>>>>> a37cda8ae6fa0a953de36108f2e4bb3916c7b263
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
 const mapImage = new Image();
+<<<<<<< HEAD
+mapImage.src = 'sprites/sprites/Mapa..png';
+=======
 mapImage.src = 'sprites/Mapa..png';
+>>>>>>> a37cda8ae6fa0a953de36108f2e4bb3916c7b263
 let mapLoaded = false, WW = 0, WH = 0, gameState = 'menu';
 
 mapImage.onload = () => { mapLoaded = true; WW = mapImage.width/2; WH = mapImage.height/4; };
@@ -39,20 +50,29 @@ var timeElapsed = 0, decayMultiplier = 1.0;
 
 const animalsOnMap = [];
 const animalSprites = { pato: new Image(), galinha: new Image(), coelho: new Image(), ovelha: new Image(), vaca: new Image(), cavalo: new Image() };
-animalSprites.pato.src='sprites/Pato.png'; 
-animalSprites.galinha.src='sprites/Galinha.png'; 
-animalSprites.coelho.src='sprites/Coelho.png';
-animalSprites.ovelha.src='sprites/Ovelha.png'; 
-animalSprites.vaca.src='sprites/Piskel Vaquinha.png'; 
-animalSprites.cavalo.src='sprites/Cavalo.png';
+animalSprites.pato.src='sprites/sprites/Pato.png'; 
+animalSprites.galinha.src='sprites/sprites/Galinha.png'; 
+animalSprites.coelho.src='sprites/sprites/Coelho.png';
+animalSprites.ovelha.src='sprites/sprites/Ovelha.png'; 
+animalSprites.vaca.src='sprites/sprites/Piskel Vaquinha.png'; 
+animalSprites.cavalo.src='sprites/sprites/Cavalo.png';
 
 const animalLots = [
+<<<<<<< HEAD
+    { type: 'pato',    n: 'Duck',    img: 'sprites/sprites/Pato.png',    p: 150,  desc: "🥚 Produce Eggs" },
+    { type: 'coelho',  n: 'Rabbit',  img: 'sprites/sprites/Coelho.png',  p: 250,  desc: "🥩 Produce Meat" },
+    { type: 'galinha', n: 'Chicken', img: 'sprites/sprites/Galinha.png', p: 400,  desc: "🥚 High Egg Yield++" },
+    { type: 'cavalo',  n: 'Horse',   img: 'sprites/sprites/Cavalo.png',  p: 800,  desc: "📎 STOPS BAR DECAY!" },
+    { type: 'ovelha',  n: 'Sheep',   img: 'sprites/sprites/Ovelha.png',  p: 1200, desc: "🥩 Med Meat Yield" },
+    { type: 'vaca',    n: 'Cow',     img: 'sprites/sprites/Piskel Vaquinha.png', p: 2000, desc: "🥩 Meat & 🥛 Milk++" }
+=======
     { type: 'pato',    n: 'Duck',    img: 'sprites/Pato.png',    p: 150,  y: { e: 2, m: 0, l: 0 } },
     { type: 'coelho',  n: 'Rabbit',  img: 'sprites/Coelho.png',  p: 250,  y: { e: 0, m: 1, l: 0 } },
     { type: 'galinha', n: 'Chicken', img: 'sprites/Galinha.png', p: 400,  y: { e: 8, m: 0, l: 0 } },
     { type: 'cavalo',  n: 'Horse',   img: 'sprites/Cavalo.png',  p: 800,  y: { e: 0, m: 0, l: 0 } },
     { type: 'ovelha',  n: 'Sheep',   img: 'sprites/Ovelha.png',  p: 1200, y: { e: 0, m: 3, l: 0 } },
     { type: 'vaca',    n: 'Cow',     img: 'sprites/Piskel Vaquinha.png', p: 2000, y: { e: 0, m: 8, l: 5 } }
+>>>>>>> a37cda8ae6fa0a953de36108f2e4bb3916c7b263
 ];
 
 const lots = [
@@ -146,7 +166,11 @@ function renderShops() {
         lots.forEach((lt, i) => {
             const isO = purchasedLotsStatus.includes(i), isN = purchasedLotsStatus.length===i, isL = !isO && !isN;
             const div = document.createElement('div'); div.className = 'shop-card'; 
+<<<<<<< HEAD
+            div.innerHTML = `<img src="sprites/sprites/Lote${lt.id}.png" style="width:30px; ${isL?'filter:grayscale(1)':''}"><h3>${lt.n}</h3><button onclick="bL(${i})" class="buy-btn" style="background:${isO?'#27ae60':(isL?'#444':'#8b4513')};" ${isL?'disabled':''}>${isO?'OWNED':(isL?'LOCKED':'💰 '+lt.p)}</button>`;
+=======
             div.innerHTML = `<img src="sprites/Lote${lt.id}.png" style="width:30px; ${isL?'filter:grayscale(1)':''}"><h3>${lt.n}</h3><button onclick="bL(${i})" class="buy-btn" style="background:${isO?'#27ae60':(isL?'#444':'#8b4513')};" ${isL?'disabled':''}>${isO?'OWNED':(isL?'LOCKED':'💰 '+lt.p)}</button>`;
+>>>>>>> a37cda8ae6fa0a953de36108f2e4bb3916c7b263
             landC.appendChild(div);
         });
     }
@@ -158,7 +182,11 @@ function renderShops() {
             let desc = (a.type==='pato')?'Eggs':(a.type==='galinha')?'+++ Eggs':(a.type==='coelho')?'Meat':(a.type==='ovelha')?'++ Meat':(a.type==='vaca')?'Meat & Milk':'🛑 STOPS DECAY!';
             div.innerHTML = `<img src="${a.img}" style="width:32px; height:auto; display:block; margin: 0 auto 5px; image-rendering: pixelated;">
                              <h3>${a.n}</h3>
+<<<<<<< HEAD
+                             <p style="font-size: 6px !important; color: #ffd700; margin-bottom: 8px;">${a.desc}</p>
+=======
                              <p style="font-size: 6px !important; color: #ffd700; margin-bottom: 8px;">${desc}</p>
+>>>>>>> a37cda8ae6fa0a953de36108f2e4bb3916c7b263
                              <button onclick="bA('${a.type}', ${a.p})" class="buy-btn" style="background:#3498db;">💰 ${a.p}</button>`;
             animC.appendChild(div);
         });
