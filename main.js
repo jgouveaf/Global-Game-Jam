@@ -1,13 +1,17 @@
-// ========================= AgriCorp Game (Final English Version v11.1) =========================
+// ========================= AgriCorp Game (Final English Version v11.2) =========================
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
 const mapImage = new Image();
 mapImage.src = 'sprites/Mapa..png';
 let mapLoaded = false;
-let WW = 2800, WH = 1400; // Reference Map Dimensions
+let WW = 0, WH = 0; // Current frame size after loading
 
-mapImage.onload = () => { mapLoaded = true; WW = mapImage.width; };
+mapImage.onload = () => { 
+    mapLoaded = true;
+    WW = mapImage.width / 2;    // Sprite sheet has 2 columns
+    WH = mapImage.height / 4;   // Sprite sheet has 4 rows
+};
 
 let W, H;
 function resize(){
@@ -23,12 +27,14 @@ let mouseX = 0, mouseY = 0;
 const EDGE = 0.08, CAM_SPEED = 20;
 window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
 
-// GAME STATES (All in English)
+// GAME STATES
 var coins = 500, wheatSeeds = 60, carrotSeeds = 30, community = 80, isGameOver = false;
 var harvestedWheat = 0, harvestedCarrot = 0;
 const crops = [];
 
-// LAND DEFINITIONS - Calibrated for WW=2800 (Ref: Locais onde pode plantar.png)
+// LAND DEFINITIONS
+// NOTE: Coordinates are Relative to a Single Map Frame (approximately 1920x1080? No, let's keep current WW=2800 scale internally if possible)
+// Since the map frame is the full map, I will use its dimensions as the boundary.
 const lots = [
     { id: 1, name: "Northwest Field", price: 0,    minSeeds: 10, target: 'wheat',  multiplier: 1,  area: { x: 100,  y: 350, w: 600, h: 450 } }, 
     { id: 2, name: "North Center Field", price: 200,  minSeeds: 20, target: 'carrot', multiplier: 2,  area: { x: 950,  y: 180, w: 500, h: 350 } }, 
@@ -38,9 +44,9 @@ const lots = [
     { id: 6, name: "Southeast Field", price: 1750, minSeeds: 60, target: 'carrot', multiplier: 12, area: { x: 1550, y: 850, w: 650, h: 400 } }
 ];
 
-let purchasedLotsStatus = [0];
+let purchasedLotsStatus = [0]; // Lot 1 starts owned
 
-// SPRITES (Wheat & Carrot)
+// SPRITES
 const wheatSprite = new Image(); wheatSprite.src = 'sprites/Trigo.png';
 const carrotSprite = new Image(); carrotSprite.src = 'sprites/Cenoura.png';
 
@@ -84,7 +90,7 @@ class Crop {
     }
 }
 
-// ANIMALS HANDLING
+// ANIMALS
 const animalsOnMap = [];
 const animalSprites = { pato: new Image(), galinha: new Image(), coelho: new Image(), ovelha: new Image(), porco: new Image(), cavalo: new Image() };
 animalSprites.pato.src='sprites/Pato.png'; animalSprites.galinha.src='sprites/Galinha.png'; animalSprites.coelho.src='sprites/Coelho.png';
@@ -104,12 +110,12 @@ class Animal {
             this.moveTimer = 2000 + Math.random() * 3000;
         }
         this.x += this.vx; this.y += this.vy;
-        this.x = Math.max(100, Math.min(this.x, WW - 100));
-        this.y = Math.max(100, Math.min(this.y, WH - 100));
+        this.x = Math.max(100, Math.min(this.x, 2800 - 100)); // Fixed boundaries
+        this.y = Math.max(100, Math.min(this.y, 1400 - 100));
     }
     draw() {
         const img = animalSprites[this.type];
-        if (img.complete && img.naturalSize > 0) {
+        if (img.complete && img.naturalWidth > 0) {
             const fh = img.height / 2;
             ctx.drawImage(img, 0, this.frame * fh, img.width, fh, this.x - camera.x - img.width/2, this.y - camera.y - fh/2, img.width, fh);
         }
@@ -123,11 +129,7 @@ function updateHUD() {
     document.getElementById('hud-coins-value').textContent = Math.round(coins);
     document.getElementById('hud-seeds-value').textContent = wheatSeeds + carrotSeeds;
     document.getElementById('hud-harvest-value').textContent = harvestedWheat + harvestedCarrot;
-    if (community <= 0 && !isGameOver) {
-        isGameOver = true;
-        const overlay = document.getElementById('game-over-overlay');
-        if(overlay) overlay.classList.remove('hidden');
-    }
+    if (community <= 0 && !isGameOver) { isGameOver = true; document.getElementById('game-over-overlay').classList.remove('hidden'); }
 }
 
 function updateInventory() {
@@ -140,7 +142,7 @@ window.buySeeds = (type, price) => {
         coins -= price;
         if (type === 'wheat' || type === 'trigo') wheatSeeds += 5; else carrotSeeds += 5;
         updateHUD(); updateInventory();
-    } else alert("Not enough coins!");
+    } else alert("No coins!");
 };
 
 window.buyAnimal = (type, price) => {
@@ -148,8 +150,8 @@ window.buyAnimal = (type, price) => {
         coins -= price;
         animalsOnMap.push(new Animal(type, 1500 + Math.random() * 500, 200 + Math.random() * 300));
         updateHUD();
-        alert(`Successfully purchased: ${type.toUpperCase()}`);
-    } else alert("Insufficient funds!");
+        alert(`You bought a ${type.toUpperCase()}!`);
+    } else alert("Not enough coins!");
 }
 
 function renderLots() {
@@ -164,8 +166,8 @@ function renderLots() {
         lotDiv.style.border = isPurchased ? '3px solid #ffd700' : '3px solid #555';
         lotDiv.innerHTML = `
             <img src="sprites/Lote${lot.id}.png" style="width: 50px; height: 50px; image-rendering: pixelated; margin-bottom: 5px;" onerror="this.src='sprites/Mapa..png'; this.style.objectFit='none'; this.style.objectPosition='0 0';">
-            <p style="color: #ffd700; font-size: 8px; font-family:'Press Start 2P';">${lot.name}</p>
-            <p style="font-size: 7px; color:#fff;">Target: ${lot.target.toUpperCase()} (x${lot.multiplier})</p>
+            <p style="color: #ffd700; font-size: 8px; font-family:'Press Start 2P',cursive;">${lot.name}</p>
+            <p style="font-size: 7px; color:#fff;">Grows: ${lot.target.toUpperCase()} (x${lot.multiplier})</p>
             <button id="buy-lot-${index}" style="width: 100%; padding: 5px; font-family: 'Press Start 2P'; font-size: 6px; cursor: pointer; background: ${isPurchased ? '#27ae60' : '#8b4513'}; color: #fff;">
                 ${isPurchased ? 'OWNED' : '💰 ' + lot.price}
             </button>
@@ -176,14 +178,13 @@ function renderLots() {
                 if (coins >= lot.price) {
                     coins -= lot.price; purchasedLotsStatus.push(index);
                     updateHUD(); renderLots();
-                } else alert('Not enough coins to buy this land!');
+                } else alert('Insufficient coins!');
             };
         }
     });
 }
 
 window.onload = () => {
-    console.log("AgriCorp v11.1 Submitting... [Final Calibrated Build]");
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
     bind('btn-open-shop', () => document.getElementById('shop-overlay').classList.remove('hidden'));
     bind('btn-shop-voltar', () => document.getElementById('shop-overlay').classList.add('hidden'));
@@ -195,7 +196,6 @@ window.onload = () => {
     bind('btn-buy-seed', () => buySeeds('wheat', 10));
 
     bind('btn-water', () => {
-        let countPlanted = 0;
         purchasedLotsStatus.forEach(idx => {
             const lot = lots[idx];
             const a = lot.area;
@@ -207,17 +207,11 @@ window.onload = () => {
                     if (hasSeeds && !crops.some(c => Math.hypot(c.x-xx, c.y-yy) < 60)) {
                         crops.push(new Crop(xx, yy, lot.multiplier, type));
                         if(type === 'wheat') wheatSeeds--; else carrotSeeds--;
-                        countPlanted++;
                     }
                 }
             }
         });
-        if(countPlanted > 0) {
-            updateHUD(); 
-            updateInventory();
-        } else {
-            alert("Out of seeds or no available space in your plots!");
-        }
+        updateHUD(); updateInventory();
     });
 
     setInterval(() => { if (!isGameOver) { community -= 0.1; updateHUD(); } }, 1000);
@@ -231,29 +225,58 @@ function loop(now){
     if (mouseX > W * (1 - EDGE)) camera.x += CAM_SPEED;
     if (mouseY < H * EDGE) camera.y -= CAM_SPEED;
     if (mouseY > H * (1 - EDGE)) camera.y += CAM_SPEED;
-    camera.x = Math.max(0, Math.min(camera.x, WW - W));
-    camera.y = Math.max(0, Math.min(camera.y, WH - H));
     
-    ctx.fillStyle = "#000";
+    // Limits
+    const currentWW = 2800; // Expected world width for coordinate mapping
+    const currentWH = 1400; // Expected world height
+    camera.x = Math.max(0, Math.min(camera.x, currentWW - W));
+    camera.y = Math.max(0, Math.min(camera.y, currentWH - H));
+    
+    // CLEAR BACKGROUND WITH GRASS GREEN (to remove the "black thing")
+    ctx.fillStyle = "#325e22"; // Dark grass green
     ctx.fillRect(0, 0, W, H);
 
     if (mapLoaded) {
-        ctx.drawImage(mapImage, 0, 0, mapImage.width, mapImage.height, -camera.x, -camera.y, mapImage.width, mapImage.height);
+        // Find which frame to use based on purchased lots
+        // purchasedLotsStatus.length: 1 owned (Lot 1) = Frame 2 ... 6 owned (Lot 6) = Frame 7
+        const lotCount = purchasedLotsStatus.length;
+        const currentFrame = lotCount; // Lot 1 owned = count is 1, so Frame 2. Lot 6 owned = count is 6, so Frame 7.
+        // wait, Lot 1 owns usually start = 1. So if 1 lot owned, count=1.
+        // Actually, frame 1 = 0 lots owned? If Lot 1 starts owned, use Frame 2 (index 1).
         
+        let frameIndex = Math.min(Math.max(0, currentFrame), 6); // Max frame 7 (index 6)
+        
+        const frameCol = frameIndex % 2;
+        const frameRow = Math.floor(frameIndex / 2);
+        
+        const frameW = mapImage.width / 2;
+        const frameH = mapImage.height / 4;
+        const sx = frameCol * frameW;
+        const sy = frameRow * frameH;
+
+        // Scale map to fill the screen better if needed, but here we draw 1:1 with camera
+        ctx.drawImage(mapImage, sx, sy, frameW, frameH, -camera.x, -camera.y, frameW, frameH);
+        
+        // Draw Animals
         animalsOnMap.forEach(a => { a.update(dt); a.draw(); });
 
+        // Update & Draw Crops
         for (let i = crops.length - 1; i >= 0; i--) {
             const c = crops[i]; c.update(dt); c.draw();
             if (c.stage === 4) {
-                const yieldAmount = 2;
+                // Carrot gives more than wheat
+                // Wheat yield = 2, Carrot yield = 4
+                const yieldAmount = (c.type === 'wheat' ? 2 : 4);
                 const basePrice = (c.type === 'wheat' ? 5 : 10);
                 const totalGain = (basePrice * c.multiplier) * yieldAmount;
+                
                 if (c.type === 'wheat') harvestedWheat += yieldAmount; 
                 else harvestedCarrot += yieldAmount;
+                
                 coins += totalGain; 
                 crops.splice(i, 1); 
                 updateHUD();
-                community = Math.min(100, community + 0.3); // Feeding the community
+                community = Math.min(100, community + 0.3);
             }
         }
     }
