@@ -1,13 +1,13 @@
-// ========================= AgriCorp Game (Final Clean Version v10.5) =========================
+// ========================= AgriCorp Game (Final Clean Version v10.6) =========================
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
 const mapImage = new Image();
 mapImage.src = 'sprites/Mapa..png';
 let mapLoaded = false;
-let WW = 2800, WH = 1400; 
+let WW = 2800, WH = 1200; // Altura limitada para remover grama vazia
 
-mapImage.onload = () => { mapLoaded = true; WW = mapImage.width; WH = mapImage.height; };
+mapImage.onload = () => { mapLoaded = true; WW = mapImage.width; };
 
 let W, H;
 function resize(){
@@ -33,14 +33,14 @@ var moedas = 500, sementesTrigo = 60, sementesCenoura = 30, comunidade = 80, isG
 var harvestedTrigo = 0, harvestedCenoura = 0;
 const crops = [];
 
-// DEFINIÇÃO DOS LOTES (Coordenadas Extra-Safe reduzidas para centralização)
+// DEFINIÇÃO DOS LOTES (Coordenadas Refinadas para Evitar Estradas e Bordas)
 const lots = [
-    { id: 1, name: "Terreno 1", price: 0,    minSeeds: 10, target: 'trigo',   multiplier: 1,  area: { x: 300,  y: 400, w: 600, h: 500 } },
-    { id: 2, name: "Terreno 2", price: 200,  minSeeds: 20, target: 'cenoura', multiplier: 2,  area: { x: 1200, y: 200, w: 500, h: 300 } },
-    { id: 3, name: "Terreno 3", price: 500,  minSeeds: 30, target: 'cenoura', multiplier: 4,  area: { x: 1800, y: 500, w: 400, h: 150 } },
-    { id: 4, name: "Terreno 4", price: 850,  minSeeds: 40, target: 'trigo',   multiplier: 6,  area: { x: 2300, y: 500, w: 300, h: 150 } },
-    { id: 5, name: "Terreno 5", price: 1150, minSeeds: 50, target: 'trigo',   multiplier: 8,  area: { x: 1100, y: 800, w: 500, h: 250 } },
-    { id: 6, name: "Terreno 6", price: 1750, minSeeds: 60, target: 'cenoura', multiplier: 12, area: { x: 1700, y: 900, w: 600, h: 300 } }
+    { id: 1, name: "Terreno 1", price: 0,    minSeeds: 10, target: 'trigo',   multiplier: 1,  area: { x: 250,  y: 350, w: 650, h: 200 } }, // Superior Esq.
+    { id: 2, name: "Terreno 2", price: 200,  minSeeds: 20, target: 'cenoura', multiplier: 2,  area: { x: 1150, y: 150, w: 550, h: 350 } }, // Topo Centro
+    { id: 3, name: "Terreno 3", price: 500,  minSeeds: 30, target: 'cenoura', multiplier: 4,  area: { x: 1850, y: 480, w: 450, h: 100 } }, // Centro Dir 1
+    { id: 4, name: "Terreno 4", price: 850,  minSeeds: 40, target: 'trigo',   multiplier: 6,  area: { x: 2400, y: 480, w: 250, h: 100 } }, // Centro Dir 2
+    { id: 5, name: "Terreno 5", price: 1150, minSeeds: 50, target: 'trigo',   multiplier: 8,  area: { x: 1100, y: 850, w: 550, h: 250 } }, // Baixo Centro
+    { id: 6, name: "Terreno 6", price: 1750, minSeeds: 60, target: 'cenoura', multiplier: 12, area: { x: 1750, y: 950, w: 650, h: 150 } }  // Baixo Dir.
 ];
 
 let purchasedLotsStatus = [0];
@@ -89,8 +89,7 @@ class Crop {
     }
 }
 
-// INVENTÁRIO & ANIMAIS
-var inventoryProducts = { ovos: 0, carne: 0 };
+// ANIMAIS
 const animalsOnMap = [];
 const animalSprites = { pato: new Image(), galinha: new Image(), coelho: new Image(), ovelha: new Image(), porco: new Image(), cavalo: new Image() };
 animalSprites.pato.src='sprites/Pato.png'; animalSprites.galinha.src='sprites/Galinha.png'; animalSprites.coelho.src='sprites/Coelho.png';
@@ -115,9 +114,9 @@ class Animal {
     }
     draw() {
         const img = animalSprites[this.type];
-        if (img.complete && img.naturalWidth > 0) {
-            const fw = img.width, fh = img.height / 2;
-            ctx.drawImage(img, 0, this.frame * fh, fw, fh, this.x - camera.x - fw/2, this.y - camera.y - fh/2, fw, fh);
+        if (img.complete && img.naturalSize > 0) {
+            const fh = img.height / 2;
+            ctx.drawImage(img, 0, this.frame * fh, img.width, fh, this.x - camera.x - img.width/2, this.y - camera.y - fh/2, img.width, fh);
         }
     }
 }
@@ -177,7 +176,7 @@ function renderLots() {
 }
 
 window.onload = () => {
-    console.log("AgriCorp v10.5 Initializing... [Black Bars Fix]");
+    console.log("AgriCorp v10.6 Initializing... [Final Precision Mode]");
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
     bind('btn-open-shop', () => document.getElementById('shop-overlay').classList.remove('hidden'));
     bind('btn-shop-voltar', () => document.getElementById('shop-overlay').classList.add('hidden'));
@@ -190,12 +189,12 @@ window.onload = () => {
         purchasedLotsStatus.forEach(idx => {
             const lot = lots[idx];
             const a = lot.area;
-            const spacing = 100; 
+            const spacing = 120; // Mais espaçado para evitar poluição visual
             for (let yy = a.y; yy < a.y + a.h; yy += spacing) {
                 for (let xx = a.x; xx < a.x + a.w; xx += spacing) {
                     const type = lot.target;
                     const canPlant = (type === 'trigo' && sementesTrigo > 0) || (type === 'cenoura' && sementesCenoura > 0);
-                    if (canPlant && !crops.some(c => Math.hypot(c.x-xx, c.y-yy) < 50)) {
+                    if (canPlant && !crops.some(c => Math.hypot(c.x-xx, c.y-yy) < 70)) {
                         crops.push(new Crop(xx, yy, lot.multiplier, type));
                         if(type === 'trigo') sementesTrigo--; else sementesCenoura--;
                     }
@@ -205,7 +204,7 @@ window.onload = () => {
         updateHUD(); updateInventory();
     });
 
-    setInterval(() => { if (!isGameOver) { comunidade -= 0.2; updateHUD(); } }, 1000);
+    setInterval(() => { if (!isGameOver) { comunidade -= 0.15; updateHUD(); } }, 1000);
     updateHUD(); updateInventory(); renderLots();
 };
 
@@ -219,25 +218,22 @@ function loop(now){
     camera.x = Math.max(0, Math.min(camera.x, WW - W));
     camera.y = Math.max(0, Math.min(camera.y, WH - H));
     
-    // FORÇAR FUNDO PRETO ANTES DE DESENHAR O MAPA
+    // LIMPEZA ABSOLUTA COM PRETO
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, W, H);
 
     if (mapLoaded) {
-        ctx.drawImage(mapImage, -camera.x, -camera.y);
+        // CORTAR O MAPA PARA REMOVER O RODAPÉ VAZIO (Corte em WH=1200)
+        ctx.drawImage(mapImage, 0, 0, mapImage.width, 1200, -camera.x, -camera.y, mapImage.width, 1200);
         for (let i = crops.length - 1; i >= 0; i--) {
             const c = crops[i]; c.update(dt); c.draw();
             if (c.stage === 4) {
-                const yieldMultiplier = 2; // Regra: cada semente gera 2 unidades
+                const yieldMultiplier = 2;
                 const basePrice = (c.type === 'trigo' ? 5 : 10);
                 const totalGain = (basePrice * c.multiplier) * yieldMultiplier;
-                
                 if (c.type === 'trigo') harvestedTrigo += yieldMultiplier; 
                 else harvestedCenoura += yieldMultiplier;
-                
-                moedas += totalGain; 
-                crops.splice(i, 1); 
-                updateHUD();
+                moedas += totalGain; crops.splice(i, 1); updateHUD();
             }
         }
     }
