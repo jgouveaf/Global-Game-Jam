@@ -1,4 +1,4 @@
-// ========================= AgriCorp Game (Fix Build v18.0) =========================
+// ========================= AgriCorp Game (Submission Build v19.0) =========================
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
@@ -6,7 +6,7 @@ const mapImage = new Image();
 mapImage.src = 'sprites/Mapa..png';
 let mapLoaded = false, WW = 0, WH = 0, gameState = 'menu';
 
-mapImage.onload = () => { mapLoaded = true; WW = mapImage.width / 2; WH = mapImage.height / 4; };
+mapImage.onload = () => { mapLoaded = true; WW = mapImage.width/2; WH = mapImage.height/4; };
 
 let W, H;
 function resize(){
@@ -20,7 +20,7 @@ window.addEventListener('resize', resize);
 const camera = { x: 0, y: 0 };
 
 // GAME STATES
-var coins = 500, community = 100, isGameOver = false;
+var coins = 10000, community = 100, isGameOver = false;
 var harvestedWheat = 0, harvestedCarrot = 0, totalEggs = 0, totalMeat = 0, totalMilk = 0;
 var timeElapsed = 0, decayMultiplier = 1.0;
 
@@ -30,12 +30,12 @@ animalSprites.pato.src='sprites/Pato.png'; animalSprites.galinha.src='sprites/Ga
 animalSprites.ovelha.src='sprites/Ovelha.png'; animalSprites.vaca.src='sprites/Piskel Vaquinha.png'; animalSprites.cavalo.src='sprites/Cavalo.png';
 
 const animalLots = [
-    { type: 'pato',    name: 'Duck',    icon: '🦆', price: 150,  yield: { e: 1, m: 0, l: 0 } },
-    { type: 'coelho',  name: 'Rabbit',  icon: '🐇', price: 250,  yield: { e: 0, m: 1, l: 0 } },
-    { type: 'galinha', name: 'Chicken', icon: '🐔', price: 400,  yield: { e: 5, m: 0, l: 0 } },
-    { type: 'cavalo',  name: 'Horse',   icon: '🐎', price: 800,  yield: { e: 0, m: 0, l: 0 } },
-    { type: 'ovelha',  name: 'Sheep',   icon: '🐑', price: 1200, yield: { e: 0, m: 3, l: 0 } },
-    { type: 'vaca',    name: 'Cow',     icon: '🐄', price: 2000, yield: { e: 0, m: 10, l: 6 } }
+    { type: 'pato',    n: 'Duck',    i: '🦆', p: 150,  y: { e: 1, m: 0, l: 0 } },
+    { type: 'coelho',  n: 'Rabbit',  i: '🐇', p: 250,  y: { e: 0, m: 1, l: 0 } },
+    { type: 'galinha', n: 'Chicken', i: '🐔', p: 400,  y: { e: 5, m: 0, l: 0 } },
+    { type: 'cavalo',  n: 'Horse',   i: '🐎', p: 800,  y: { e: 0, m: 0, l: 0 } },
+    { type: 'ovelha',  n: 'Sheep',   i: '🐑', p: 1200, y: { e: 0, m: 3, l: 0 } },
+    { type: 'vaca',    n: 'Cow',     i: '🐄', p: 2000, y: { e: 0, m: 10, l: 6 } }
 ];
 
 const lots = [
@@ -50,17 +50,16 @@ let purchasedLotsStatus = [0];
 
 class Animal {
     constructor(type, x, y) {
-        this.type = type; this.x = x; this.y = y; this.frame = 0; this.nextFrameTime = 0;
-        this.vx = (Math.random() - 0.5) * 0.6; this.vy = (Math.random() - 0.5) * 0.6;
+        this.type = type; this.x = x; this.y = y;
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.4;
         this.moveTimer = 3000;
     }
     update(dt) {
-        this.nextFrameTime += dt;
-        if (this.nextFrameTime > 400) { this.frame = (this.frame + 1) % 2; this.nextFrameTime = 0; }
         this.moveTimer -= dt;
         if (this.moveTimer <= 0) {
-            this.vx = (Math.random() - 0.5) * 0.6; this.vy = (Math.random() - 0.5) * 0.6;
-            this.moveTimer = 2000 + Math.random() * 3000;
+            this.vx = (Math.random() - 0.5) * 0.4; this.vy = (Math.random() - 0.5) * 0.4;
+            this.moveTimer = 3000 + Math.random() * 3000;
         }
         this.x += this.vx; this.y += this.vy;
         this.x = Math.max(150, Math.min(this.x, 1750)); this.y = Math.max(150, Math.min(this.y, 950));
@@ -72,7 +71,8 @@ class Animal {
         const fh = isV ? img.height : img.height/2;
         const dw = img.width * scale, dh = fh * scale;
         const dx = (W - WW*scale)/2, dy = (H - WH*scale)/2;
-        ctx.drawImage(img, 0, this.frame * (isV?0:img.height/2), img.width, fh, dx + this.x*scale - dw/2, dy + this.y*scale - dh/2, dw, dh);
+        // DRAW STATIC IMAGE (FRAME 0)
+        ctx.drawImage(img, 0, 0, img.width, fh, dx + this.x*scale - dw/2, dy + this.y*scale - dh/2, dw, dh);
     }
 }
 
@@ -98,24 +98,24 @@ setInterval(() => {
         const lot = lots[idx]; if (lot.t === 'wheat') harvestedWheat += (2 * lot.m); else harvestedCarrot += (5 * lot.m);
     });
     animalsOnMap.forEach(a => {
-        const d = animalLots.find(i => i.type === a.type); if(d) { totalEggs += d.yield.e; totalMeat += d.yield.m; totalMilk += d.yield.l; }
+        const d = animalLots.find(i => i.type === a.type); if(d) { totalEggs += d.y.e; totalMeat += d.y.m; totalMilk += d.y.l; }
     });
     updateInventory(); updateHUD();
 }, 8000);
 
 setInterval(() => {
     if (isGameOver || gameState === 'menu') return;
-    timeElapsed++; if (timeElapsed % 30 === 0) decayMultiplier += 0.25;
-    let hR = Math.min(0.65, animalsOnMap.filter(a=>a.type==='cavalo').length * 0.12);
-    community -= (0.4 * decayMultiplier) * (1 - hR);
+    timeElapsed++; if (timeElapsed % 25 === 0) decayMultiplier += 0.35; // FALLING FASTER
+    let hR = Math.min(0.70, animalsOnMap.filter(a=>a.type==='cavalo').length * 0.15);
+    community -= (0.55 * decayMultiplier) * (1 - hR);
     updateHUD();
 }, 1000);
 
-window.sellEverything = () => {
+window.sellE = () => {
     const total = harvestedWheat + harvestedCarrot + totalEggs + totalMeat + totalMilk;
     if (total <= 0) return;
-    coins += (harvestedWheat * 2) + (harvestedCarrot * 4) + (totalEggs * 8) + (totalMeat * 20) + (totalMilk * 12);
-    community = Math.min(100, community + (total * 0.1));
+    coins += (harvestedWheat * 2) + (harvestedCarrot * 4) + (totalEggs * 8) + (totalMeat * 25) + (totalMilk * 12);
+    community = Math.min(100, community + (total * 0.15));
     harvestedWheat = 0; harvestedCarrot = 0; totalEggs = 0; totalMeat = 0; totalMilk = 0;
     updateHUD(); updateInventory();
 }
@@ -124,10 +124,10 @@ function renderShops() {
     const landC = document.getElementById('lots-container');
     if(landC) {
         landC.innerHTML = '';
-        lots.forEach((lot, i) => {
+        lots.forEach((lt, i) => {
             const isO = purchasedLotsStatus.includes(i), isN = purchasedLotsStatus.length===i, isL = !isO && !isN;
-            const div = document.createElement('div'); div.className = 'shop-card'; div.style.opacity = isL?'0.5':'1';
-            div.innerHTML = `<img src="sprites/Lote${lot.id}.png" style="width:40px; ${isL?'filter:grayscale(1)':''}"><h3>${lot.n}</h3><button onclick="buyL(${i})" class="buy-btn" style="background:${isO?'#27ae60':(isL?'#444':'#8b4513')};" ${isL?'disabled':''}>${isO?'OWNED':(isL?'LOCKED':'💰 '+lot.p)}</button>`;
+            const div = document.createElement('div'); div.className = 'shop-card'; 
+            div.innerHTML = `<img src="sprites/Lote${lt.id}.png" style="width:30px; ${isL?'filter:grayscale(1)':''}"><h3>${lt.n}</h3><button onclick="bL(${i})" class="buy-btn" style="background:${isO?'#27ae60':(isL?'#444':'#8b4513')};" ${isL?'disabled':''}>${isO?'OWNED':(isL?'LOCKED':'💰 '+lt.p)}</button>`;
             landC.appendChild(div);
         });
     }
@@ -136,28 +136,25 @@ function renderShops() {
         animC.innerHTML = '';
         animalLots.forEach(a => {
             const div = document.createElement('div'); div.className = 'shop-card';
-            div.innerHTML = `<div style="font-size:32px;">${a.icon}</div><h3>${a.name}</h3><button onclick="buyA('${a.type}', ${a.price})" class="buy-btn" style="background:#3498db;">💰 ${a.price}</button>`;
+            div.innerHTML = `<div style="font-size:32px;">${a.i}</div><h3>${a.n}</h3><button onclick="bA('${a.type}', ${a.p})" class="buy-btn" style="background:#3498db;">💰 ${a.p}</button>`;
             animC.appendChild(div);
         });
     }
 }
-
-window.buyA = (t,p) => { if(coins>=p){ coins-=p; animalsOnMap.push(new Animal(t, 1000+(Math.random()-0.5)*800, 600+(Math.random()-0.5)*400)); updateHUD(); updateInventory(); } };
-window.buyL = (i) => { if(coins>=lots[i].p && !purchasedLotsStatus.includes(i)){ coins-=lots[i].p; purchasedLotsStatus.push(i); updateHUD(); renderShops(); } };
+window.bA = (t,p) => { if(coins>=p){ coins-=p; animalsOnMap.push(new Animal(t, 1000+(Math.random()-0.5)*800, 600+(Math.random()-0.5)*400)); updateHUD(); updateInventory(); } };
+window.bL = (i) => { if(coins>=lots[i].p && !purchasedLotsStatus.includes(i)){ coins-=lots[i].p; purchasedLotsStatus.push(i); updateHUD(); renderShops(); } };
 
 window.onload = () => {
-    const safeBind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
-    safeBind('btn-play', () => {
-        gameState = 'playing';
-        const m = document.getElementById('menu-overlay'); if(m) m.classList.add('hidden');
-        const g = document.getElementById('game-ui'); if(g) g.classList.remove('hidden');
-    });
-    safeBind('btn-exit', () => { location.reload(); });
-    safeBind('btn-open-inventory', () => { updateInventory(); const i = document.getElementById('inventory-overlay'); if(i) i.classList.remove('hidden'); });
-    safeBind('btn-inv-voltar', () => { const i = document.getElementById('inventory-overlay'); if(i) i.classList.add('hidden'); });
-    safeBind('btn-open-lots', () => { renderShops(); const l = document.getElementById('lots-overlay'); if(l) l.classList.remove('hidden'); });
-    safeBind('btn-open-animals', () => { renderShops(); const a = document.getElementById('animal-shop-overlay'); if(a) a.classList.remove('hidden'); });
-    safeBind('btn-sell-manual', sellEverything);
+    const safe = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+    safe('btn-play', () => { gameState = 'playing'; document.getElementById('menu-overlay').classList.add('hidden'); document.getElementById('game-ui').classList.remove('hidden'); });
+    safe('btn-exit', () => { location.reload(); });
+    safe('btn-open-inventory', () => { updateInventory(); document.getElementById('inventory-overlay').classList.remove('hidden'); });
+    safe('btn-inv-voltar', () => document.getElementById('inventory-overlay').classList.add('hidden'));
+    safe('btn-open-lots', () => { renderShops(); document.getElementById('lots-overlay').classList.remove('hidden'); });
+    safe('btn-open-animals', () => { renderShops(); document.getElementById('animal-shop-overlay').classList.remove('hidden'); });
+    safe('btn-open-tutorial', () => { document.getElementById('tutorial-overlay').classList.remove('hidden'); });
+    safe('btn-close-tut', () => { document.getElementById('tutorial-overlay').classList.add('hidden'); });
+    safe('btn-sell-manual', sellE);
 };
 
 let lastTime = performance.now();
