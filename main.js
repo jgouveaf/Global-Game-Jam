@@ -1,4 +1,4 @@
-// ========================= AgriCorp Game (MASTER SUBMISSION v24.0) =========================
+// ========================= AgriCorp Game (POLISHED v25.0) =========================
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
@@ -18,16 +18,16 @@ resize();
 window.addEventListener('resize', resize);
 
 // --- SOUND SYSTEM ---
-// Tentando carregar os sons da pasta sprites/
-const clickSnd = new Audio('sprites/SomClique.mp3');
-const natureSnd = new Audio('sprites/Natureza.mp3');
+// Ajustando caminhos para a raiz do projeto para evitar 404 se estiverem lá
+const clickSnd = new Audio('SomClique.mp3'); 
+const natureSnd = new Audio('Natureza.mp3'); 
 natureSnd.loop = true;
 natureSnd.volume = 0.4;
 
 function play(snd) { 
     if(snd) { 
         snd.currentTime = 0; 
-        snd.play().catch(e => console.log("Sound blocked by browser")); 
+        snd.play().catch(e => console.log("Sound blocked by browser or file missing")); 
     } 
 }
 
@@ -47,12 +47,12 @@ animalSprites.vaca.src='sprites/Piskel Vaquinha.png';
 animalSprites.cavalo.src='sprites/Cavalo.png';
 
 const animalLots = [
-    { type: 'pato',    n: 'Duck',    img: 'sprites/Pato.png',    p: 150,  y: { e: 1, m: 0, l: 0 } },
+    { type: 'pato',    n: 'Duck',    img: 'sprites/Pato.png',    p: 150,  y: { e: 2, m: 0, l: 0 } },
     { type: 'coelho',  n: 'Rabbit',  img: 'sprites/Coelho.png',  p: 250,  y: { e: 0, m: 1, l: 0 } },
-    { type: 'galinha', n: 'Chicken', img: 'sprites/Galinha.png', p: 400,  y: { e: 5, m: 0, l: 0 } },
+    { type: 'galinha', n: 'Chicken', img: 'sprites/Galinha.png', p: 400,  y: { e: 8, m: 0, l: 0 } },
     { type: 'cavalo',  n: 'Horse',   img: 'sprites/Cavalo.png',  p: 800,  y: { e: 0, m: 0, l: 0 } },
     { type: 'ovelha',  n: 'Sheep',   img: 'sprites/Ovelha.png',  p: 1200, y: { e: 0, m: 3, l: 0 } },
-    { type: 'vaca',    n: 'Cow',     img: 'sprites/Piskel Vaquinha.png', p: 2000, y: { e: 0, m: 10, l: 6 } }
+    { type: 'vaca',    n: 'Cow',     img: 'sprites/Piskel Vaquinha.png', p: 2000, y: { e: 0, m: 8, l: 5 } }
 ];
 
 const lots = [
@@ -83,7 +83,6 @@ class Animal {
     draw(scale) {
         const img = animalSprites[this.type];
         if (!img.complete || img.naturalWidth === 0) return;
-        // Desenha a imagem INTEIRA para evitar cortes (Full width/height)
         const dw = img.width * scale, dh = img.height * scale;
         const dx = (W - WW*scale)/2, dy = (H - WH*scale)/2;
         ctx.drawImage(img, 0, 0, img.width, img.height, dx + this.x*scale - dw/2, dy + this.y*scale - dh/2, dw, dh);
@@ -118,13 +117,15 @@ setInterval(() => {
     updateInventory(); updateHUD();
 }, 8000);
 
-// DECLÍNIO ACELERADO DA COMUNIDADE (BARRA DIMINUI RÁPIDO)
+// REQUISITO: Barra acelera a cada 2 MINUTOS (120 s)
 setInterval(() => {
     if (isGameOver || gameState === 'menu') return;
     timeElapsed++; 
-    if (timeElapsed % 20 === 0) decayMultiplier += 0.8; // Aceleração a cada 20s
+    if (timeElapsed > 0 && timeElapsed % 120 === 0) {
+        decayMultiplier += 0.5; // Escala a cada 2 min
+    }
     let hR = Math.min(0.70, animalsOnMap.filter(a=>a.type==='cavalo').length * 0.15);
-    community -= (0.95 * decayMultiplier) * (1 - hR);
+    community -= (0.45 * decayMultiplier) * (1 - hR);
     updateHUD();
 }, 1000);
 
@@ -132,8 +133,8 @@ window.sellE = () => {
     play(clickSnd);
     const total = harvestedWheat + harvestedCarrot + totalEggs + totalMeat + totalMilk;
     if (total <= 0) return;
-    totalCoinsJam += (harvestedWheat * 3) + (harvestedCarrot * 5) + (totalEggs * 12) + (totalMeat * 35) + (totalMilk * 20);
-    community = Math.min(100, community + (total * 0.35));
+    totalCoinsJam += (harvestedWheat * 4) + (harvestedCarrot * 6) + (totalEggs * 15) + (totalMeat * 40) + (totalMilk * 25);
+    community = Math.min(100, community + (total * 0.4));
     harvestedWheat = 0; harvestedCarrot = 0; totalEggs = 0; totalMeat = 0; totalMilk = 0;
     updateHUD(); updateInventory();
 }
@@ -154,7 +155,6 @@ function renderShops() {
         animC.innerHTML = '';
         animalLots.forEach(a => {
             const div = document.createElement('div'); div.className = 'shop-card';
-            // ÍCONES INTEIROS NA LOJA (Sem corte)
             div.innerHTML = `<img src="${a.img}" style="width:32px; height:auto; display:block; margin: 0 auto 5px; image-rendering: pixelated;"><h3>${a.n}</h3><button onclick="bA('${a.type}', ${a.p})" class="buy-btn" style="background:#3498db;">💰 ${a.p}</button>`;
             animC.appendChild(div);
         });
@@ -165,12 +165,7 @@ window.bL = (i) => { play(clickSnd); if(totalCoinsJam>=lots[i].p && !purchasedLo
 
 window.onload = () => {
     const safe = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = () => { play(clickSnd); fn(); }; };
-    safe('btn-play', () => { 
-        gameState = 'playing'; 
-        document.getElementById('menu-overlay').classList.add('hidden'); 
-        document.getElementById('game-ui').classList.remove('hidden'); 
-        play(natureSnd);
-    });
+    safe('btn-play', () => { gameState = 'playing'; document.getElementById('menu-overlay').classList.add('hidden'); document.getElementById('game-ui').classList.remove('hidden'); play(natureSnd); });
     safe('btn-exit', () => { location.reload(); });
     safe('btn-open-inventory', () => { updateInventory(); document.getElementById('inventory-overlay').classList.remove('hidden'); });
     safe('btn-inv-voltar', () => document.getElementById('inventory-overlay').classList.add('hidden'));
