@@ -1,13 +1,15 @@
-// ========================= AgriCorp Game (Final Clean Version v10) =========================
+// ========================= AgriCorp Game (ULTIMATE MASTER v26.0) =========================
+// SE VOCÊ VER ESSE LOG NO CONSOLE (F12), ESTÁ NA VERSÃO CERTA!
+console.log("AGRICORP V26 - DESCRICOES CARREGADAS OK");
+
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 
 const mapImage = new Image();
-mapImage.src = 'sprites/Mapa.png';
-let mapLoaded = false;
-let WW = 2800, WH = 1400; 
+mapImage.src = 'sprites/Mapa..png';
+let mapLoaded = false, WW = 0, WH = 0, gameState = 'menu';
 
-mapImage.onload = () => { mapLoaded = true; WW = mapImage.width; WH = mapImage.height; };
+mapImage.onload = () => { mapLoaded = true; WW = mapImage.width/2; WH = mapImage.height/4; };
 
 let W, H;
 function resize(){
@@ -18,367 +20,180 @@ function resize(){
 resize();
 window.addEventListener('resize', resize);
 
-const camera = { x: 1300, y: 450 };
-let mouseX = 0, mouseY = 0;
-const EDGE = 0.15, CAM_SPEED = 10;
-window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
+const clickSnd = new Audio('SomClique.mp3'); 
+const natureSnd = new Audio('Natureza.mp3'); 
+natureSnd.loop = true;
+natureSnd.volume = 0.4;
 
-// ESTADOS
-var moedas = 500, sementesTrigo = 60, comunidade = 80, isGameOver = false, harvestedTrigo = 0, paused = false;
-const crops = [], blueField = { x: 1580, y: 580, w: 900, h: 540 };
-
-const trigoSprite = new Image();
-trigoSprite.src = 'sprites/Trigo.png';
-
-class Crop {
-    constructor(x, y) {
-        this.x = x; this.y = y;
-        this.stage = 0; // 0 a 4 (Frames do sprite)
-        this.timer = 0;
-        this.isSeed = true; // Começa como semente
-        this.seedTimer = 0;
-    }
-    update(dt) {
-        if (this.isSeed) {
-            this.seedTimer += dt;
-            if (this.seedTimer > 3000) { this.isSeed = false; } // Vira broto após 3s
-        } else if (this.stage < 4) {
-            this.timer += dt;
-            if (this.timer > 6000) { this.stage++; this.timer = 0; }
-        }
-    }
-    draw() {
-        if (this.isSeed) {
-            ctx.fillStyle = '#8b4513';
-            ctx.beginPath();
-            ctx.arc(this.x - camera.x, this.y - camera.y, 4, 0, Math.PI * 2);
-            ctx.fill();
-        } else if (trigoSprite.complete && trigoSprite.naturalWidth > 0) {
-            // Sprite 2x3
-            const fw = trigoSprite.width / 2;
-            const fh = trigoSprite.height / 3;
-            const sx = (this.stage % 2) * fw;
-            const sy = Math.floor(this.stage / 2) * fh;
-            ctx.drawImage(trigoSprite, sx, sy, fw, fh, this.x - camera.x - fw, this.y - camera.y - fh * 2, fw * 2, fh * 2);
-        } else {
-            ctx.font = '20px Arial';
-            ctx.fillText('🌱', this.x - camera.x - 10, this.y - camera.y);
-        }
-    }
+function play(snd) { 
+    if(snd) { 
+        snd.currentTime = 0; 
+        snd.play().catch(e => {}); 
+    } 
 }
 
+// DATA - 500 COINS INITIAL
+var totalCoinsJam = 500; 
+var community = 100, isGameOver = false;
+var harvestedWheat = 0, harvestedCarrot = 0, totalEggs = 0, totalMeat = 0, totalMilk = 0;
+var timeElapsed = 0, decayMultiplier = 1.0;
 
-// INVENTÁRIO DE PRODUTOS
-var inventoryProducts = { ovos: 0, carne: 0 };
+const animalsOnMap = [];
+const animalSprites = { pato: new Image(), galinha: new Image(), coelho: new Image(), ovelha: new Image(), vaca: new Image(), cavalo: new Image() };
+animalSprites.pato.src='sprites/Pato.png'; 
+animalSprites.galinha.src='sprites/Galinha.png'; 
+animalSprites.coelho.src='sprites/Coelho.png';
+animalSprites.ovelha.src='sprites/Ovelha.png'; 
+animalSprites.vaca.src='sprites/Piskel Vaquinha.png'; 
+animalSprites.cavalo.src='sprites/Cavalo.png';
 
-// ANIMAIS
-const animalsOnMap = [], animalsUnlocked = ['pato'];
-const unlockOrder = ['pato', 'coelho', 'ovelha', 'galinha', 'porco', 'cavalo'];
-const animalSprites = { 
-    pato: new Image(), galinha: new Image(), coelho: new Image(), 
-    ovelha: new Image(), porco: new Image(), cavalo: new Image() 
-};
-animalSprites.pato.src = 'sprites/Pato.png';
-animalSprites.galinha.src = 'sprites/Galinha.png';
-animalSprites.coelho.src = 'sprites/Coelho.png';
-animalSprites.ovelha.src = 'sprites/Ovelha.png';
-animalSprites.porco.src = 'sprites/Porco.png';
-animalSprites.cavalo.src = 'sprites/Cavalo.png';
+const animalLots = [
+    { type: 'pato',    n: 'Duck',    img: 'sprites/Pato.png',    p: 150,  desc: "🥚 Produce Eggs" },
+    { type: 'coelho',  n: 'Rabbit',  img: 'sprites/Coelho.png',  p: 250,  desc: "🥩 Produce Meat" },
+    { type: 'galinha', n: 'Chicken', img: 'sprites/Galinha.png', p: 400,  desc: "🥚 High Egg Yield++" },
+    { type: 'cavalo',  n: 'Horse',   img: 'sprites/Cavalo.png',  p: 800,  desc: "📎 STOPS BAR DECAY!" },
+    { type: 'ovelha',  n: 'Sheep',   img: 'sprites/Ovelha.png',  p: 1200, desc: "🥩 Med Meat Yield" },
+    { type: 'vaca',    n: 'Cow',     img: 'sprites/Piskel Vaquinha.png', p: 2000, desc: "🥩 Meat & 🥛 Milk++" }
+];
+
+const lots = [
+    { id: 1, n: "NW Plot", p: 0,    m: 1,  t: 'wheat'  }, 
+    { id: 2, n: "NC Plot", p: 800,  m: 2,  t: 'carrot' }, 
+    { id: 3, n: "EA Plot", p: 2000, m: 4,  t: 'carrot' }, 
+    { id: 4, n: "EB Plot", p: 4500, m: 6,  t: 'wheat'  }, 
+    { id: 5, n: "SC Plot", p: 8000, m: 8,  t: 'wheat'  }, 
+    { id: 6, n: "SE Plot", p: 15000, m: 12, t: 'carrot' }
+];
+let purchasedLotsStatus = [0];
 
 class Animal {
     constructor(type, x, y) {
         this.type = type; this.x = x; this.y = y;
-        this.frame = 0; this.nextFrameTime = 0; this.productionTimer = 0;
-        this.productionInterval = 5000 + Math.random() * 5000;
-        this.vx = 0; this.vy = 0; this.moveTimer = 0;
-        this.facingRight = true;
+        this.vx = (Math.random() - 0.5) * 0.4; this.vy = (Math.random() - 0.5) * 0.4;
+        this.moveTimer = 3000;
     }
     update(dt) {
-        this.nextFrameTime += dt;
-        if (this.nextFrameTime > 300) { this.frame = (this.frame + 1) % 2; this.nextFrameTime = 0; }
-        this.productionTimer += dt;
-        if (this.productionTimer >= this.productionInterval) { this.produce(); this.productionTimer = 0; }
         this.moveTimer -= dt;
         if (this.moveTimer <= 0) {
-            if (Math.random() > 0.4) { 
-                this.vx = (Math.random() - 0.5) * 1.5; 
-                this.vy = (Math.random() - 0.5) * 1.5; 
-            }
-            else { this.vx = 0; this.vy = 0; }
-            this.moveTimer = 2000 + Math.random() * 3000;
+            this.vx = (Math.random() - 0.5) * 0.4; this.vy = (Math.random() - 0.5) * 0.4;
+            this.moveTimer = 2000 + Math.random() * 4000;
         }
-        
-        if (this.vx > 0.1) this.facingRight = true;
-        else if (this.vx < -0.1) this.facingRight = false;
-
         this.x += this.vx; this.y += this.vy;
-        const margin = 100;
-        this.x = Math.max(margin, Math.min(this.x, WW - margin));
-        this.y = Math.max(margin, Math.min(this.y, WH - margin));
+        this.x = Math.max(200, Math.min(this.x, 1700)); this.y = Math.max(200, Math.min(this.y, 900));
     }
-    produce() {
-        if (this.type === 'pato' || this.type === 'galinha') inventoryProducts.ovos++;
-        else if (this.type !== 'cavalo') inventoryProducts.carne++;
-        updateInventory();
-    }
-    draw() {
+    draw(scale) {
         const img = animalSprites[this.type];
-        const screenX = this.x - camera.x;
-        const screenY = this.y - camera.y;
-
-        if (img.complete && img.naturalWidth > 0) {
-            const fw = img.width, fh = img.height / 2;
-            
-            ctx.save();
-            ctx.translate(screenX, screenY);
-            if (!this.facingRight) ctx.scale(-1, 1);
-            
-            ctx.drawImage(img, 0, this.frame * fh, fw, fh, -fw/2, -fh/2, fw, fh);
-            ctx.restore();
-        } else {
-            ctx.font = '24px Arial';
-            const em = {pato:'🦆', galinha:'🐔', coelho:'🐇', ovelha:'🐑', porco:'🐖', cavalo:'🐎'};
-            ctx.fillText(em[this.type] || '🐾', screenX - 12, screenY + 12);
-        }
+        if (!img.complete || img.naturalWidth === 0) return;
+        const dw = img.width * scale, dh = img.height * scale;
+        const dx = (W - WW*scale)/2, dy = (H - WH*scale)/2;
+        ctx.drawImage(img, 0, 0, img.width, img.height, dx + this.x*scale - dw/2, dy + this.y*scale - dh/2, dw, dh);
     }
 }
 
 function updateHUD() {
-    const hpBar = document.getElementById('hp-bar');
-    if(hpBar) hpBar.style.width = comunidade + '%';
-    document.getElementById('hud-value').textContent = Math.round(comunidade);
-    document.getElementById('hud-coins-value').textContent = Math.round(moedas);
-    document.getElementById('hud-seeds-value').textContent = sementesTrigo;
-    const harvestEl = document.getElementById('hud-harvest-value');
-    if (harvestEl) harvestEl.textContent = harvestedTrigo;
-    
-    document.querySelectorAll('.shop-card').forEach(card => {
-        const title = card.querySelector('h3');
-        if (!title) return;
-        const type = title.textContent.toLowerCase();
-        if (unlockOrder.includes(type)) {
-            const unlocked = animalsUnlocked.includes(type);
-            card.style.opacity = unlocked ? "1" : "0.3";
-            card.style.pointerEvents = unlocked ? "auto" : "none";
-            card.style.filter = unlocked ? "none" : "grayscale(100%)";
-        }
-    });
-
-    if (comunidade <= 0 && !isGameOver) {
-        isGameOver = true;
-        document.getElementById('game-over-overlay').classList.remove('hidden');
-    }
+    if(gameState === 'menu') return;
+    const hp = document.getElementById('hp-bar'); if(hp) hp.style.width = community + '%';
+    const hV = document.getElementById('hud-value'); if(hV) hV.textContent = Math.round(community);
+    const hC = document.getElementById('hud-coins-value'); if(hC) hC.textContent = Math.round(totalCoinsJam);
+    const hS = document.getElementById('hud-products-value'); if(hS) hS.textContent = Math.round(harvestedWheat + harvestedCarrot + totalEggs + totalMeat + totalMilk);
+    if (community <= 0 && !isGameOver) { isGameOver = true; document.getElementById('game-over-overlay').classList.remove('hidden'); }
 }
 
 function updateInventory() {
-    // Sementes
-    const seedList = document.getElementById('inv-seeds-list');
-    if (seedList) seedList.innerHTML = `<div class="inv-item">🌾 Trigo x${sementesTrigo}</div>`;
-
-    // Animais
-    const list = document.getElementById('inv-animals-list');
+    const list = document.getElementById('inv-crops-list');
     if (list) {
-        const counts = {};
-        animalsOnMap.forEach(a => counts[a.type] = (counts[a.type] || 0) + 1);
-        list.innerHTML = '';
-        const emojiMap = { pato: '🦆', galinha: '🐔', coelho: '🐇', ovelha: '🐑', porco: '🐖', cavalo: '🐎' };
-        if (animalsOnMap.length === 0) list.innerHTML = '<div class="inv-item">Nenhum comprado</div>';
-        else {
-            for (const [type, count] of Object.entries(counts)) {
-                const div = document.createElement('div'); div.className = 'inv-item';
-                div.innerHTML = `${emojiMap[type] || ''} ${type.toUpperCase()}: ${count}`;
-                list.appendChild(div);
-            }
-        }
-    }
-
-    // Produtos
-    const prodList = document.getElementById('inv-products-list');
-    if (prodList) {
-        prodList.innerHTML = `
-            <div class="inv-item" style="display:flex; justify-content: space-between; align-items: center;">
-                <div>🥚 OVOS: ${inventoryProducts.ovos}</div>
-                <button onclick="sellItem('ovos')" style="padding: 5px; background: #2ecc71; border: 2px solid #fff; font-family:'Press Start 2P'; font-size:6px; cursor:pointer;">VENDER (6s)</button>
-            </div>
-            <div class="inv-item" style="display:flex; justify-content: space-between; align-items: center; margin-top:5px;">
-                <div>🥩 CARNES: ${inventoryProducts.carne}</div>
-                <button onclick="sellItem('carne')" style="padding: 5px; background: #2ecc71; border: 2px solid #fff; font-family:'Press Start 2P'; font-size:6px; cursor:pointer;">VENDER (6s)</button>
-            </div>
-        `;
+        list.innerHTML = `<div>🌾 Wheat: ${Math.round(harvestedWheat)}</div><div>🥕 Carrot: ${Math.round(harvestedCarrot)}</div><div>🥚 Eggs: ${totalEggs}</div><div>🥩 Meat: ${totalMeat}</div><div>🥛 Milk: ${totalMilk}</div>`;
     }
 }
 
-var isSelling = false;
-window.sellItem = (type) => {
-    if (isSelling) return;
-    if (inventoryProducts[type] <= 0) { alert("Sem estoque!"); return; }
+setInterval(() => {
+    if (isGameOver || gameState === 'menu') return;
+    purchasedLotsStatus.forEach(idx => {
+        const lt = lots[idx]; if (lt.t === 'wheat') harvestedWheat += (2 * lt.m); else harvestedCarrot += (5 * lt.m);
+    });
+    animalsOnMap.forEach(a => {
+        const d = (a.type==='pato')?{e:2,m:0,l:0}:(a.type==='galinha')?{e:8,m:0,l:0}:(a.type==='coelho')?{e:0,m:1,l:0}:(a.type==='ovelha')?{e:0,m:3,l:0}:(a.type==='vaca')?{e:0,m:8,l:5}:{e:0,m:0,l:0};
+        totalEggs += d.e; totalMeat += d.m; totalMilk += d.l;
+    });
+    updateInventory(); updateHUD();
+}, 8000);
 
-    isSelling = true;
-    inventoryProducts[type]--;
-    updateInventory();
+// REQUISITO: Barra acelera a cada 2 MINUTOS (120 s)
+setInterval(() => {
+    if (isGameOver || gameState === 'menu') return;
+    timeElapsed++; 
+    if (timeElapsed > 0 && timeElapsed % 120 === 0) decayMultiplier += 0.5;
+    let hR = Math.min(0.70, animalsOnMap.filter(a=>a.type==='cavalo').length * 0.15);
+    community -= (0.45 * decayMultiplier) * (1 - hR);
+    updateHUD();
+}, 1000);
 
-    const hasHorse = animalsOnMap.some(a => a.type === 'cavalo');
-    const sellTime = hasHorse ? 3000 : 6000;
-    const status = document.getElementById('sell-status');
-    status.textContent = `VENDENDO ${type.toUpperCase()}... (${sellTime / 1000}s)`;
+window.sellE = () => {
+    play(clickSnd);
+    const total = harvestedWheat + harvestedCarrot + totalEggs + totalMeat + totalMilk;
+    if (total <= 0) return;
+    totalCoinsJam += (harvestedWheat * 4) + (harvestedCarrot * 6) + (totalEggs * 15) + (totalMeat * 40) + (totalMilk * 25);
+    community = Math.min(100, community + (total * 1.5));
+    harvestedWheat = 0; harvestedCarrot = 0; totalEggs = 0; totalMeat = 0; totalMilk = 0;
+    updateHUD(); updateInventory();
+}
 
-    setTimeout(() => {
-        const gain = type === 'ovos' ? 10 : 25;
-        comunidade = Math.min(100, comunidade + gain);
-        moedas += gain * 2;
-        status.textContent = `VENDIDO! +${gain} COMUNIDADE`;
-        isSelling = false;
-        updateHUD();
-        setTimeout(() => { status.textContent = ''; }, 2000);
-    }, sellTime);
-};
-
-window.buyAnimal = (type, price) => {
-    if (!animalsUnlocked.includes(type)) { alert("Animal bloqueado!"); return; }
-    if (moedas >= price) {
-        moedas -= price;
-        animalsOnMap.push(new Animal(type, camera.x + 400 + Math.random()*200, camera.y + 400 + Math.random()*200));
-        const idx = unlockOrder.indexOf(type);
-        if (idx !== -1 && idx < unlockOrder.length - 1) {
-            const next = unlockOrder[idx + 1];
-            if (!animalsUnlocked.includes(next)) animalsUnlocked.push(next);
-        }
-        updateHUD(); updateInventory();
-    } else alert("Sem moedas!");
-};
-
-// ================================= ROAD SYSTEM =================================
-const roadNodes = [
-    {id:0, x:0,    y:1226, next:[1]},
-    {id:1, x:584,  y:1226, next:[0, 2, 4, 8]},
-    {id:2, x:1516, y:1226, next:[1, 3, 4]},
-    {id:3, x:2240, y:1226, next:[2]},
-    {id:4, x:1516, y:784,  next:[2, 5, 7, 10]},
-    {id:5, x:1516, y:330,  next:[4, 6]},
-    {id:6, x:2152, y:330,  next:[5]},
-    {id:7, x:2152, y:784,  next:[4]},
-    // Waypoints Caminho Curvo (Escalados x2)
-    {id:8, x:716,  y:1084, next:[1, 9]},
-    {id:9, x:922,  y:928,  next:[8, 10]},
-    {id:10, x:1230, y:806,  next:[9, 4]}
-];
-
-const personSprite = new Image();
-personSprite.src = 'player_sprite.png';
-
-class Person {
-    constructor() {
-        const startNode = roadNodes[Math.floor(Math.random() * roadNodes.length)];
-        this.x = startNode.x; this.y = startNode.y;
-        this.targetNode = roadNodes[startNode.next[Math.floor(Math.random() * startNode.next.length)]];
-        this.speed = 1.0 + Math.random() * 1.0;
-        this.facingRight = true;
+function renderShops() {
+    const landC = document.getElementById('lots-container');
+    if(landC) {
+        landC.innerHTML = '';
+        lots.forEach((lt, i) => {
+            const isO = purchasedLotsStatus.includes(i), isN = purchasedLotsStatus.length===i, isL = !isO && !isN;
+            const div = document.createElement('div'); div.className = 'shop-card'; 
+            div.innerHTML = `<img src="sprites/Lote${lt.id}.png" style="width:30px; ${isL?'filter:grayscale(1)':''}"><h3>${lt.n}</h3><button onclick="bL(${i})" class="buy-btn" style="background:${isO?'#27ae60':(isL?'#444':'#8b4513')};" ${isL?'disabled':''}>${isO?'OWNED':(isL?'LOCKED':'💰 '+lt.p)}</button>`;
+            landC.appendChild(div);
+        });
     }
-    update() {
-        if (paused) return;
-        const dx = this.targetNode.x - this.x, dy = this.targetNode.y - this.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 5) {
-            const possibleNext = this.targetNode.next;
-            this.targetNode = roadNodes[possibleNext[Math.floor(Math.random() * possibleNext.length)]];
-        } else {
-            const dirX = dx / dist, dirY = dy / dist;
-            this.x += dirX * this.speed;
-            this.y += dirY * this.speed;
-            if (Math.abs(dirX) > 0.1) this.facingRight = (dirX > 0);
-        }
-    }
-    draw() {
-        const img = personSprite;
-        const screenX = this.x - camera.x;
-        const screenY = this.y - camera.y;
-        if (img.complete && img.naturalWidth > 0) {
-            const dw = 64, dh = 64; 
-            ctx.save();
-            ctx.translate(screenX, screenY);
-            if (!this.facingRight) ctx.scale(-1, 1);
-            ctx.drawImage(img, -dw/2, -dh/2, dw, dh);
-            ctx.restore();
-        }
+    const animC = document.getElementById('animals-container');
+    if(animC) {
+        animC.innerHTML = '';
+        animalLots.forEach(a => {
+            const div = document.createElement('div'); div.className = 'shop-card';
+            div.innerHTML = `<img src="${a.img}" style="width:32px; height:auto; display:block; margin: 0 auto 5px; image-rendering: pixelated;">
+                             <h3>${a.n}</h3>
+                             <p style="font-size: 6px !important; color: #ffd700; margin-bottom: 8px;">${a.desc}</p>
+                             <button onclick="bA('${a.type}', ${a.p})" class="buy-btn" style="background:#3498db;">💰 ${a.p}</button>`;
+            animC.appendChild(div);
+        });
     }
 }
-const peopleOnMap = [];
-for (let i = 0; i < 5; i++) peopleOnMap.push(new Person());
-
-function togglePause() {
-    if (isGameOver) return;
-    paused = !paused;
-    const overlay = document.getElementById('pause-overlay');
-    if (overlay) overlay.classList.toggle('hidden', !paused);
-}
-window.addEventListener('keydown', (e) => { if (e.key === 'Escape') togglePause(); });
+window.bA = (t,p) => { play(clickSnd); if(totalCoinsJam>=p){ totalCoinsJam-=p; animalsOnMap.push(new Animal(t, 1000+(Math.random()-0.5)*800, 600+(Math.random()-0.5)*400)); updateHUD(); updateInventory(); } };
+window.bL = (i) => { play(clickSnd); if(totalCoinsJam>=lots[i].p && !purchasedLotsStatus.includes(i)){ totalCoinsJam-=lots[i].p; purchasedLotsStatus.push(i); updateHUD(); renderShops(); } };
 
 window.onload = () => {
-    console.log("AgriCorp v10 Initializing...");
-    const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
-    bind('btn-open-shop', () => document.getElementById('shop-overlay').classList.remove('hidden'));
-    bind('btn-shop-voltar', () => document.getElementById('shop-overlay').classList.add('hidden'));
-    bind('btn-open-inventory', () => document.getElementById('inventory-overlay').classList.remove('hidden'));
-    bind('btn-inv-voltar', () => document.getElementById('inventory-overlay').classList.add('hidden'));
-    bind('btn-resume', () => togglePause());
-    bind('btn-buy-seed', () => { if (moedas >= 10) { moedas -= 10; sementesTrigo++; updateHUD(); updateInventory(); } else alert("Sem moedas!"); });
-    
-    bind('btn-water', () => {
-        if (sementesTrigo <= 0) { alert("Sem sementes!"); return; }
-        let plantedCount = 0;
-        const spacing = 130;
-        for (let yy = blueField.y + 60; yy < blueField.y + blueField.h - 60; yy += spacing) {
-            for (let xx = blueField.x + 60; xx < blueField.x + blueField.w - 60; xx += spacing) {
-                if (sementesTrigo > 0 && !crops.some(c => Math.hypot(c.x - xx, c.y - yy) < 60)) {
-                    crops.push(new Crop(xx, yy)); sementesTrigo--; plantedCount++;
-                }
-            }
-        }
-        updateHUD(); updateInventory();
-        const timerEl = document.getElementById('planting-timer');
-        if (timerEl) {
-            timerEl.innerHTML = `PLANTADO ${plantedCount} SEMENTES!`;
-            timerEl.classList.remove('hidden');
-            setTimeout(() => timerEl.classList.add('hidden'), 3000);
-        }
-    });
-
-    setInterval(() => { if (!isGameOver && !paused) { comunidade -= 0.5; updateHUD(); } }, 1000);
-    updateHUD(); updateInventory();
-};
-
-canvas.onmousedown = (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const wx = (e.clientX - rect.left) + camera.x, wy = (e.clientY - rect.top) + camera.y;
-    const cropIdx = crops.findIndex(c => Math.hypot(c.x - wx, c.y - wy) < 60 && c.stage === 4);
-    if (cropIdx !== -1) {
-        crops.splice(cropIdx, 1); harvestedTrigo++; moedas += 50; updateHUD(); return;
-    }
+    const safe = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = () => { play(clickSnd); fn(); }; };
+    safe('btn-play', () => { gameState = 'playing'; document.getElementById('menu-overlay').classList.add('hidden'); document.getElementById('game-ui').classList.remove('hidden'); play(natureSnd); });
+    safe('btn-exit', () => { location.reload(); });
+    safe('btn-open-inventory', () => { updateInventory(); document.getElementById('inventory-overlay').classList.remove('hidden'); });
+    safe('btn-inv-voltar', () => document.getElementById('inventory-overlay').classList.add('hidden'));
+    safe('btn-open-lots', () => { renderShops(); document.getElementById('lots-overlay').classList.remove('hidden'); });
+    safe('btn-open-animals', () => { renderShops(); document.getElementById('animal-shop-overlay').classList.remove('hidden'); });
+    safe('btn-open-tutorial', () => { document.getElementById('tutorial-overlay').classList.remove('hidden'); });
+    safe('btn-close-tut', () => { document.getElementById('tutorial-overlay').classList.add('hidden'); });
+    safe('btn-sell-manual', window.sellE);
 };
 
 let lastTime = performance.now();
 function loop(now){
     const dt = now - lastTime; lastTime = now;
-    if (!paused) {
-        if (mouseX < W * EDGE) camera.x -= CAM_SPEED;
-        if (mouseX > W * (1 - EDGE)) camera.x += CAM_SPEED;
-        if (mouseY < H * EDGE) camera.y -= CAM_SPEED;
-        if (mouseY > H * (1 - EDGE)) camera.y += CAM_SPEED;
-        camera.x = Math.max(0, Math.min(camera.x, WW - W));
-        camera.y = Math.max(0, Math.min(camera.y, WH - H));
+    if (gameState === 'playing') {
+        ctx.fillStyle = "#325e22"; ctx.fillRect(0,0,W,H);
+        if (mapLoaded) {
+            // Mapa centralizado em tela cheia
+            const fI = Math.min(Math.max(0, purchasedLotsStatus.length), 6);
+            const fW = mapImage.width/2, fH = mapImage.height/4;
+            const s = Math.max(W/fW, H/fH);
+            const drawX = (W - fW*s)/2;
+            const drawY = (H - fH*s)/2;
+            ctx.drawImage(mapImage, (fI%2)*fW, Math.floor(fI/2)*fH, fW, fH, drawX, drawY, fW*s, fH*s);
+            animalsOnMap.forEach(a => { a.update(dt); a.draw(s); });
+        }
     }
-    
-    ctx.clearRect(0, 0, W, H);
-    if (mapLoaded) {
-        ctx.drawImage(mapImage, -camera.x, -camera.y);
-        ctx.save();
-        ctx.strokeStyle = 'rgba(0, 255, 255, 0.2)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
-        ctx.strokeRect(blueField.x - camera.x, blueField.y - camera.y, blueField.w, blueField.h);
-        ctx.restore();
-        crops.forEach(c => { if(!paused) c.update(dt); c.draw(); });
-    }
-    peopleOnMap.forEach(p => { p.update(); p.draw(); });
-    animalsOnMap.forEach(a => { if(!paused) a.update(dt); a.draw(); });
     requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
