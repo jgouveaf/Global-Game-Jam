@@ -134,7 +134,7 @@ window.sellE = () => {
     const total = harvestedWheat + harvestedCarrot + totalEggs + totalMeat + totalMilk;
     if (total <= 0) return;
     totalCoinsJam += (harvestedWheat * 4) + (harvestedCarrot * 6) + (totalEggs * 15) + (totalMeat * 40) + (totalMilk * 25);
-    community = Math.min(100, community + (total * 0.4));
+    community = Math.min(100, community + (total * 1.5)); // Aumentado significativamente o ganho ao vender!
     harvestedWheat = 0; harvestedCarrot = 0; totalEggs = 0; totalMeat = 0; totalMilk = 0;
     updateHUD(); updateInventory();
 }
