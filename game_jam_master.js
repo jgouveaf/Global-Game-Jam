@@ -7,7 +7,7 @@ const ctx    = canvas.getContext('2d');
 
 const mapImage = new Image();
 mapImage.src = 'sprites/Mapa..png';
-let mapLoaded = false, WW = 0, WH = 0, gameState = 'intro'; // MUDADO PARA INTRO
+let mapLoaded = false, WW = 0, WH = 0, gameState = 'intro';
 
 mapImage.onload = () => { mapLoaded = true; WW = mapImage.width/2; WH = mapImage.height/4; };
 
@@ -20,13 +20,14 @@ function resize(){
 resize();
 window.addEventListener('resize', resize);
 
-const clickSnd = new Audio('SomClique.mp3'); 
-const natureSnd = new Audio('Natureza.mp3'); 
+// --- SOUND SYSTEM (FIXED PATHS OR DISABLED TO AVOID 404) ---
+const clickSnd = new Audio('Música/Fundo.mp3'); // Temporário até ter os arquivos certos
+const natureSnd = new Audio('Música/Fundo.mp3'); 
 natureSnd.loop = true;
 natureSnd.volume = 0.4;
 
 function play(snd) { 
-    if(snd) { 
+    if(snd && snd.readyState >= 2) { 
         snd.currentTime = 0; 
         snd.play().catch(e => {}); 
     } 
@@ -91,7 +92,7 @@ class Animal {
 }
 
 function updateHUD() {
-    if(gameState === 'menu' || gameState === 'intro') return; // MUDADO
+    if(gameState === 'menu' || gameState === 'intro') return;
     const hp = document.getElementById('hp-bar'); if(hp) hp.style.width = community + '%';
     const hV = document.getElementById('hud-value'); if(hV) hV.textContent = Math.round(community);
     const hC = document.getElementById('hud-coins-value'); if(hC) hC.textContent = Math.round(totalCoinsJam);
@@ -178,32 +179,31 @@ window.onload = () => {
 };
 
 let lastTime = performance.now();
-let introStartTime = 0, introOpacity = 0; // AUXILIARES
+let introStartTime = 0;
 function loop(now){
     const dt = now - lastTime; lastTime = now;
     
     // INTRO LOGIC
     if (gameState === 'intro') {
         if (!introStartTime) introStartTime = now;
-        const elapsed = (now - introStartTime) / 1000; // Segundos
+        const elapsed = (now - introStartTime) / 1000;
         
         ctx.fillStyle = "#000";
         ctx.fillRect(0,0,W,H);
         
-        ctx.font = "14px 'Press Start 2P'";
+        ctx.font = "14px 'Press Start 2P', cursive"; // Força fallback se falhar
         ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
         
-        // FADE EM FASES
         let text = "", alpha = 0;
         if (elapsed < 2) {
-            text = "A GodFrame production"; alpha = Math.min(1, elapsed * 1);
+            text = "A GodFrame production"; alpha = Math.min(1, elapsed * 0.8);
         } else if (elapsed < 4) {
-            text = "AgriCorp."; alpha = Math.min(1, (elapsed - 2) * 1);
+            text = "AgriCorp."; alpha = Math.min(1, (elapsed - 2) * 0.8);
         } else if (elapsed < 6) {
-            text = "In collaboration with FECAP"; alpha = Math.min(1, (elapsed - 4) * 1);
+            text = "In collaboration with FECAP"; alpha = Math.min(1, (elapsed - 4) * 0.8);
+        } else if (elapsed < 8) {
+            text = "Thank you Rafael Rosetti"; alpha = Math.min(1, (elapsed - 6) * 0.8);
         } else {
-            // FIM INTRO
             gameState = 'menu';
             document.getElementById('menu-overlay').classList.remove('hidden');
         }
@@ -221,7 +221,6 @@ function loop(now){
             animalsOnMap.forEach(a => { a.update(dt); a.draw(s); });
         }
     } else if (gameState === 'menu') {
-        // Clear canvas during menu
         ctx.fillStyle = "#000";
         ctx.fillRect(0,0,W,H);
     }
